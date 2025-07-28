@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Simples de Cálculo</title>
+</head>
+<body>
+    <h1>Teste de Cálculo</h1>
+    
+    <div>
+        <label>Entrada: <input type="text" id="vendaEntradaValor" value="100000"></label><br><br>
+        <label>Parcelas: <input type="text" id="vendaParcelasValor" value="200000"></label><br><br>
+        <label>Reforço: <input type="text" id="vendaReforcoValor" value="50000"></label><br><br>
+        <label>Nas Chaves: <input type="text" id="vendaBemMovelImovel" value="30000"></label><br><br>
+        
+        <button onclick="testarCalculo()">Calcular</button><br><br>
+        
+        <div>Valor Total: <span id="valorImovelCalculado">R$ 0,00</span></div>
+    </div>
+    
+    <script>
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(value);
+        }
+
+        function parseBRNumber(value) {
+            if (typeof value === 'string') {
+                const cleanValue = value.replace(/\./g, '').replace(',', '.');
+                return parseFloat(cleanValue) || 0;
+            }
+            return parseFloat(value) || 0;
+        }
+
+        function calculateValorImovel() {
+            console.log('Iniciando cálculo...');
+            
+            const entradaValor = parseBRNumber(document.getElementById('vendaEntradaValor')?.value || '0');
+            const parcelasValor = parseBRNumber(document.getElementById('vendaParcelasValor')?.value || '0');
+            const reforcoValor = parseBRNumber(document.getElementById('vendaReforcoValor')?.value || '0');
+            const bemMovelValor = parseBRNumber(document.getElementById('vendaBemMovelImovel')?.value || '0');
+            
+            console.log('Valores:', { entradaValor, parcelasValor, reforcoValor, bemMovelValor });
+            
+            const valorTotal = entradaValor + parcelasValor + reforcoValor + bemMovelValor;
+            
+            console.log('Valor total:', valorTotal);
+            
+            const valorImovelEl = document.getElementById('valorImovelCalculado');
+            if (valorImovelEl) {
+                valorImovelEl.textContent = formatCurrency(valorTotal);
+                console.log('Atualizado:', formatCurrency(valorTotal));
+            }
+        }
+        
+        function testarCalculo() {
+            calculateValorImovel();
+        }
+        
+        // Event listeners
+        document.getElementById('vendaEntradaValor').addEventListener('input', calculateValorImovel);
+        document.getElementById('vendaParcelasValor').addEventListener('input', calculateValorImovel);
+        document.getElementById('vendaReforcoValor').addEventListener('input', calculateValorImovel);
+        document.getElementById('vendaBemMovelImovel').addEventListener('input', calculateValorImovel);
+        
+        // Calcular no início
+        calculateValorImovel();
+    </script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Debug Resultados</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">Debug dos Resultados</h1>
+        
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+            <h2 class="text-lg font-semibold mb-4">Ações de Debug</h2>
+            <div class="space-x-2 mb-4">
+                <button onclick="criarDadosTeste()" class="px-4 py-2 bg-green-600 text-white rounded">Criar Dados Teste</button>
+                <button onclick="limparDados()" class="px-4 py-2 bg-red-600 text-white rounded">Limpar Dados</button>
+                <button onclick="verificarDados()" class="px-4 py-2 bg-blue-600 text-white rounded">Verificar Dados</button>
+                <button onclick="window.location.href='resultados.html'" class="px-4 py-2 bg-purple-600 text-white rounded">Ir para Resultados</button>
+            </div>
+            <div id="output" class="bg-gray-100 p-4 rounded text-sm font-mono"></div>
+        </div>
+    </div>
+
+    <script>
+        function criarDadosTeste() {
+            // Dados de teste que correspondem aos campos esperados
+            const dadosGerais = {
+                cliente: 'João Silva',
+                imobiliaria: 'Imobiliária Teste',
+                incorporadora: 'Incorporadora XYZ',
+                empreendimento: 'Residencial Exemplo',
+                unidade: 'Apto 101',
+                areaPrivativa: '80',
+                tmaAno: '12',
+                tmaMes: '1'
+            };
+            
+            const tabelaVendas = {
+                vendaEntradaValor: '50000',
+                vendaEntradaParcelas: '2',
+                vendaParcelasValor: '150000',
+                vendaParcelasQtd: '60',
+                vendaReforcoValor: '30000',
+                vendaReforcoQtd: '12',
+                vendaBemMovelImovel: '20000',
+                vendaDesagio: '5'
+            };
+            
+            const propostaCliente = {
+                mesVenda: '6',
+                propostaEntradaValor: '45000',
+                propostaEntradaParcelas: '2',
+                propostaParcelasValor: '140000',
+                propostaParcelasQtd: '60',
+                propostaReforcoValor: '25000',
+                propostaReforcoQtd: '12'
+            };
+            
+            localStorage.setItem('dadosGerais', JSON.stringify(dadosGerais));
+            localStorage.setItem('tabelaVendas', JSON.stringify(tabelaVendas));
+            localStorage.setItem('propostaCliente', JSON.stringify(propostaCliente));
+            
+            document.getElementById('output').innerHTML = 'Dados de teste criados com sucesso!';
+        }
+        
+        function limparDados() {
+            localStorage.removeItem('dadosGerais');
+            localStorage.removeItem('tabelaVendas');
+            localStorage.removeItem('propostaCliente');
+            document.getElementById('output').innerHTML = 'Dados limpos!';
+        }
+        
+        function verificarDados() {
+            const dadosGerais = localStorage.getItem('dadosGerais');
+            const tabelaVendas = localStorage.getItem('tabelaVendas');
+            const propostaCliente = localStorage.getItem('propostaCliente');
+            
+            const output = document.getElementById('output');
+            output.innerHTML = `
+                <strong>dadosGerais:</strong><br>
+                ${dadosGerais || 'VAZIO'}<br><br>
+                <strong>tabelaVendas:</strong><br>
+                ${tabelaVendas || 'VAZIO'}<br><br>
+                <strong>propostaCliente:</strong><br>
+                ${propostaCliente || 'VAZIO'}
+            `;
+        }
+        
+        // Verificar dados ao carregar
+        verificarDados();
+    </script>
+</body>
+</html>

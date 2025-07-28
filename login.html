@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Model AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/login.css">
+    <style>
+        .hero-gradient {
+            background: linear-gradient(135deg, #006b6a 0%, #008d8c 50%, #00aeac 100%);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #008d8c 0%, #006b6a 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #007270 0%, #005452 100%);
+            transform: translateY(-2px);
+        }
+        .login-bg {
+            background-image: url('https://images-ext-1.discordapp.net/external/1iEIIMGYriFFaADZntPm7dj2UYdPrJ4VRbhjXFpkDCw/https/i.pinimg.com/736x/c4/58/c4/c458c41684de286ef7412412f08876d2.jpg?format=webp');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .overlay {
+            background: rgba(0, 0, 0, 0.7);
+        }
+        .input-group {
+            transition: all 0.3s ease;
+        }
+        .input-group:focus-within {
+            transform: translateY(-2px);
+        }
+        .floating-logo {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex">
+    <!-- Left Side - Background Image with Logo -->
+    <div class="hidden lg:flex lg:w-1/2 relative login-bg">
+        <div class="overlay absolute inset-0"></div>
+        <div class="relative z-10 flex flex-col justify-center items-center w-full p-12 text-white">
+            <div class="floating-logo text-center">
+                <div class="flex items-center justify-center mb-6">
+                    <i class="fas fa-building text-6xl text-white mr-4"></i>
+                    <h1 class="text-5xl font-bold">Model AI</h1>
+                </div>
+                <p class="text-xl text-white mb-8 max-w-md text-center">
+                    Sistema inteligente para análise de viabilidade de empreendimentos imobiliários
+                </p>
+                <div class="flex items-center justify-center space-x-4 text-white">
+                    <div class="flex items-center">
+                        <i class="fas fa-chart-line mr-2"></i>
+                        <span>Análises Precisas</span>
+                    </div>
+                    <div class="w-1 h-6 bg-white opacity-50"></div>
+                    <div class="flex items-center">
+                        <i class="fas fa-briefcase mr-2"></i>
+                        <span>Resultados Comerciais</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Side - Login Form -->
+    <div class="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-12 lg:px-16">
+        <!-- Header for mobile -->
+        <div class="lg:hidden text-center mb-8">
+            <div class="flex items-center justify-center mb-4">
+                <i class="fas fa-building text-3xl text-teal-600 mr-3"></i>
+                <h1 class="text-3xl font-bold text-gray-900">Model AI</h1>
+            </div>
+            <p class="text-gray-600">Sistema de Análise de Empreendimentos</p>
+        </div>
+
+        <div class="max-w-md w-full mx-auto">
+            <!-- Login Header -->
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Bem-vindo de volta!</h2>
+                <p class="text-gray-600">Entre na sua conta para continuar</p>
+            </div>
+
+            <!-- Login Form -->
+            <form class="space-y-6">
+                <!-- Email Input -->
+                <div class="input-group">
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-envelope mr-2 text-teal-600"></i>
+                        E-mail
+                    </label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+                        placeholder="seu@email.com"
+                    >
+                </div>
+
+                <!-- Password Input -->
+                <div class="input-group">
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-lock mr-2 text-teal-600"></i>
+                        Senha
+                    </label>
+                    <div class="relative">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all pr-12"
+                            placeholder="••••••••"
+                        >
+                        <button 
+                            type="button" 
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                            onclick="togglePassword()"
+                        >
+                            <i id="toggleIcon" class="fas fa-eye text-gray-400 hover:text-gray-600"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Remember Me & Forgot Password -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input 
+                            id="remember-me" 
+                            name="remember-me" 
+                            type="checkbox" 
+                            class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+                        >
+                        <label for="remember-me" class="ml-2 block text-sm text-gray-700">
+                            Lembrar de mim
+                        </label>
+                    </div>
+                    <a href="#" class="text-sm text-teal-600 hover:text-teal-500 font-medium">
+                        Esqueceu a senha?
+                    </a>
+                </div>
+
+                <!-- Login Button -->
+                <button 
+                    type="submit" 
+                    class="btn-primary w-full py-3 px-4 text-white font-semibold rounded-lg shadow-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+                >
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    Entrar
+                </button>
+            </form>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="mt-8 text-center">
+            <a href="index.html" class="inline-flex items-center text-gray-600 hover:text-teal-600 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Voltar ao início
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+
+        // Form submission
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Aqui você pode adicionar a lógica de autenticação
+            // Por enquanto, vamos apenas redirecionar para a página de inputs
+            if (email && password) {
+                alert('Login realizado com sucesso!');
+                window.location.href = 'inputs.html';
+            } else {
+                alert('Por favor, preencha todos os campos.');
+            }
+        });
+    </script>
+</body>
+</html>

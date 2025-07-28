@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste do Sistema ModelAI2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">Teste do Sistema de Cenários</h1>
+        
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+            <h2 class="text-lg font-semibold mb-4">Dados no LocalStorage</h2>
+            <div id="localStorageData" class="space-y-2"></div>
+            <button onclick="refreshData()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded">Atualizar</button>
+            <button onclick="clearData()" class="mt-4 ml-2 px-4 py-2 bg-red-600 text-white rounded">Limpar Tudo</button>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-lg font-semibold mb-4">Ações de Teste</h2>
+            <div class="space-x-2">
+                <button onclick="createTestScenario()" class="px-4 py-2 bg-green-600 text-white rounded">Criar Cenário Teste</button>
+                <button onclick="testEditFlow()" class="px-4 py-2 bg-yellow-600 text-white rounded">Testar Edição</button>
+                <button onclick="testResultsFlow()" class="px-4 py-2 bg-purple-600 text-white rounded">Testar Resultados</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function refreshData() {
+            const container = document.getElementById('localStorageData');
+            container.innerHTML = '';
+            
+            // Listar todos os itens do localStorage
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                
+                const div = document.createElement('div');
+                div.className = 'border p-2 rounded';
+                div.innerHTML = `
+                    <strong>${key}:</strong>
+                    <pre class="text-xs mt-1 bg-gray-100 p-2 rounded overflow-auto">${value}</pre>
+                `;
+                container.appendChild(div);
+            }
+        }
+        
+        function clearData() {
+            if (confirm('Limpar todos os dados do localStorage?')) {
+                localStorage.clear();
+                refreshData();
+            }
+        }
+        
+        function createTestScenario() {
+            const testScenario = {
+                id: Date.now().toString(),
+                name: 'Cenário Teste ' + new Date().toLocaleTimeString(),
+                createdAt: new Date().toISOString(),
+                data: {
+                    dadosGerais: {
+                        cliente: 'João Silva',
+                        imobiliaria: 'Imobiliária Teste',
+                        incorporadora: 'Incorporadora XYZ',
+                        empreendimento: 'Residencial Exemplo',
+                        unidade: 'Apto 101',
+                        areaPrivativa: '80',
+                        tmaAno: '12',
+                        tmaMes: '1'
+                    },
+                    tabelaVendas: {
+                        vendaEntradaValor: '50000',
+                        vendaEntradaParcelas: '2',
+                        vendaParcelasValor: '150000',
+                        vendaParcelasQtd: '60',
+                        vendaReforcoValor: '30000',
+                        vendaReforcoQtd: '12',
+                        vendaBemMovelImovel: '20000',
+                        vendaDesagio: '5'
+                    },
+                    propostaCliente: {
+                        mesVenda: '6',
+                        propostaEntradaValor: '45000',
+                        propostaEntradaParcelas: '2',
+                        propostaParcelasValor: '140000',
+                        propostaParcelasQtd: '60',
+                        propostaReforcoValor: '25000',
+                        propostaReforcoQtd: '12'
+                    }
+                }
+            };
+            
+            const scenarios = JSON.parse(localStorage.getItem('scenarios') || '[]');
+            scenarios.push(testScenario);
+            localStorage.setItem('scenarios', JSON.stringify(scenarios));
+            
+            alert('Cenário teste criado com sucesso!');
+            refreshData();
+        }
+        
+        function testEditFlow() {
+            const scenarios = JSON.parse(localStorage.getItem('scenarios') || '[]');
+            if (scenarios.length === 0) {
+                alert('Primeiro crie um cenário teste!');
+                return;
+            }
+            
+            const scenario = scenarios[0];
+            
+            // Simular o que o editScenario faz
+            localStorage.setItem('dadosGerais', JSON.stringify(scenario.data.dadosGerais || {}));
+            localStorage.setItem('tabelaVendas', JSON.stringify(scenario.data.tabelaVendas || {}));
+            localStorage.setItem('propostaCliente', JSON.stringify(scenario.data.propostaCliente || {}));
+            localStorage.setItem('editingScenarioId', scenario.id);
+            
+            alert('Dados de edição configurados! Agora vá para inputs.html');
+            refreshData();
+        }
+        
+        function testResultsFlow() {
+            const scenarios = JSON.parse(localStorage.getItem('scenarios') || '[]');
+            if (scenarios.length === 0) {
+                alert('Primeiro crie um cenário teste!');
+                return;
+            }
+            
+            const scenario = scenarios[0];
+            
+            // Simular o que o viewResults faz
+            localStorage.setItem('dadosGerais', JSON.stringify(scenario.data.dadosGerais || {}));
+            localStorage.setItem('tabelaVendas', JSON.stringify(scenario.data.tabelaVendas || {}));
+            localStorage.setItem('propostaCliente', JSON.stringify(scenario.data.propostaCliente || {}));
+            localStorage.setItem('currentScenarioId', scenario.id);
+            
+            alert('Dados de resultados configurados! Agora vá para resultados.html');
+            refreshData();
+        }
+        
+        // Carregar dados iniciais
+        refreshData();
+    </script>
+</body>
+</html>

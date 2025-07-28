@@ -1,0 +1,166 @@
+/* Inputs Page - Model AI - Enhanced Design */
+
+.modern-sidebar {
+    background: linear-gradient(145deg, #0f766e 0%, #134e4a 100%);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    transition: all 0.3s ease;
+}
+
+.modern-sidebar.collapsed {
+    width: 80px;
+}
+
+.sidebar-item {
+    position: relative;
+    margin: 0.25rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.sidebar-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.sidebar-item:hover::before {
+    left: 100%;
+}
+
+.sidebar-item:hover {
+    background: rgba(20, 184, 166, 0.15);
+    transform: translateX(4px);
+}
+
+.sidebar-item.active {
+    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+    box-shadow: 0 8px 25px rgba(20, 184, 166, 0.3);
+}
+
+.sidebar-icon {
+    transition: all 0.3s ease;
+}
+
+.sidebar-item:hover .sidebar-icon {
+    transform: scale(1.1);
+}
+
+.sidebar-text {
+    transition: all 0.3s ease;
+}
+
+.modern-sidebar.collapsed .sidebar-text {
+    opacity: 0;
+    transform: translateX(-20px);
+}
+
+.main-content {
+    transition: all 0.3s ease;
+    min-height: 100vh;
+}
+
+.main-content.expanded {
+    margin-left: 80px;
+}
+
+.glassmorphism {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.subtab-btn {
+    transition: all 0.3s ease;
+    position: relative;
+    border-radius: 12px 12px 0 0;
+}
+
+.subtab-btn.active {
+    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3);
+}
+
+.subtab-content {
+    display: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.subtab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.card-hover {
+    transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.input-group input:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 25px rgba(20, 184, 166, 0.15);
+}
+
+.compact-input {
+    font-size: 0.85rem;
+    padding: 0.5rem;
+    height: 2.5rem;
+}
+
+.compact-label {
+    font-size: 0.775rem;
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+}
+
+.input-group {
+    background: rgba(255, 255, 255, 0.7);
+    padding: 1.75rem;
+    border-radius: 1.25rem;
+    border: 1px solid rgba(229, 231, 235, 0.8);
+    margin-bottom: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+    .main-content {
+        margin-left: 0;
+        padding-top: 80px;
+    }
+    
+    .modern-sidebar {
+        transform: translateX(-100%);
+        z-index: 1000;
+    }
+    
+    .modern-sidebar.show {
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 640px) {
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    .glassmorphism {
+        margin: 0.5rem 0;
+    }
+}
