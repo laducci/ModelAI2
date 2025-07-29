@@ -193,7 +193,7 @@ window.salvarEdicaoUsuario = async function(event) {
 };
 
 // Função para deletar usuário
-window.deletarUsuario = function(userId) {
+window.deletarUsuario = async function(userId) {
     console.log('🗑️ === DELETANDO USUÁRIO ===');
     console.log('🆔 User ID:', userId);
     
@@ -203,16 +203,25 @@ window.deletarUsuario = function(userId) {
         return;
     }
     
-    // Confirmação personalizada usando alertas do sistema
-    const confirmar = confirm(`⚠️ ATENÇÃO!\n\nDeseja realmente EXCLUIR o usuário "${usuario.name}"?\n\n📧 Email: ${usuario.email}\n👤 Role: ${usuario.role}\n\n⚠️ Esta ação NÃO pode ser desfeita!\n\nClique OK para confirmar a exclusão.`);
-    
-    if (!confirmar) {
-        showInfo('Exclusão cancelada pelo usuário.');
-        return;
+    // Usar o sistema de confirmação moderno
+    try {
+        const confirmar = await confirmAction(
+            `Deseja realmente EXCLUIR o usuário "${usuario.name}"?\n\n📧 Email: ${usuario.email}\n👤 Role: ${usuario.role}\n\n⚠️ Esta ação NÃO pode ser desfeita!`,
+            '⚠️ Confirmar Exclusão'
+        );
+        
+        if (!confirmar) {
+            showInfo('Exclusão cancelada pelo usuário.');
+            return;
+        }
+        
+        // Prosseguir com a exclusão
+        await window.confirmarDelecaoUsuario(userId);
+        
+    } catch (error) {
+        console.error('❌ Erro na confirmação:', error);
+        showError('Erro ao exibir confirmação.');
     }
-    
-    // Prosseguir com a exclusão
-    window.confirmarDelecaoUsuario(userId);
 };
 
 // Função para confirmar deleção
@@ -306,31 +315,39 @@ window.toggleUsuario = async function(userId) {
 //===============================
 
 // Função de logout padronizada
-window.logout = function() {
+window.logout = async function() {
     console.log('🚪 === LOGOUT SOLICITADO ===');
     
-    // Usar o sistema de alertas padronizado em vez de confirm()
-    const confirmar = confirm('🚪 Deseja realmente sair do sistema?\n\nVocê precisará fazer login novamente para acessar o sistema.');
-    
-    if (confirmar) {
-        console.log('✅ Logout confirmado');
+    try {
+        // Usar o sistema de confirmação moderno
+        const confirmar = await confirmAction(
+            'Deseja realmente sair do sistema?\n\nVocê precisará fazer login novamente para acessar o sistema.',
+            '🚪 Confirmar Logout'
+        );
         
-        // Limpar dados de autenticação
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('currentInputs');
-        localStorage.removeItem('scenarios');
-        
-        showInfo('Logout realizado com sucesso. Redirecionando...');
-        
-        // Redirecionar após 1 segundo
-        setTimeout(() => {
-            window.location.href = '/login.html';
-        }, 1000);
-        
-    } else {
-        console.log('❌ Logout cancelado');
-        showInfo('Logout cancelado.');
+        if (confirmar) {
+            console.log('✅ Logout confirmado');
+            
+            // Limpar dados de autenticação
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('currentInputs');
+            localStorage.removeItem('scenarios');
+            
+            showInfo('Logout realizado com sucesso. Redirecionando...');
+            
+            // Redirecionar após 1 segundo
+            setTimeout(() => {
+                window.location.href = '/login.html';
+            }, 1000);
+            
+        } else {
+            console.log('❌ Logout cancelado');
+            showInfo('Logout cancelado.');
+        }
+    } catch (error) {
+        console.error('❌ Erro na confirmação de logout:', error);
+        showError('Erro ao exibir confirmação.');
     }
 };
 

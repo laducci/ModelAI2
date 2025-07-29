@@ -120,9 +120,9 @@ const handler = async (req, res) => {
   console.log('🔍 [API DEBUG] Method:', method);
   console.log('🔍 [API DEBUG] Headers:', req.headers);
   
-  // Parse do body para requisições POST
+  // Parse do body para requisições POST e PUT
   let body = {};
-  if (method === 'POST' && req.body) {
+  if ((method === 'POST' || method === 'PUT') && req.body) {
     if (typeof req.body === 'string') {
       try {
         body = JSON.parse(req.body);
@@ -133,6 +133,9 @@ const handler = async (req, res) => {
       body = req.body;
     }
   }
+  
+  // DEBUG: Imprimir body
+  console.log('🔍 [API DEBUG] Body:', body);
   
   // LOGIN
   if (url === '/api/auth/login' && method === 'POST') {
@@ -482,7 +485,11 @@ const handler = async (req, res) => {
       const userId = cleanUrl.split('/')[3]; // /api/users/{id}
       const { name, email, company, role, active, password } = body;
 
-      console.log('🔄 Atualizando usuário:', userId, body);
+      console.log('🔄 Atualizando usuário:', userId);
+      console.log('📦 Body recebido:', body);
+      console.log('📊 Chaves do body:', Object.keys(body));
+      console.log('📊 Quantidade de chaves:', Object.keys(body).length);
+      console.log('📊 Tipo de active:', typeof active, active);
 
       // Se é apenas toggle de status (active), não validar name/email
       if (Object.keys(body).length === 1 && typeof active === 'boolean') {
@@ -495,10 +502,11 @@ const handler = async (req, res) => {
         ).select('-password');
 
         if (!updatedUser) {
-          return res.status(404).json({ message: 'Usuário não encontrado.' });
+          return sendResponse(404, { message: 'Usuário não encontrado.' });
         }
 
-        return res.status(200).json({ 
+        return sendResponse(200, { 
+          success: true,
           message: `Usuário ${active ? 'ativado' : 'desativado'} com sucesso!`,
           user: {
             _id: updatedUser._id,
@@ -513,7 +521,7 @@ const handler = async (req, res) => {
 
       // Para edição completa, validar name e email
       if (!name || !email) {
-        return res.status(400).json({ message: 'Nome e email são obrigatórios.' });
+        return sendResponse(400, { message: 'Nome e email são obrigatórios.' });
       }
 
       // Verificar se o email já existe em outro usuário
@@ -523,7 +531,7 @@ const handler = async (req, res) => {
       });
 
       if (existingUser) {
-        return res.status(400).json({ message: 'Email já está em uso por outro usuário.' });
+        return sendResponse(400, { message: 'Email já está em uso por outro usuário.' });
       }
 
       // Preparar dados para atualização
@@ -556,10 +564,13 @@ const handler = async (req, res) => {
       ).select('-password');
 
       if (!updatedUser) {
-        return res.status(404).json({ message: 'Usuário não encontrado.' });
+        return sendResponse(404, { message: 'Usuário não encontrado.' });
       }
 
-      return res.status(200).json({ 
+      console.log('✅ Usuário editado com sucesso:', updatedUser.email);
+
+      return sendResponse(200, { 
+        success: true,
         message: 'Usuário atualizado com sucesso!',
         user: {
           _id: updatedUser._id,
@@ -571,16 +582,9 @@ const handler = async (req, res) => {
         }
       });
 
-      console.log('✅ Usuário editado com sucesso:', updatedUser.email);
-
-      return res.status(200).json({
-        message: 'Usuário atualizado com sucesso!',
-        user: updatedUser
-      });
-
     } catch (error) {
       console.error('❌ Erro ao editar usuário:', error);
-      return res.status(500).json({ message: 'Erro no servidor.', error: error.message });
+      return sendResponse(500, { message: 'Erro no servidor.', error: error.message });
     }
   }
 
@@ -592,17 +596,18 @@ const handler = async (req, res) => {
       const user = await User.findByIdAndDelete(userId);
       
       if (!user) {
-        return res.status(404).json({ message: 'Usuário não encontrado' });
+        return sendResponse(404, { message: 'Usuário não encontrado' });
       }
       
       console.log('🗑️ Usuário excluído:', user.email);
       
-      return res.status(200).json({ 
+      return sendResponse(200, { 
+        success: true,
         message: 'Usuário excluído com sucesso'
       });
     } catch (error) {
       console.error('❌ Erro ao excluir usuário:', error);
-      return res.status(500).json({ message: 'Erro no servidor.', error: error.message });
+      return sendResponse(500, { message: 'Erro no servidor.', error: error.message });
     }
   }
 
