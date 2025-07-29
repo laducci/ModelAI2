@@ -16,15 +16,20 @@
       "dest": "/api/index.js"
     },
     {
-      "src": "/(.*)",
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico))",
       "dest": "/public/$1"
     },
     {
-      "handle": "filesystem"
+      "src": "/(.*\\.html)",
+      "dest": "/public/$1"
     },
     {
       "src": "/",
       "dest": "/public/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
     }
   ]
 }

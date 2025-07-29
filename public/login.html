@@ -255,9 +255,12 @@
                     const data = await response.json();
 
                     if (response.ok) {
-                        // Store authentication data
+                        // Store authentication data (ambos os formatos para compatibilidade)
                         localStorage.setItem('token', data.token);
                         localStorage.setItem('user', JSON.stringify(data.user));
+                        localStorage.setItem('modelai_token', data.token);
+                        localStorage.setItem('modelai_user', JSON.stringify(data.user));
+                        localStorage.setItem('modelai_logged_in', 'true');
                         
                         // Success feedback
                         btnText.innerHTML = '<i class="fas fa-check mr-2"></i>Sucesso!';
@@ -285,15 +288,24 @@
         // Auto-login check
         document.addEventListener('DOMContentLoaded', function() {
             const token = localStorage.getItem('token');
-            if (token) {
-                // Verify token is still valid
+            const modelaiToken = localStorage.getItem('modelai_token');
+            
+            // Se já tem token, verificar se é válido
+            if (token || modelaiToken) {
+                const authToken = token || modelaiToken;
+                
                 fetch('/api/auth/verify', {
                     headers: {
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': `Bearer ${authToken}`
                     }
                 }).then(response => {
                     if (response.ok) {
-                        const user = JSON.parse(localStorage.getItem('user'));
+                        return response.json();
+                    }
+                    throw new Error('Token inválido');
+                }).then(data => {
+                    if (data.valid) {
+                        const user = data.user || JSON.parse(localStorage.getItem('user') || localStorage.getItem('modelai_user') || '{}');
                         if (user && user.role === 'admin') {
                             window.location.href = 'usuarios.html';
                         } else {
@@ -301,9 +313,13 @@
                         }
                     }
                 }).catch(error => {
-                    // Token invalid, stay on login page
+                    // Token invalid, limpar dados e ficar na página de login
                     localStorage.removeItem('token');
                     localStorage.removeItem('user');
+                    localStorage.removeItem('modelai_token');
+                    localStorage.removeItem('modelai_user');
+                    localStorage.removeItem('modelai_logged_in');
+                    console.log('Token inválido, mantendo na página de login');
                 });
             }
         });
