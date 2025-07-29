@@ -133,13 +133,14 @@ function initializeAuth() {
     console.log('✅ Usuário logado:', currentUser.name, 'Role:', currentUser.role);
     
     if (!checkPageAccess()) {
-        console.log('🚫 Sem acesso, redirecionando');
-        if (currentUser.role === 'admin') {
-            window.location.replace('usuarios.html');
-        } else {
-            window.location.replace('inputs.html');
-        }
-        return;
+        console.log('🚫 Sem acesso a esta página');
+        // Não redirecionar automaticamente - deixar o usuário navegar
+        // if (currentUser.role === 'admin') {
+        //     window.location.replace('usuarios.html');
+        // } else {
+        //     window.location.replace('inputs.html');
+        // }
+        // return;
     }
     
     updateUserInterface();

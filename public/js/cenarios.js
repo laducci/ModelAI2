@@ -65,8 +65,15 @@ class ScenarioManager {
     }
 
     renderScenarios() {
+        console.log('🎨 === RENDERIZANDO CENÁRIOS ===');
+        console.log('📊 Cenários para renderizar:', this.scenarios.length);
+        console.log('📝 Lista de cenários:', this.scenarios);
+        
         const grid = document.getElementById('scenariosGrid');
         const emptyState = document.getElementById('emptyState');
+        
+        console.log('🔍 Grid encontrado:', !!grid);
+        console.log('🔍 EmptyState encontrado:', !!emptyState);
         
         if (!grid) {
             console.warn('⚠️ Grid de cenários não encontrado');
@@ -217,13 +224,18 @@ class ScenarioManager {
             allScenarios.push(scenario);
             localStorage.setItem('scenarios', JSON.stringify(allScenarios));
 
-            // Atualizar lista
+            console.log('✅ Cenário salvo no localStorage, total:', allScenarios.length);
+
+            // Atualizar lista IMEDIATAMENTE
+            this.scenarios = allScenarios.filter(s => s.userId === this.currentUser._id);
             await this.loadScenarios();
             
             // Fechar modal
             this.closeModal();
 
             showSuccess(`Cenário "${scenario.name}" salvo com sucesso!`);
+            
+            console.log('🎯 Lista atualizada, cenários visíveis:', this.scenarios.length);
             
         } catch (error) {
             console.error('❌ Erro ao salvar cenário:', error);
