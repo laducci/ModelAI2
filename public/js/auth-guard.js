@@ -97,27 +97,53 @@ function updateUserInterface() {
         });
     }, 150);
 
-    // 3. CONTROLAR MENU DE USUÁRIOS - CRÍTICO!
+    // 3. CONTROLAR MENU DE USUÁRIOS - SUPER CRÍTICO!
     setTimeout(() => {
         const menuUsuarios = document.querySelector('a[href="usuarios.html"]');
+        console.log('🔍 Procurando menu de usuários...', menuUsuarios ? 'ENCONTRADO' : 'NÃO ENCONTRADO');
+        
         if (menuUsuarios) {
             const menuItem = menuUsuarios.closest('.sidebar-item, .nav-item');
+            console.log('🔍 Item do menu encontrado:', menuItem ? 'SIM' : 'NÃO');
+            
             if (menuItem) {
                 if (currentUser.role === 'admin') {
-                    // ADMIN: SEMPRE mostrar menu de usuários
+                    // ADMIN: FORÇA mostrar menu de usuários
                     menuItem.style.display = 'flex';
                     menuItem.style.visibility = 'visible';
                     menuItem.style.opacity = '1';
-                    console.log('👑 Menu USUÁRIOS HABILITADO para admin');
+                    menuItem.style.pointerEvents = 'auto';
+                    menuItem.classList.remove('hidden');
+                    console.log('👑 Menu USUÁRIOS FORÇADO VISÍVEL para admin');
                 } else {
-                    // USER: NUNCA mostrar menu de usuários
+                    // USER: FORÇA esconder menu de usuários
                     menuItem.style.display = 'none';
                     menuItem.style.visibility = 'hidden';
                     menuItem.style.opacity = '0';
-                    console.log('👤 Menu USUÁRIOS DESABILITADO para usuário');
+                    menuItem.style.pointerEvents = 'none';
+                    menuItem.classList.add('hidden');
+                    console.log('👤 Menu USUÁRIOS FORÇADO OCULTO para usuário');
                 }
             }
         }
+        
+        // FORÇA ADICIONAL: Buscar em todos os elementos possíveis
+        const allUsuariosLinks = document.querySelectorAll('[href="usuarios.html"], [data-page="usuarios"], .usuarios-menu');
+        allUsuariosLinks.forEach(link => {
+            const item = link.closest('.sidebar-item, .nav-item, .menu-item');
+            if (item) {
+                if (currentUser.role === 'admin') {
+                    item.style.display = 'flex';
+                    item.style.visibility = 'visible';
+                    item.classList.remove('hidden');
+                } else {
+                    item.style.display = 'none';
+                    item.style.visibility = 'hidden';
+                    item.classList.add('hidden');
+                }
+            }
+        });
+        
     }, 200);
 
     // 4. ATUALIZAR EMAIL
@@ -284,6 +310,37 @@ window.addEventListener('focus', function() {
         updateUserInterface();
     }
 });
+
+// FUNÇÃO EXTRA: Monitorar constantemente o menu de usuários para admin
+function monitorAdminMenu() {
+    if (!currentUser || currentUser.role !== 'admin') return;
+    
+    const menuUsuarios = document.querySelector('a[href="usuarios.html"]');
+    if (menuUsuarios) {
+        const menuItem = menuUsuarios.closest('.sidebar-item, .nav-item');
+        if (menuItem) {
+            // Se o menu estiver oculto para admin, FORÇAR mostrar
+            const isHidden = menuItem.style.display === 'none' || 
+                           menuItem.style.visibility === 'hidden' || 
+                           menuItem.classList.contains('hidden');
+            
+            if (isHidden) {
+                console.log('🚨 DETECTADO: Menu de usuários oculto para admin - CORRIGINDO!');
+                menuItem.style.display = 'flex';
+                menuItem.style.visibility = 'visible';
+                menuItem.style.opacity = '1';
+                menuItem.classList.remove('hidden');
+            }
+        }
+    }
+}
+
+// Executar monitoramento a cada 2 segundos
+setInterval(() => {
+    if (currentUser && currentUser.role === 'admin') {
+        monitorAdminMenu();
+    }
+}, 2000);
 
 // Exportar funções para uso global
 window.authGuard = {
