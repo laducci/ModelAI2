@@ -3,78 +3,64 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 
-// Models
+// MODELS
 const User = require('../backend/models/User');
 
-// Initialize Express
+// CONFIG EXPRESS
 const app = express();
-
-// Trust proxy for Vercel
 app.set('trust proxy', 1);
-
-// CORS configuration
-app.use(cors({
-    origin: true,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-// Rate limiting
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
-    message: 'Muitas tentativas. Tente novamente em 15 minutos.'
-});
-
-app.use(limiter);
-
-// Middleware
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// MongoDB connection
+// RATE LIMIT
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: 'Muitas tentativas. Tente novamente em 15 minutos.'
+});
+app.use(limiter);
+
+// DB CONNECT
 const connectDB = async () => {
-    if (mongoose.connections[0].readyState) {
-        return;
-    }
-    
-    try {
-        await mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://administrador:ModelAI123@cluster0.k5pupmg.mongodb.net/modelai?retryWrites=true&w=majority&appName=Cluster0', {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 5000,
-            socketTimeoutMS: 45000,
-        });
-        console.log('📦 MongoDB Connected');
-    } catch (error) {
-        console.error('❌ MongoDB connection error:', error);
-        throw error;
-    }
+  if (mongoose.connections[0].readyState) return;
+  await mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://administrador:ModelAI123@cluster0.k5pupmg.mongodb.net/modelai?retryWrites=true&w=majority&appName=Cluster0', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+  console.log('📦 MongoDB conectado');
 };
 
-// Conectar ao banco quando o módulo for carregado
-connectDB();
+// ROTAS BACKEND
+app.post('/api/auth/login', async (req, res) => {
+  const { email, senha } = req.body;
 
-// Auth routes
-app.use('/auth', require('../backend/routes/auth'));
-app.use('/scenarios', require('../backend/routes/scenarios'));
-app.use('/users', require('../backend/routes/users'));
+  if (!email || !senha) {
+    return res.status(400).json({ message: 'E-mail e senha obrigatórios.' });
+  }
 
-// Health check
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development'
-    });
+  try {
+    await connectDB();
+    const user = await User.findOne({ email });
+
+    if (!user || user.senha !== senha) {
+      return res.status(401).json({ message: 'Credenciais inválidas.' });
+    }
+
+    return res.status(200).json({ message: 'Login bem-sucedido', nome: user.nome });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Erro no servidor.' });
+  }
 });
 
-// Para Vercel (serverless)
-module.exports = async (req, res) => {
-    await connectDB();
-    return app(req, res);
-};
+// HEALTH CHECK
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
+});
 
-// Para desenvolvimento local (export do Express app)
-module.exports.app = app;
+// EXPORTAÇÃO PARA VERCEL
+module.exports = async (req, res) => {
+  await connectDB();
+  return app(req, res);
+};
