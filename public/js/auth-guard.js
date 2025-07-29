@@ -29,6 +29,10 @@ function getUserData() {
 function forceAdminMenu() {
     if (!currentUser || currentUser.role !== 'admin') return;
     
+    // Não adicionar menu duplicado na própria página de usuários
+    const currentPage = window.location.pathname.split('/').pop();
+    if (currentPage === 'usuarios.html') return;
+    
     // Encontrar TODOS os links de usuários
     const selectors = [
         'a[href="usuarios.html"]',

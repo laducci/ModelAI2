@@ -44,23 +44,37 @@ class ScenarioManager {
 
     async loadScenarios() {
         try {
-            console.log('📂 Carregando cenários do usuário:', this.currentUser._id);
+            console.log('📂 Carregando cenários do usuário via API...');
             
-            // Carregar cenários do usuário atual do localStorage
-            const allScenarios = JSON.parse(localStorage.getItem('scenarios') || '[]');
-            
-            // Filtrar cenários do usuário atual
-            this.scenarios = allScenarios.filter(scenario => 
-                scenario.userId === this.currentUser._id
-            );
-            
-            console.log('📊 Cenários encontrados:', this.scenarios.length);
+            const response = await fetch('/api/scenarios', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.scenarios = data.scenarios || [];
+                console.log('📊 Cenários carregados da API:', this.scenarios.length);
+            } else {
+                console.warn('⚠️ Erro ao carregar da API, usando localStorage como fallback');
+                // Fallback para localStorage se API falhar
+                const allScenarios = JSON.parse(localStorage.getItem('scenarios') || '[]');
+                this.scenarios = allScenarios.filter(scenario => 
+                    scenario.userId === this.currentUser._id
+                );
+            }
             
             this.renderScenarios();
             
         } catch (error) {
             console.error('❌ Erro ao carregar cenários:', error);
-            showError('Erro ao carregar cenários.');
+            // Fallback para localStorage em caso de erro
+            const allScenarios = JSON.parse(localStorage.getItem('scenarios') || '[]');
+            this.scenarios = allScenarios.filter(scenario => 
+                scenario.userId === this.currentUser._id
+            );
+            this.renderScenarios();
         }
     }
 
@@ -206,36 +220,56 @@ class ScenarioManager {
                 return;
             }
             
-            const scenario = {
-                id: Date.now().toString(),
+            const scenarioData = {
                 name: scenarioName.trim(),
                 description: scenarioDescription?.trim() || '',
-                userId: this.currentUser._id,
-                userName: this.currentUser.name,
-                data: inputData,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
+                data: inputData
             };
 
-            console.log('📝 Salvando cenário:', scenario);
+            console.log('📝 Salvando cenário via API:', scenarioData);
 
-            // Salvar no localStorage
-            const allScenarios = JSON.parse(localStorage.getItem('scenarios') || '[]');
-            allScenarios.push(scenario);
-            localStorage.setItem('scenarios', JSON.stringify(allScenarios));
+            // Salvar via API
+            const response = await fetch('/api/scenarios', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(scenarioData)
+            });
 
-            console.log('✅ Cenário salvo no localStorage, total:', allScenarios.length);
+            if (response.ok) {
+                const result = await response.json();
+                console.log('✅ Cenário salvo via API:', result);
 
-            // Atualizar lista IMEDIATAMENTE
-            this.scenarios = allScenarios.filter(s => s.userId === this.currentUser._id);
-            await this.loadScenarios();
-            
-            // Fechar modal
-            this.closeModal();
+                // Também salvar no localStorage para compatibilidade com filtros
+                const localScenario = {
+                    id: result.scenario.id,
+                    name: scenarioData.name,
+                    description: scenarioData.description,
+                    userId: this.currentUser._id,
+                    userName: this.currentUser.name,
+                    data: inputData,
+                    createdAt: result.scenario.createdAt,
+                    updatedAt: result.scenario.createdAt
+                };
 
-            showSuccess(`Cenário "${scenario.name}" salvo com sucesso!`);
-            
-            console.log('🎯 Lista atualizada, cenários visíveis:', this.scenarios.length);
+                const allScenarios = JSON.parse(localStorage.getItem('scenarios') || '[]');
+                allScenarios.push(localScenario);
+                localStorage.setItem('scenarios', JSON.stringify(allScenarios));
+
+                // Recarregar lista
+                await this.loadScenarios();
+                
+                // Fechar modal
+                this.closeModal();
+
+                showSuccess(`Cenário "${scenarioData.name}" salvo com sucesso!`);
+            } else {
+                const error = await response.json();
+                console.error('❌ Erro da API:', error);
+                showError(`Erro ao salvar: ${error.message}`);
+            }
             
         } catch (error) {
             console.error('❌ Erro ao salvar cenário:', error);

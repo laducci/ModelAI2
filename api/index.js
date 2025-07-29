@@ -576,6 +576,200 @@ const handler = async (req, res) => {
     }
   }
 
+  // ==================== ROTAS DE GERENCIAMENTO DE USUÁRIOS ====================
+  
+  // Atualizar usuário (ativar/desativar, editar)
+  if (url.startsWith('/api/users/') && method === 'PUT') {
+    try {
+      const userId = url.split('/')[3];
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      
+      if (!token) {
+        return sendResponse(401, { message: 'Token não fornecido.' });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
+      
+      // Verificar se é admin
+      const adminUser = await User.findById(decoded.userId);
+      if (!adminUser || adminUser.role !== 'admin') {
+        return sendResponse(403, { message: 'Acesso negado. Apenas administradores.' });
+      }
+
+      const updateData = body;
+      
+      const user = await User.findByIdAndUpdate(
+        userId,
+        { ...updateData, updatedAt: new Date() },
+        { new: true }
+      );
+
+      if (!user) {
+        return sendResponse(404, { message: 'Usuário não encontrado.' });
+      }
+
+      return sendResponse(200, { 
+        message: 'Usuário atualizado com sucesso!',
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          isActive: user.isActive
+        }
+      });
+
+    } catch (error) {
+      console.error('❌ Erro ao atualizar usuário:', error);
+      return sendResponse(500, { message: 'Erro no servidor.', error: error.message });
+    }
+  }
+
+  // Deletar usuário
+  if (url.startsWith('/api/users/') && method === 'DELETE') {
+    try {
+      const userId = url.split('/')[3];
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      
+      if (!token) {
+        return sendResponse(401, { message: 'Token não fornecido.' });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
+      
+      // Verificar se é admin
+      const adminUser = await User.findById(decoded.userId);
+      if (!adminUser || adminUser.role !== 'admin') {
+        return sendResponse(403, { message: 'Acesso negado. Apenas administradores.' });
+      }
+
+      // Não permitir deletar a si mesmo
+      if (userId === decoded.userId) {
+        return sendResponse(400, { message: 'Não é possível deletar sua própria conta.' });
+      }
+
+      const user = await User.findByIdAndDelete(userId);
+
+      if (!user) {
+        return sendResponse(404, { message: 'Usuário não encontrado.' });
+      }
+
+      return sendResponse(200, { message: 'Usuário deletado com sucesso!' });
+
+    } catch (error) {
+      console.error('❌ Erro ao deletar usuário:', error);
+      return sendResponse(500, { message: 'Erro no servidor.', error: error.message });
+    }
+  }
+
+  // ==================== ROTAS DE CENÁRIOS ====================
+  
+  // Salvar cenário
+  if (url === '/api/scenarios' && method === 'POST') {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token) {
+        return sendResponse(401, { message: 'Token não fornecido.' });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
+      const { name, description, data } = body;
+
+      if (!name || !data) {
+        return sendResponse(400, { message: 'Nome e dados do cenário são obrigatórios.' });
+      }
+
+      const Scenario = require('../backend/models/Scenario');
+      
+      const scenario = new Scenario({
+        name,
+        description: description || '',
+        userId: decoded.userId,
+        data,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      await scenario.save();
+      
+      return sendResponse(201, { 
+        message: 'Cenário salvo com sucesso!',
+        scenario: {
+          id: scenario._id,
+          name: scenario.name,
+          description: scenario.description,
+          createdAt: scenario.createdAt
+        }
+      });
+
+    } catch (error) {
+      console.error('❌ Erro ao salvar cenário:', error);
+      return sendResponse(500, { message: 'Erro no servidor.', error: error.message });
+    }
+  }
+
+  // Listar cenários do usuário
+  if (url === '/api/scenarios' && method === 'GET') {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token) {
+        return sendResponse(401, { message: 'Token não fornecido.' });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
+      
+      const Scenario = require('../backend/models/Scenario');
+      
+      const scenarios = await Scenario.find({ userId: decoded.userId })
+        .sort({ createdAt: -1 });
+
+      return sendResponse(200, { 
+        scenarios: scenarios.map(s => ({
+          id: s._id,
+          name: s.name,
+          description: s.description,
+          data: s.data,
+          createdAt: s.createdAt,
+          updatedAt: s.updatedAt
+        }))
+      });
+
+    } catch (error) {
+      console.error('❌ Erro ao listar cenários:', error);
+      return sendResponse(500, { message: 'Erro no servidor.', error: error.message });
+    }
+  }
+
+  // Deletar cenário
+  if (url.startsWith('/api/scenarios/') && method === 'DELETE') {
+    try {
+      const scenarioId = url.split('/')[3];
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      
+      if (!token) {
+        return sendResponse(401, { message: 'Token não fornecido.' });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
+      
+      const Scenario = require('../backend/models/Scenario');
+      
+      const scenario = await Scenario.findOne({ _id: scenarioId, userId: decoded.userId });
+      
+      if (!scenario) {
+        return sendResponse(404, { message: 'Cenário não encontrado.' });
+      }
+
+      await Scenario.deleteOne({ _id: scenarioId });
+
+      return sendResponse(200, { message: 'Cenário deletado com sucesso!' });
+
+    } catch (error) {
+      console.error('❌ Erro ao deletar cenário:', error);
+      return sendResponse(500, { message: 'Erro no servidor.', error: error.message });
+    }
+  }
+
   // HEALTH CHECK
   if (url === '/api/health' && method === 'GET') {
     const result = res.json({ status: 'ok', time: new Date().toISOString() });

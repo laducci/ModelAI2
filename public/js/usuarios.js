@@ -211,8 +211,19 @@ function renderizarUsuarios() {
                 <td class="px-6 py-4">${status}</td>
                 <td class="px-6 py-4 text-sm text-gray-500">${ultimoLogin}</td>
                 <td class="px-6 py-4 text-sm font-medium">
-                    <button class="text-teal-600 hover:text-teal-900 mr-2">Editar</button>
-                    <button class="text-red-600 hover:text-red-900">Excluir</button>
+                    <div class="flex space-x-2">
+                        <button onclick="editarUsuario('${usuario._id}')" class="text-blue-600 hover:text-blue-900 px-2 py-1 rounded">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button onclick="toggleUsuarioStatus('${usuario._id}', ${usuario.isActive})" 
+                                class="px-2 py-1 rounded ${usuario.isActive ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'}">
+                            <i class="fas fa-${usuario.isActive ? 'ban' : 'check'}"></i> 
+                            ${usuario.isActive ? 'Desativar' : 'Ativar'}
+                        </button>
+                        <button onclick="deletarUsuario('${usuario._id}')" class="text-red-600 hover:text-red-900 px-2 py-1 rounded">
+                            <i class="fas fa-trash"></i> Excluir
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -242,7 +253,103 @@ function atualizarEstatisticas() {
     console.log(`📈 Stats: ${total} total, ${ativos} ativos, ${admins} admins`);
 }
 
-// 7. FUNÇÃO LOGOUT
+// 7. FUNÇÃO PARA EDITAR USUÁRIO - GLOBAL
+window.editarUsuario = function(userId) {
+    console.log('✏️ Editando usuário:', userId);
+    const usuario = usuarios.find(u => u._id === userId);
+    if (!usuario) {
+        alert('Usuário não encontrado');
+        return;
+    }
+    
+    // Preencher modal com dados do usuário
+    document.getElementById('scenarioName').value = usuario.name;
+    document.getElementById('scenarioDescription').value = usuario.email;
+    // TODO: Implementar modal de edição completo
+    
+    alert(`Edição do usuário ${usuario.name} será implementada em breve`);
+};
+
+// 8. FUNÇÃO PARA DELETAR USUÁRIO - GLOBAL
+window.deletarUsuario = async function(userId) {
+    console.log('🗑️ Deletando usuário:', userId);
+    
+    const usuario = usuarios.find(u => u._id === userId);
+    if (!usuario) {
+        alert('Usuário não encontrado');
+        return;
+    }
+    
+    if (!confirm(`Tem certeza que deseja excluir o usuário "${usuario.name}"?\n\nEsta ação não pode ser desfeita.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/users/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (response.ok) {
+            alert('Usuário deletado com sucesso!');
+            await window.carregarUsuarios();
+        } else {
+            const erro = await response.json();
+            alert(`Erro ao deletar usuário: ${erro.message}`);
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao deletar usuário:', error);
+        alert('Erro de conexão. Tente novamente.');
+    }
+};
+
+// 9. FUNÇÃO PARA ATIVAR/DESATIVAR USUÁRIO - GLOBAL
+window.toggleUsuarioStatus = async function(userId, currentStatus) {
+    console.log('🔄 Toggle status usuário:', userId, 'Status atual:', currentStatus);
+    
+    const usuario = usuarios.find(u => u._id === userId);
+    if (!usuario) {
+        alert('Usuário não encontrado');
+        return;
+    }
+    
+    const acao = currentStatus ? 'desativar' : 'ativar';
+    const novoStatus = !currentStatus;
+    
+    if (!confirm(`Tem certeza que deseja ${acao} o usuário "${usuario.name}"?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/users/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                isActive: novoStatus
+            })
+        });
+        
+        if (response.ok) {
+            alert(`Usuário ${acao === 'ativar' ? 'ativado' : 'desativado'} com sucesso!`);
+            await window.carregarUsuarios();
+        } else {
+            const erro = await response.json();
+            alert(`Erro ao ${acao} usuário: ${erro.message}`);
+        }
+        
+    } catch (error) {
+        console.error(`❌ Erro ao ${acao} usuário:`, error);
+        alert('Erro de conexão. Tente novamente.');
+    }
+};
+
+// 10. FUNÇÃO LOGOUT
 window.logout = function() {
     console.log('🚪 Logout...');
     localStorage.clear();
