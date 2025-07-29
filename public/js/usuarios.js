@@ -315,22 +315,34 @@ async function carregarDashboard() {
 
 // Event listeners
 function setupEventListeners() {
+    console.log('🎛️ Configurando event listeners...');
+    
     // Modal novo usuário
     const btnNovoUsuario = document.getElementById('btnNovoUsuario');
     if (btnNovoUsuario) {
-        btnNovoUsuario.addEventListener('click', abrirModalNovoUsuario);
+        btnNovoUsuario.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('🔵 Botão Novo Usuário clicado!');
+            window.abrirModalNovoUsuario();
+        });
+        console.log('✅ Event listener do botão configurado!');
+    } else {
+        console.error('❌ Botão btnNovoUsuario não encontrado!');
     }
 
     // Fechar modal
     const btnFecharModal = document.getElementById('fecharModal');
     if (btnFecharModal) {
-        btnFecharModal.addEventListener('click', fecharModalNovoUsuario);
+        btnFecharModal.addEventListener('click', window.fecharModalNovoUsuario);
     }
 
     // Form novo usuário
     const formNovoUsuario = document.getElementById('formNovoUsuario');
     if (formNovoUsuario) {
-        formNovoUsuario.addEventListener('submit', criarUsuario);
+        formNovoUsuario.addEventListener('submit', window.criarUsuario);
+        console.log('✅ Event listener do form configurado!');
+    } else {
+        console.error('❌ Form não encontrado!');
     }
 
     // Pesquisa
