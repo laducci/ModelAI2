@@ -1,49 +1,111 @@
-// Administração de Usuários - ModelAI
+// Administração de Usuários - ModelAI V2 ROBUSTA
+
+console.log('👑 Carregando página de administração...');
 
 // Verificar se usuário é admin
 document.addEventListener('DOMContentLoaded', async function() {
+    console.log('📋 DOM carregado - verificando admin...');
+    
     try {
-        // Verificar autenticação usando ApiClient
-        const api = new ApiClient();
-        if (!api.isAuthenticated()) {
-            window.location.href = '/login.html';
+        // Aguardar um pouco para garantir que o auth-guard carregou
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Verificar dados do usuário
+        const token = localStorage.getItem('token') || localStorage.getItem('modelai_token');
+        const userData = localStorage.getItem('user') || localStorage.getItem('modelai_user');
+        
+        if (!token || !userData) {
+            console.log('❌ Não autenticado - redirecionando');
+            window.location.replace('login.html');
             return;
         }
 
-        // Obter usuário atual
-        const currentUser = api.getCurrentUser();
-        if (!currentUser || currentUser.role !== 'admin') {
+        const currentUser = JSON.parse(userData);
+        console.log('👤 Usuário atual:', currentUser.name, 'Role:', currentUser.role);
+
+        // FORÇAR verificação de admin
+        if (currentUser.role !== 'admin') {
+            console.log('🚫 Não é admin - redirecionando');
             showError('Acesso negado. Apenas administradores podem acessar esta página.');
             setTimeout(() => {
-                window.location.href = '/index.html';
+                window.location.replace('inputs.html');
             }, 2000);
             return;
         }
 
-        // Atualizar info do usuário no sidebar
-        document.getElementById('userName').textContent = currentUser.name;
-        document.getElementById('userEmail').textContent = currentUser.email;
+        console.log('✅ Admin verificado - carregando dados...');
 
-        // Carregar dados
-        await carregarDashboard();
-        await carregarUsuarios();
+        // Atualizar info do usuário no sidebar - FORÇAR
+        setTimeout(() => {
+            const userName = document.getElementById('user-name') || document.getElementById('userName');
+            const userEmail = document.getElementById('userEmail');
+            
+            if (userName) userName.textContent = currentUser.name;
+            if (userEmail) userEmail.textContent = currentUser.email;
+            
+            console.log('✅ Info do usuário atualizada na sidebar');
+        }, 100);
+
+        // Carregar dados com retry
+        let retries = 3;
+        while (retries > 0) {
+            try {
+                console.log('📊 Carregando dashboard... (tentativa:', 4 - retries, ')');
+                await carregarDashboard();
+                
+                console.log('👥 Carregando usuários... (tentativa:', 4 - retries, ')');
+                await carregarUsuarios();
+                
+                console.log('✅ Dados carregados com sucesso!');
+                break;
+            } catch (error) {
+                retries--;
+                console.log('❌ Erro ao carregar dados, tentativas restantes:', retries);
+                if (retries === 0) {
+                    throw error;
+                }
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
 
         // Setup dos filtros
         setupFiltros();
         
+        console.log('🎉 Página de administração carregada com sucesso!');
+        
     } catch (error) {
-        console.error('Erro ao inicializar página:', error);
-        showError('Erro ao carregar página de administração');
+        console.error('❌ Erro crítico ao inicializar página:', error);
+        showError('Erro ao carregar página de administração. Recarregando...');
+        setTimeout(() => {
+            window.location.reload();
+        }, 3000);
     }
 });
 
-// Carregar estatísticas do dashboard
+// Função melhorada para carregar dashboard
 async function carregarDashboard() {
     try {
-        // Buscar dados dos usuários para calcular estatísticas
-        const api = new ApiClient();
-        const response = await api.get('/users');
-        const usuarios = response.users || [];
+        console.log('📊 Iniciando carregamento do dashboard...');
+        
+        // Usar fetch diretamente para mais controle
+        const token = localStorage.getItem('token') || localStorage.getItem('modelai_token');
+        
+        const response = await fetch('/api/users', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Erro HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const usuarios = data.users || data || [];
+        
+        console.log('✅ Dados recebidos:', usuarios.length, 'usuários');
         
         const totalUsuarios = usuarios.length;
         const usuariosAtivos = usuarios.filter(u => u.isActive !== false).length;
@@ -68,19 +130,40 @@ async function carregarDashboard() {
     }
 }
 
-// Carregar lista de usuários
+// Carregar lista de usuários com fetch direto
 async function carregarUsuarios() {
     try {
-        const api = new ApiClient();
-        const response = await api.get('/users');
-        const usuarios = response.users || [];
+        console.log('👥 Iniciando carregamento de usuários...');
         
-        console.log('👥 Usuários carregados:', usuarios.length);
+        const token = localStorage.getItem('token') || localStorage.getItem('modelai_token');
+        
+        const response = await fetch('/api/users', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Erro HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const usuarios = data.users || data || [];
+        
+        console.log('✅ Usuários carregados:', usuarios.length);
         
         const tbody = document.getElementById('tabelaUsuarios');
         const emptyState = document.getElementById('emptyState');
         
+        if (!tbody) {
+            console.error('❌ Tabela de usuários não encontrada');
+            return;
+        }
+        
         if (usuarios.length === 0) {
+            console.log('📭 Nenhum usuário encontrado');
             tbody.innerHTML = '';
             if (emptyState) emptyState.classList.remove('hidden');
             return;
