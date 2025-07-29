@@ -1,61 +1,8 @@
 /* Common Sidebar Styles - Model AI */
 
-/* Loading state para evitar piscar - melhorado */
-body.loading {
-    overflow: hidden;
-}
-
-body.loading #mainContent,
-body.loading #sidebar {
-    opacity: 0;
-    visibility: hidden;
-}
-
-body.loading::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #0f766e 0%, #134e4a 50%, #0d9488 100%);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 1;
-    transition: opacity 0.5s ease-out;
-}
-
-body.loading::after {
-    content: 'Carregando...';
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: white;
-    font-size: 1.2rem;
-    font-weight: 600;
-    z-index: 10000;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-/* Transições suaves para conteúdo principal - melhoradas */
+/* Transições suaves sem piscar excessivo */
 #mainContent, #sidebar {
-    transition: opacity 0.4s ease-in-out, transform 0.3s ease-out;
-    opacity: 0;
-    visibility: hidden;
-}
-
-body:not(.loading) #mainContent,
-body:not(.loading) #sidebar {
-    opacity: 1;
-    visibility: visible;
+    transition: opacity 0.3s ease-in-out;
 }
 
 /* Sidebar principal */
@@ -69,6 +16,16 @@ body:not(.loading) #sidebar {
 .modern-sidebar.collapsed {
     width: 80px;
     transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Correção para ícones quando colapsada */
+.modern-sidebar.collapsed .toggle-container {
+    justify-content: center;
+    padding: 0.75rem;
+}
+
+.modern-sidebar.collapsed .toggle-container button {
+    margin: 0 auto;
 }
 
 .sidebar-item {
@@ -127,6 +84,11 @@ body:not(.loading) #sidebar {
 
 .modern-sidebar.collapsed .toggle-container {
     justify-content: center;
+    padding: 0.75rem;
+}
+
+.modern-sidebar.collapsed .toggle-container button {
+    margin: 0 auto;
 }
 
 .modern-sidebar.collapsed .logo-container {

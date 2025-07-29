@@ -49,24 +49,34 @@ module.exports = async (req, res) => {
   if (url === '/api/auth/login' && method === 'POST') {
     const { email, password } = body;
 
+    console.log('🔐 Tentativa de login para:', email);
+
     if (!email || !password) {
+      console.log('❌ Email ou senha em branco');
       return res.status(400).json({ message: 'E-mail e senha obrigatórios.' });
     }
 
     try {
       // Buscar usuário por email (case insensitive)
       const user = await User.findOne({ email: email.toLowerCase() });
+      console.log('👤 Usuário encontrado:', user ? 'SIM' : 'NÃO');
 
       if (!user) {
+        console.log('❌ Usuário não encontrado para email:', email);
         return res.status(401).json({ message: 'Credenciais inválidas.' });
       }
 
+      console.log('🔍 Verificando senha...');
       // Verificar senha
       const isValidPassword = await bcrypt.compare(password, user.password);
+      console.log('🔑 Senha válida:', isValidPassword ? 'SIM' : 'NÃO');
       
       if (!isValidPassword) {
+        console.log('❌ Senha incorreta para usuário:', email);
         return res.status(401).json({ message: 'Credenciais inválidas.' });
       }
+
+      console.log('✅ Login bem-sucedido para:', user.name);
 
       // Atualizar último login
       user.lastLogin = new Date();
@@ -91,7 +101,7 @@ module.exports = async (req, res) => {
         }
       });
     } catch (error) {
-      console.error('Erro no login:', error);
+      console.error('❌ Erro no login:', error);
       return res.status(500).json({ message: 'Erro no servidor.' });
     }
   }
@@ -223,6 +233,33 @@ module.exports = async (req, res) => {
     }
   }
 
+  // DEBUG: LISTAR TODOS OS USUÁRIOS (temporário para debug)
+  if (url === '/api/debug/users' && method === 'GET') {
+    try {
+      const users = await User.find({}).sort({ createdAt: -1 });
+      console.log('🔍 DEBUG: Todos os usuários na base:');
+      users.forEach(user => {
+        console.log(`- ${user.name} (${user.email}) - Role: ${user.role}`);
+      });
+      
+      return res.status(200).json({ 
+        success: true,
+        users: users.map(u => ({
+          _id: u._id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          company: u.company,
+          createdAt: u.createdAt
+        })),
+        total: users.length
+      });
+    } catch (error) {
+      console.error('❌ Erro no debug de usuários:', error);
+      return res.status(500).json({ message: 'Erro no servidor.', error: error.message });
+    }
+  }
+
   // ATUALIZAR STATUS DO USUÁRIO
   if (url.startsWith('/api/users/') && url.endsWith('/status') && method === 'PUT') {
     try {
@@ -269,6 +306,60 @@ module.exports = async (req, res) => {
       });
     } catch (error) {
       console.error('❌ Erro ao excluir usuário:', error);
+      return res.status(500).json({ message: 'Erro no servidor.', error: error.message });
+    }
+  }
+
+  // CRIAR USUÁRIO DE TESTE (temporário para debug)
+  if (url === '/api/debug/create-test-user' && method === 'POST') {
+    try {
+      const testEmail = 'teste@modelai.com';
+      
+      // Verificar se já existe
+      const existingUser = await User.findOne({ email: testEmail });
+      if (existingUser) {
+        return res.status(200).json({ 
+          message: 'Usuário de teste já existe',
+          user: {
+            _id: existingUser._id,
+            name: existingUser.name,
+            email: existingUser.email,
+            role: existingUser.role
+          }
+        });
+      }
+      
+      // Criar hash da senha
+      const hashedPassword = await bcrypt.hash('123456', 10);
+      
+      // Criar usuário de teste
+      const testUser = new User({
+        name: 'Usuario Teste',
+        email: testEmail,
+        password: hashedPassword,
+        role: 'user',
+        company: 'ModelAI Teste'
+      });
+      
+      await testUser.save();
+      console.log('✅ Usuário de teste criado:', testUser.email);
+      
+      return res.status(201).json({ 
+        message: 'Usuário de teste criado com sucesso!',
+        user: {
+          _id: testUser._id,
+          name: testUser.name,
+          email: testUser.email,
+          role: testUser.role,
+          company: testUser.company
+        },
+        credentials: {
+          email: testEmail,
+          password: '123456'
+        }
+      });
+    } catch (error) {
+      console.error('❌ Erro ao criar usuário de teste:', error);
       return res.status(500).json({ message: 'Erro no servidor.', error: error.message });
     }
   }

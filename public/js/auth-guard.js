@@ -12,9 +12,6 @@ class AuthGuard {
         
         console.log('🔐 Inicializando AuthGuard na página:', window.location.pathname);
         
-        // Adicionar classe de loading para evitar piscar
-        document.body.classList.add('loading');
-        
         try {
             // Verificar se estamos na página de login
             if (window.location.pathname.includes('login.html')) {
@@ -28,11 +25,6 @@ class AuthGuard {
                     setTimeout(() => {
                         this.redirectAfterLogin(user);
                     }, 800);
-                } else {
-                    // Remover loading se não está logado na página de login
-                    setTimeout(() => {
-                        document.body.classList.remove('loading');
-                    }, 300);
                 }
                 this.isInitialized = true;
                 return;
@@ -192,27 +184,7 @@ class AuthGuard {
 
     showPageContent() {
         console.log('✨ Exibindo conteúdo da página...');
-        
-        // Remover classe de carregamento com transição suave
-        setTimeout(() => {
-            document.body.classList.remove('loading');
-            
-            // Mostrar conteúdo principal com transição suave
-            const mainContent = document.getElementById('mainContent');
-            const sidebar = document.getElementById('sidebar');
-            
-            if (mainContent) {
-                mainContent.style.visibility = 'visible';
-                mainContent.style.opacity = '1';
-            }
-            
-            if (sidebar) {
-                sidebar.style.visibility = 'visible';
-                sidebar.style.opacity = '1';
-            }
-
-            console.log('✨ Conteúdo da página exibido com transição suave');
-        }, 200);
+        // Não precisamos mais de manipulação complexa - deixar o CSS cuidar
     }
 
     redirectToLogin(message = '') {
