@@ -1,16 +1,94 @@
 // Common Sidebar JavaScript - Model AI
 
-// Sidebar toggle functionality
+// Estado da sidebar
+let sidebarCollapsed = false;
+
+// Sidebar toggle functionality com animação suave
 function initializeSidebar() {
     const sidebar = document.getElementById('sidebar');
     const mainContent = document.getElementById('mainContent');
     const toggleBtn = document.getElementById('toggleSidebar');
 
-    if (toggleBtn && sidebar && mainContent) {
-        toggleBtn.addEventListener('click', function() {
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
+    if (toggleBtn && sidebar) {
+        toggleBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            toggleSidebar();
         });
+    }
+
+    // Adicionar listeners para elementos que devem desaparecer quando collapsed
+    setupSidebarTextElements();
+}
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+    const sidebarTexts = document.querySelectorAll('.sidebar-text');
+    const toggleIcon = document.querySelector('#toggleSidebar i');
+    
+    if (!sidebar) return;
+
+    sidebarCollapsed = !sidebarCollapsed;
+    
+    if (sidebarCollapsed) {
+        // Colapsar sidebar
+        sidebar.style.transform = 'translateX(-200px)';
+        sidebar.style.width = '72px';
+        
+        // Esconder textos
+        sidebarTexts.forEach(text => {
+            text.style.opacity = '0';
+            text.style.transform = 'translateX(-20px)';
+        });
+        
+        // Ajustar conteúdo principal
+        if (mainContent) {
+            mainContent.style.marginLeft = '72px';
+        }
+        
+        // Rotacionar ícone
+        if (toggleIcon) {
+            toggleIcon.style.transform = 'rotate(180deg)';
+        }
+        
+    } else {
+        // Expandir sidebar
+        sidebar.style.transform = 'translateX(0)';
+        sidebar.style.width = '288px'; // w-72
+        
+        // Mostrar textos após um pequeno delay
+        setTimeout(() => {
+            sidebarTexts.forEach(text => {
+                text.style.opacity = '1';
+                text.style.transform = 'translateX(0)';
+            });
+        }, 200);
+        
+        // Ajustar conteúdo principal
+        if (mainContent) {
+            mainContent.style.marginLeft = '288px';
+        }
+        
+        // Rotacionar ícone de volta
+        if (toggleIcon) {
+            toggleIcon.style.transform = 'rotate(0deg)';
+        }
+    }
+
+    console.log(sidebarCollapsed ? '📱 Sidebar colapsada' : '📺 Sidebar expandida');
+}
+
+function setupSidebarTextElements() {
+    const sidebarTexts = document.querySelectorAll('.sidebar-text, nav span:not(.sr-only)');
+    
+    sidebarTexts.forEach(text => {
+        text.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    });
+    
+    // Configurar transição do ícone de toggle
+    const toggleIcon = document.querySelector('#toggleSidebar i');
+    if (toggleIcon) {
+        toggleIcon.style.transition = 'transform 0.3s ease';
     }
 }
 

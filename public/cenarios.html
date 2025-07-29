@@ -58,13 +58,18 @@
                 <div class="w-10 h-10 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full flex items-center justify-center">
                     <i class="fas fa-user text-white"></i>
                 </div>
-                <div class="flex-1 sidebar-text">
-                    <p class="text-sm font-semibold text-white">Admin</p>
-                    <p class="text-xs text-teal-200">admin@modelai.com</p>
+                <div class="flex-1 min-w-0">
+                    <p class="text-white text-sm font-semibold truncate sidebar-text" id="userName">Usuário</p>
+                    <p class="text-teal-200 text-xs truncate sidebar-text" id="userEmail">usuario@email.com</p>
                 </div>
-                <button class="text-teal-200 hover:text-white sidebar-text">
-                    <i class="fas fa-sign-out-alt"></i>
-                </button>
+                <div class="flex space-x-1">
+                    <button class="text-teal-200 hover:text-white p-2 rounded-lg hover:bg-teal-700/50 transition-colors sidebar-text" title="Configurações">
+                        <i class="fas fa-cog text-sm"></i>
+                    </button>
+                    <button onclick="logout()" class="text-teal-200 hover:text-white p-2 rounded-lg hover:bg-teal-700/50 transition-colors sidebar-text" title="Sair">
+                        <i class="fas fa-sign-out-alt text-sm"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

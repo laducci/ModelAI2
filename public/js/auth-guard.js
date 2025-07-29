@@ -94,7 +94,7 @@ class AuthGuard {
     updateUserInfo() {
         const userNameEl = document.getElementById('userName');
         const userEmailEl = document.getElementById('userEmail');
-        const userIconEl = document.querySelector('.sidebar .w-8.h-8, .modern-sidebar .w-8.h-8');
+        const userIconEl = document.querySelector('.sidebar .w-8.h-8, .modern-sidebar .w-8.h-8, .w-10.h-10');
 
         if (userNameEl) userNameEl.textContent = this.currentUser.name || 'Usuário';
         if (userEmailEl) userEmailEl.textContent = this.currentUser.email || '';
@@ -102,13 +102,19 @@ class AuthGuard {
         // Configurar ícone baseado no role
         if (userIconEl) {
             if (this.currentUser.role === 'admin') {
-                userIconEl.innerHTML = '<i class="fas fa-crown text-yellow-300"></i>';
-                userIconEl.className = 'w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center';
+                userIconEl.innerHTML = '<i class="fas fa-crown text-white"></i>';
+                userIconEl.className = 'w-10 h-10 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center';
             } else {
                 userIconEl.innerHTML = '<i class="fas fa-user text-white"></i>';
-                userIconEl.className = 'w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center';
+                userIconEl.className = 'w-10 h-10 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full flex items-center justify-center';
             }
         }
+
+        console.log('👤 Informações do usuário atualizadas:', {
+            name: this.currentUser.name,
+            email: this.currentUser.email,
+            role: this.currentUser.role
+        });
     }
 
     setupNavigation() {
@@ -180,19 +186,26 @@ class AuthGuard {
         // Remover classe de carregamento se existir
         document.body.classList.remove('loading');
         
-        // Mostrar conteúdo principal
+        // Mostrar conteúdo principal com transição suave
         const mainContent = document.getElementById('mainContent');
         const sidebar = document.getElementById('sidebar');
         
         if (mainContent) {
             mainContent.style.visibility = 'visible';
-            mainContent.style.opacity = '1';
+            // Pequeno delay para garantir que a visibilidade foi aplicada
+            setTimeout(() => {
+                mainContent.style.opacity = '1';
+            }, 50);
         }
         
         if (sidebar) {
             sidebar.style.visibility = 'visible';
-            sidebar.style.opacity = '1';
+            setTimeout(() => {
+                sidebar.style.opacity = '1';
+            }, 50);
         }
+
+        console.log('✨ Conteúdo da página exibido com transição suave');
     }
 
     redirectToLogin(message = '') {
