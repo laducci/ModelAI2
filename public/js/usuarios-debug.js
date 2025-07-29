@@ -148,13 +148,13 @@ function renderizarUsuarios() {
                 <td class="px-6 py-4 text-sm text-gray-500">${ultimoLogin}</td>
                 <td class="px-6 py-4 text-sm font-medium">
                     <div class="flex space-x-2">
-                        <button class="text-blue-600 hover:text-blue-900 px-2 py-1 rounded border border-blue-200 hover:bg-blue-50">
+                        <button onclick="editarUsuario('${usuario._id}')" class="text-blue-600 hover:text-blue-900 px-2 py-1 rounded border border-blue-200 hover:bg-blue-50">
                             <i class="fas fa-edit"></i> Editar
                         </button>
-                        <button class="text-yellow-600 hover:text-yellow-900 px-2 py-1 rounded border border-yellow-200 hover:bg-yellow-50">
-                            <i class="fas fa-toggle-on"></i> Toggle
+                        <button onclick="toggleUsuario('${usuario._id}')" class="text-yellow-600 hover:text-yellow-900 px-2 py-1 rounded border border-yellow-200 hover:bg-yellow-50">
+                            <i class="fas fa-toggle-${usuario.active ? 'on' : 'off'}"></i> ${usuario.active ? 'Desativar' : 'Ativar'}
                         </button>
-                        <button class="text-red-600 hover:text-red-900 px-2 py-1 rounded border border-red-200 hover:bg-red-50">
+                        <button onclick="deletarUsuario('${usuario._id}')" class="text-red-600 hover:text-red-900 px-2 py-1 rounded border border-red-200 hover:bg-red-50">
                             <i class="fas fa-trash"></i> Excluir
                         </button>
                     </div>
@@ -181,6 +181,17 @@ function configurarBotaoNovo() {
     }
 }
 
+// Configurar formulário de edição
+function configurarFormularioEdicao() {
+    const formEditar = document.getElementById('formEditarUsuario');
+    if (formEditar) {
+        formEditar.addEventListener('submit', window.salvarEdicaoUsuario);
+        console.log('✅ [DEBUG] Formulário de edição configurado');
+    } else {
+        console.log('⚠️ [DEBUG] Formulário formEditarUsuario não encontrado');
+    }
+}
+
 // Inicialização
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('🚀 [DEBUG] DOM carregado - iniciando...');
@@ -199,6 +210,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         // Configurar botões
         configurarBotaoNovo();
+        configurarFormularioEdicao();
         
         // Carregar usuários
         await carregarUsuarios();
@@ -213,5 +225,216 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 // Expor função globalmente para botões
 window.carregarUsuarios = carregarUsuarios;
+
+//===============================
+// FUNÇÕES DOS BOTÕES
+//===============================
+
+// Função para editar usuário
+window.editarUsuario = function(id) {
+    console.log('✏️ [DEBUG] Editando usuário:', id);
+    
+    const usuario = usuarios.find(u => u._id === id);
+    if (!usuario) {
+        showError('Usuário não encontrado');
+        return;
+    }
+    
+    console.log('👤 [DEBUG] Dados do usuário para edição:', usuario);
+    
+    // Preencher formulário do modal
+    document.getElementById('editName').value = usuario.name || '';
+    document.getElementById('editEmail').value = usuario.email || '';
+    document.getElementById('editCompany').value = usuario.company || '';
+    document.getElementById('editRole').value = usuario.role || 'user';
+    document.getElementById('editActive').checked = usuario.active !== false;
+    
+    // Armazenar ID do usuário sendo editado
+    window.usuarioEditandoId = id;
+    
+    // Abrir modal
+    const modal = document.getElementById('modalEditarUsuario');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        console.log('✅ [DEBUG] Modal de edição aberto');
+    } else {
+        console.error('❌ [DEBUG] Modal modalEditarUsuario não encontrado');
+        showError('Modal de edição não encontrado');
+    }
+};
+
+// Função para toggle (ativar/desativar)
+window.toggleUsuario = async function(id) {
+    console.log('🔄 [DEBUG] Toggle usuário:', id);
+    
+    const usuario = usuarios.find(u => u._id === id);
+    if (!usuario) {
+        showError('Usuário não encontrado');
+        return;
+    }
+    
+    const novoStatus = !usuario.active;
+    const acao = novoStatus ? 'ativar' : 'desativar';
+    
+    if (!confirm(`Tem certeza que deseja ${acao} o usuário ${usuario.name}?`)) {
+        return;
+    }
+    
+    try {
+        console.log(`📡 [DEBUG] ${acao} usuário na API...`);
+        
+        const response = await fetch(`/api/users/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ active: novoStatus })
+        });
+        
+        console.log('📈 [DEBUG] Resposta da API:', response.status);
+        
+        if (response.ok) {
+            console.log(`✅ [DEBUG] Usuário ${acao} com sucesso`);
+            showSuccess(`Usuário ${acao} com sucesso!`);
+            
+            // Recarregar lista de usuários
+            await carregarUsuarios();
+            
+        } else {
+            const erro = await response.text();
+            console.error('❌ [DEBUG] Erro da API:', erro);
+            showError(`Erro ao ${acao} usuário: ` + erro);
+        }
+        
+    } catch (error) {
+        console.error(`💥 [DEBUG] Erro ao ${acao} usuário:`, error);
+        showError(`Erro de conexão ao ${acao} usuário`);
+    }
+};
+
+// Função para deletar usuário
+window.deletarUsuario = async function(id) {
+    console.log('🗑️ [DEBUG] Deletando usuário:', id);
+    
+    const usuario = usuarios.find(u => u._id === id);
+    if (!usuario) {
+        showError('Usuário não encontrado');
+        return;
+    }
+    
+    if (!confirm(`Tem certeza que deseja EXCLUIR permanentemente o usuário ${usuario.name}?\n\nEsta ação NÃO pode ser desfeita!`)) {
+        return;
+    }
+    
+    try {
+        console.log('📡 [DEBUG] Deletando usuário na API...');
+        
+        const response = await fetch(`/api/users/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        console.log('📈 [DEBUG] Resposta da API:', response.status);
+        
+        if (response.ok) {
+            console.log('✅ [DEBUG] Usuário deletado com sucesso');
+            showSuccess('Usuário excluído com sucesso!');
+            
+            // Recarregar lista de usuários
+            await carregarUsuarios();
+            
+        } else {
+            const erro = await response.text();
+            console.error('❌ [DEBUG] Erro da API:', erro);
+            showError('Erro ao excluir usuário: ' + erro);
+        }
+        
+    } catch (error) {
+        console.error('💥 [DEBUG] Erro ao deletar usuário:', error);
+        showError('Erro de conexão ao excluir usuário');
+    }
+};
+
+// Função para salvar edição do usuário
+window.salvarEdicaoUsuario = async function(event) {
+    console.log('💾 [DEBUG] Salvando edição do usuário...');
+    event.preventDefault();
+    
+    if (!window.usuarioEditandoId) {
+        showError('Nenhum usuário sendo editado');
+        return;
+    }
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    const dadosAtualizados = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        company: formData.get('company') || '',
+        role: formData.get('role') || 'user',
+        active: formData.get('active') === 'on'
+    };
+    
+    // Incluir senha se fornecida
+    const novaSenha = formData.get('password');
+    if (novaSenha && novaSenha.trim()) {
+        dadosAtualizados.password = novaSenha;
+    }
+    
+    console.log('📊 [DEBUG] Dados atualizados:', dadosAtualizados);
+    
+    try {
+        console.log('📡 [DEBUG] Enviando atualização para API...');
+        
+        const response = await fetch(`/api/users/${window.usuarioEditandoId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(dadosAtualizados)
+        });
+        
+        console.log('📈 [DEBUG] Resposta da API:', response.status);
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('✅ [DEBUG] Usuário atualizado:', data);
+            
+            showSuccess('Usuário atualizado com sucesso!');
+            fecharModalEditarUsuario();
+            
+            // Recarregar lista de usuários
+            await carregarUsuarios();
+            
+        } else {
+            const erro = await response.text();
+            console.error('❌ [DEBUG] Erro da API:', erro);
+            showError('Erro ao atualizar usuário: ' + erro);
+        }
+        
+    } catch (error) {
+        console.error('💥 [DEBUG] Erro ao atualizar usuário:', error);
+        showError('Erro de conexão ao atualizar usuário');
+    }
+};
+
+// Função para fechar modal de edição
+window.fecharModalEditarUsuario = function() {
+    console.log('❌ [DEBUG] Fechando modal de edição...');
+    
+    const modal = document.getElementById('modalEditarUsuario');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        window.usuarioEditandoId = null;
+        console.log('✅ [DEBUG] Modal de edição fechado');
+    }
+};
 
 console.log('✅ [DEBUG] Script de usuários carregado');

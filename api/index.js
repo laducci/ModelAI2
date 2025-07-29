@@ -436,9 +436,9 @@ const handler = async (req, res) => {
   }
 
   // ATUALIZAR STATUS DO USUÁRIO
-  if (url.startsWith('/api/users/') && url.endsWith('/status') && method === 'PUT') {
+  if (cleanUrl.startsWith('/api/users/') && cleanUrl.endsWith('/status') && method === 'PUT') {
     try {
-      const userId = url.split('/')[3]; // Extrair ID da URL
+      const userId = cleanUrl.split('/')[3]; // Extrair ID da URL
       const { isActive } = body;
       
       const user = await User.findByIdAndUpdate(
@@ -464,22 +464,22 @@ const handler = async (req, res) => {
   }
 
   // EDITAR USUÁRIO (apenas admins)
-  if (url.startsWith('/api/users/') && !url.includes('/status') && method === 'PUT') {
+  if (cleanUrl.startsWith('/api/users/') && !cleanUrl.includes('/status') && method === 'PUT') {
     try {
       // Verificar se o usuário logado é admin
       const token = req.headers.authorization?.replace('Bearer ', '');
       if (!token) {
-        return res.status(401).json({ message: 'Token não fornecido.' });
+        return sendResponse(401, { message: 'Token não fornecido.' });
       }
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
       const requestUser = await User.findById(decoded.userId);
       
       if (!requestUser || requestUser.role !== 'admin') {
-        return res.status(403).json({ message: 'Acesso negado. Apenas administradores.' });
+        return sendResponse(403, { message: 'Acesso negado. Apenas administradores.' });
       }
 
-      const userId = url.split('/')[3]; // /api/users/{id}
+      const userId = cleanUrl.split('/')[3]; // /api/users/{id}
       const { name, email, company, role, active, password } = body;
 
       console.log('🔄 Atualizando usuário:', userId, body);
@@ -585,9 +585,9 @@ const handler = async (req, res) => {
   }
 
   // EXCLUIR USUÁRIO
-  if (url.startsWith('/api/users/') && !url.includes('/status') && method === 'DELETE') {
+  if (cleanUrl.startsWith('/api/users/') && !cleanUrl.includes('/status') && method === 'DELETE') {
     try {
-      const userId = url.split('/')[3]; // Extrair ID da URL
+      const userId = cleanUrl.split('/')[3]; // Extrair ID da URL
       
       const user = await User.findByIdAndDelete(userId);
       
@@ -663,9 +663,9 @@ const handler = async (req, res) => {
   // ==================== ROTAS DE GERENCIAMENTO DE USUÁRIOS ====================
   
   // Deletar usuário
-  if (url.startsWith('/api/users/') && method === 'DELETE') {
+  if (cleanUrl.startsWith('/api/users/') && method === 'DELETE') {
     try {
-      const userId = url.split('/')[3];
+      const userId = cleanUrl.split('/')[3];
       const token = req.headers.authorization?.replace('Bearer ', '');
       
       if (!token) {
