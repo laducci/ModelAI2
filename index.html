@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Model AI - Sistema de Análise de Empreendimentos</title>
+    <title>ModelAI - Sistema de Análise VPL de Empreendimentos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/index.css">
     <style>
         .hero-gradient {
-            background: linear-gradient(135deg, #006b6a 0%, #008d8c 50%, #00aeac 100%);
+            background: linear-gradient(135deg, #0d9488 0%, #059669 50%, #0891b2 100%);
         }
         .card-hover {
             transition: all 0.3s ease;
@@ -19,14 +19,14 @@
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
         .feature-icon {
-            background: linear-gradient(45deg, #008d8c, #006b6a);
+            background: linear-gradient(45deg, #0d9488, #059669);
         }
         .btn-primary {
-            background: linear-gradient(135deg, #008d8c 0%, #006b6a 100%);
+            background: linear-gradient(135deg, #0d9488 0%, #059669 100%);
             transition: all 0.3s ease;
         }
         .btn-primary:hover {
-            background: linear-gradient(135deg, #007270 0%, #005452 100%);
+            background: linear-gradient(135deg, #0f766e 0%, #047857 100%);
             transform: translateY(-2px);
         }
         .floating-animation {
@@ -36,6 +36,11 @@
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-20px); }
         }
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -44,18 +49,17 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center">
-                    <i class="fas fa-building text-3xl text-teal-600 mr-3"></i>
-                    <span class="text-2xl font-bold text-gray-900">Model AI</span>
+                    <img src="images/Logo-ModelAI.png" alt="ModelAI2" class="h-10 w-auto mr-3">
                 </div>
                 <div class="flex items-center space-x-6">
                     <nav class="hidden md:flex space-x-8">
                         <a href="#features" class="text-gray-700 hover:text-teal-600 transition-colors">Recursos</a>
                         <a href="#benefits" class="text-gray-700 hover:text-teal-600 transition-colors">Benefícios</a>
-                        <a href="#contact" class="text-gray-700 hover:text-teal-600 transition-colors">Contato</a>
+                        <a href="cenarios.html" class="text-gray-700 hover:text-teal-600 transition-colors">Cenários</a>
                     </nav>
-                    <a href="login.html" class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition-colors font-semibold">
-                        <i class="fas fa-sign-in-alt mr-2"></i>
-                        Login
+                    <a href="inputs.html" class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition-colors font-semibold">
+                        <i class="fas fa-calculator mr-2"></i>
+                        Começar Análise
                     </a>
                 </div>
             </div>
@@ -68,30 +72,40 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 <div class="text-center lg:text-left">
                     <h1 class="text-4xl md:text-6xl font-bold mb-6">
-                        Sistema de Análise de 
+                        Análise de <span class="text-yellow-300">VPL</span> para 
                         <span class="text-yellow-300">Empreendimentos</span>
                     </h1>
                     <p class="text-xl md:text-2xl mb-8 text-teal-100">
-                        Tome decisões inteligentes com análises financeiras precisas e resultados comerciais detalhados
+                        Compare cenários, calcule Valor Presente Líquido e tome decisões financeiras inteligentes com análises precisas em tempo real
                     </p>
-                    <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                        <a href="inputs.html" class="btn-primary text-white px-8 py-4 rounded-lg text-lg font-semibold inline-flex items-center justify-center shadow-lg">
-                            <i class="fas fa-rocket mr-2"></i>
-                            Comece Agora
-                        </a>
-                        <a href="#features" class="bg-white text-teal-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors inline-flex items-center justify-center shadow-lg">
-                            <i class="fas fa-info-circle mr-2"></i>
-                            Saiba Mais
+                    <div class="flex justify-center lg:justify-start">
+                        <a href="inputs.html" class="btn-primary text-white px-10 py-4 rounded-lg text-xl font-semibold inline-flex items-center justify-center shadow-lg">
+                            <i class="fas fa-calculator mr-3"></i>
+                            Iniciar Análise VPL
                         </a>
                     </div>
                 </div>
                 <div class="flex justify-center">
                     <div class="floating-animation">
-                        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-md">
+                        <div class="glassmorphism p-8 rounded-2xl shadow-2xl max-w-md text-white">
                             <div class="text-center">
-                                <i class="fas fa-chart-line text-6xl text-teal-600 mb-4"></i>
-                                <h3 class="text-xl font-bold text-gray-900 mb-2">Análise Inteligente</h3>
-                                <p class="text-gray-600">Dados em tempo real para decisões assertivas</p>
+                                <i class="fas fa-chart-line text-6xl text-yellow-300 mb-4"></i>
+                                <h3 class="text-xl font-bold mb-2">VPL em Tempo Real</h3>
+                                <p class="text-teal-100">Cálculos automáticos com fórmulas do Excel</p>
+                                <div class="mt-4 space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>VPL Tabela:</span>
+                                        <span className="text-green-300">R$ 1.234.567</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>VPL Proposta:</span>
+                                        <span className="text-blue-300">R$ 1.345.678</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Delta VPL:</span>
+                                        <span className="text-yellow-300">+8,99%</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -104,53 +118,53 @@
     <section id="features" class="py-20 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4">Recursos Principais</h2>
-                <p class="text-xl text-gray-600">Tudo que você precisa para analisar seus empreendimentos</p>
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Funcionalidades Principais</h2>
+                <p class="text-xl text-gray-600">Tudo que você precisa para análise financeira de empreendimentos</p>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Feature 1 -->
+                <!-- Feature 1: Entrada de Dados -->
                 <div class="card-hover bg-white p-8 rounded-xl shadow-lg border border-gray-100">
                     <div class="feature-icon w-16 h-16 rounded-full flex items-center justify-center mb-6">
                         <i class="fas fa-edit text-2xl text-white"></i>
                     </div>
                     <h3 class="text-2xl font-bold text-gray-900 mb-4">Entrada de Dados</h3>
-                    <p class="text-gray-600 mb-4">Interface intuitiva para inserir dados gerais, formas de pagamento, custos de construção e financiamento bancário.</p>
+                    <p class="text-gray-600 mb-4">Interface simplificada para inserir dados do empreendimento, tabela de vendas e proposta do cliente com cálculos automáticos.</p>
                     <ul class="text-sm text-gray-500 space-y-2">
-                        <li>• Dados gerais do empreendimento</li>
-                        <li>• Formas de pagamento flexíveis</li>
-                        <li>• Custos de construção detalhados</li>
-                        <li>• Configuração de financiamentos</li>
+                        <li>• Dados gerais (cliente, imobiliária, TMA)</li>
+                        <li>• Tabela de vendas com parcelas</li>
+                        <li>• Proposta do cliente personalizada</li>
+                        <li>• Cálculos automáticos em tempo real</li>
                     </ul>
                 </div>
 
-                <!-- Feature 2 -->
+                <!-- Feature 2: Cálculo de VPL -->
                 <div class="card-hover bg-white p-8 rounded-xl shadow-lg border border-gray-100">
                     <div class="feature-icon w-16 h-16 rounded-full flex items-center justify-center mb-6">
-                        <i class="fas fa-chart-line text-2xl text-white"></i>
+                        <i class="fas fa-calculator text-2xl text-white"></i>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Resultados Financeiros</h3>
-                    <p class="text-gray-600 mb-4">Análises completas com DRE anual, fluxo de caixa e indicadores financeiros essenciais.</p>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Análise de VPL</h3>
+                    <p class="text-gray-600 mb-4">Cálculos precisos de Valor Presente Líquido usando as mesmas fórmulas do Excel para comparação de cenários.</p>
                     <ul class="text-sm text-gray-500 space-y-2">
-                        <li>• Demonstração de Resultados (DRE)</li>
-                        <li>• Fluxo de caixa acumulado</li>
-                        <li>• Indicadores de rentabilidade</li>
-                        <li>• Análise de viabilidade</li>
+                        <li>• VPL da Tabela de Vendas</li>
+                        <li>• VPL da Proposta do Cliente</li>
+                        <li>• Delta de VPL (diferença absoluta)</li>
+                        <li>• Percentual de variação (%)</li>
                     </ul>
                 </div>
 
-                <!-- Feature 3 -->
+                <!-- Feature 3: Gestão de Cenários -->
                 <div class="card-hover bg-white p-8 rounded-xl shadow-lg border border-gray-100">
                     <div class="feature-icon w-16 h-16 rounded-full flex items-center justify-center mb-6">
-                        <i class="fas fa-briefcase text-2xl text-white"></i>
+                        <i class="fas fa-folder-open text-2xl text-white"></i>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Resultados Comerciais</h3>
-                    <p class="text-gray-600 mb-4">Acompanhe performance de vendas, tipologia de unidades e projeções comerciais.</p>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Gestão de Cenários</h3>
+                    <p class="text-gray-600 mb-4">Salve, edite e compare múltiplos cenários para tomar decisões financeiras mais assertivas.</p>
                     <ul class="text-sm text-gray-500 space-y-2">
-                        <li>• Performance de vendas</li>
-                        <li>• Análise de tipologias</li>
-                        <li>• Projeções comerciais</li>
-                        <li>• Métricas de conversão</li>
+                        <li>• Salvamento automático de cenários</li>
+                        <li>• Edição e atualização sem duplicação</li>
+                        <li>• Comparação de múltiplos cenários</li>
+                        <li>• Histórico de modificações</li>
                     </ul>
                 </div>
             </div>
@@ -161,41 +175,137 @@
     <section id="benefits" class="py-20 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4">Por que escolher o Model AI?</h2>
-                <p class="text-xl text-gray-600">Vantagens que fazem a diferença nos seus projetos</p>
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Por que escolher nosso sistema?</h2>
+                <p class="text-xl text-gray-600">Vantagens que fazem a diferença na análise de seus empreendimentos</p>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div class="text-center">
-                    <div class="bg-teal-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-clock text-3xl text-teal-600"></i>
+                    <div class="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-chart-line text-3xl text-green-600"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Economia de Tempo</h3>
-                    <p class="text-gray-600">Análises que levariam horas agora ficam prontas em minutos</p>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Fórmulas do Excel</h3>
+                    <p class="text-gray-600">Cálculos idênticos ao Excel com precisão matemática comprovada</p>
                 </div>
                 
                 <div class="text-center">
-                    <div class="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-bullseye text-3xl text-green-600"></i>
+                    <div class="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-bolt text-3xl text-blue-600"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Precisão</h3>
-                    <p class="text-gray-600">Cálculos precisos baseados em metodologias comprovadas</p>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Tempo Real</h3>
+                    <p class="text-gray-600">Resultados instantâneos conforme você digita os dados</p>
                 </div>
                 
                 <div class="text-center">
                     <div class="bg-purple-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-users text-3xl text-purple-600"></i>
+                        <i class="fas fa-save text-3xl text-purple-600"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Fácil de Usar</h3>
-                    <p class="text-gray-600">Interface intuitiva que qualquer pessoa pode dominar</p>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Múltiplos Cenários</h3>
+                    <p class="text-gray-600">Salve e compare quantos cenários quiser sem limitações</p>
                 </div>
                 
                 <div class="text-center">
                     <div class="bg-orange-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-chart-bar text-3xl text-orange-600"></i>
+                        <i class="fas fa-mobile-alt text-3xl text-orange-600"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Visualização</h3>
-                    <p class="text-gray-600">Gráficos e relatórios claros para facilitar a tomada de decisão</p>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Interface Moderna</h3>
+                    <p class="text-gray-600">Design responsivo que funciona perfeitamente em qualquer dispositivo</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demonstração dos 6 Cards -->
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">6 Indicadores Financeiros Essenciais</h2>
+                <p class="text-xl text-gray-600">Todos os cálculos que você precisa para uma análise completa de VPL</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Card 1: Desconto Nominal -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
+                    <div class="flex items-center mb-4">
+                        <div class="p-4 rounded-xl bg-gradient-to-r from-red-500 to-red-600">
+                            <i class="fas fa-percentage text-white text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-xl font-bold text-gray-900">Desconto Nominal</h3>
+                            <p class="text-sm text-gray-500">Em percentual (%)</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600">Percentual de desconto entre a proposta do cliente e o valor da tabela de vendas</p>
+                </div>
+
+                <!-- Card 2: Delta Desconto -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
+                    <div class="flex items-center mb-4">
+                        <div class="p-4 rounded-xl bg-gradient-to-r from-yellow-500 to-yellow-600">
+                            <i class="fas fa-minus text-white text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-xl font-bold text-gray-900">Delta Desconto</h3>
+                            <p class="text-sm text-gray-500">Em reais (R$)</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600">Diferença absoluta em reais entre o valor da tabela e a proposta do cliente</p>
+                </div>
+
+                <!-- Card 3: VPL Tabela -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
+                    <div class="flex items-center mb-4">
+                        <div class="p-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600">
+                            <i class="fas fa-chart-line text-white text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-xl font-bold text-gray-900">VPL Tabela</h3>
+                            <p class="text-sm text-gray-500">Valor presente</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600">Valor Presente Líquido calculado sobre a tabela de vendas oficial</p>
+                </div>
+
+                <!-- Card 4: VPL Proposta -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
+                    <div class="flex items-center mb-4">
+                        <div class="p-4 rounded-xl bg-gradient-to-r from-green-500 to-green-600">
+                            <i class="fas fa-handshake text-white text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-xl font-bold text-gray-900">VPL Proposta</h3>
+                            <p class="text-sm text-gray-500">Valor presente</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600">Valor Presente Líquido calculado sobre a proposta personalizada do cliente</p>
+                </div>
+
+                <!-- Card 5: Delta de VPL -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
+                    <div class="flex items-center mb-4">
+                        <div class="p-4 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600">
+                            <i class="fas fa-arrows-alt-h text-white text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-xl font-bold text-gray-900">Delta de VPL</h3>
+                            <p class="text-sm text-gray-500">Diferença absoluta</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600">Diferença absoluta entre o VPL da proposta e o VPL da tabela de vendas</p>
+                </div>
+
+                <!-- Card 6: % Delta VPL -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
+                    <div class="flex items-center mb-4">
+                        <div class="p-4 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600">
+                            <i class="fas fa-percentage text-white text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-xl font-bold text-gray-900">% Delta VPL</h3>
+                            <p class="text-sm text-gray-500">Variação percentual</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600">Variação percentual entre os VPLs, mostrando o impacto relativo da proposta</p>
                 </div>
             </div>
         </div>
@@ -205,51 +315,56 @@
     <section class="hero-gradient text-white py-16">
         <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
             <h2 class="text-3xl md:text-4xl font-bold mb-4">
-                Pronto para revolucionar suas análises?
+                Pronto para otimizar suas análises de VPL?
             </h2>
-            <p class="text-xl mb-8 text-blue-100">
-                Comece agora mesmo e descubra o potencial dos seus empreendimentos
+            <p class="text-xl mb-8 text-teal-100">
+                Comece agora mesmo e compare cenários com precisão de Excel em uma interface moderna
             </p>
-            <a href="inputs.html" class="btn-primary text-white px-10 py-4 rounded-lg text-xl font-semibold inline-flex items-center shadow-lg">
-                <i class="fas fa-rocket mr-3"></i>
-                Começar Análise
-            </a>
+            <div class="flex justify-center">
+                <a href="inputs.html" class="btn-primary text-white px-10 py-4 rounded-lg text-xl font-semibold inline-flex items-center shadow-lg">
+                    <i class="fas fa-calculator mr-3"></i>
+                    Começar Análise VPL
+                </a>
+            </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer id="contact" class="bg-gray-900 text-white py-12">
+    <footer class="bg-gray-900 text-white py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div>
                     <div class="flex items-center mb-4">
-                        <i class="fas fa-building text-2xl text-teal-400 mr-3"></i>
-                        <span class="text-xl font-bold">Model AI</span>
+                        <img src="images/Logo-ModelAI-positiva.png" alt="ModelAI2" class="h-8 w-auto mr-3 brightness-0 invert">
                     </div>
                     <p class="text-gray-300">
-                        Sistema inteligente para análise de viabilidade de empreendimentos imobiliários.
+                        Sistema especializado em análise de VPL para empreendimentos imobiliários com precisão e rapidez.
                     </p>
                 </div>
                 
                 <div>
                     <h3 class="text-lg font-semibold mb-4">Navegação</h3>
                     <ul class="space-y-2">
-                        <li><a href="inputs.html" class="text-gray-300 hover:text-teal-400 transition-colors">Inputs</a></li>
-                        <li><a href="resultados.html" class="text-gray-300 hover:text-teal-400 transition-colors">Resultados</a></li>
-                        <li><a href="resultados-comerciais.html" class="text-gray-300 hover:text-teal-400 transition-colors">Resultados Comerciais</a></li>
+                        <li><a href="inputs.html" class="text-gray-300 hover:text-teal-400 transition-colors">Criar Análise</a></li>
+                        <li><a href="cenarios.html" class="text-gray-300 hover:text-teal-400 transition-colors">Gerenciar Cenários</a></li>
+                        <li><a href="resultados.html" class="text-gray-300 hover:text-teal-400 transition-colors">Ver Resultados</a></li>
                     </ul>
                 </div>
                 
                 <div>
-                    <h3 class="text-lg font-semibold mb-4">Contato</h3>
+                    <h3 class="text-lg font-semibold mb-4">Funcionalidades</h3>
                     <div class="space-y-2">
-                        <p class="text-gray-300">
-                            <i class="fas fa-envelope mr-2"></i>
-                            admin@modelai.com
+                        <p class="text-gray-300 text-sm">
+                            <i class="fas fa-check mr-2 text-teal-400"></i>
+                            Cálculos VPL em tempo real
                         </p>
-                        <p class="text-gray-300">
-                            <i class="fas fa-phone mr-2"></i>
-                            (11) 99999-9999
+                        <p class="text-gray-300 text-sm">
+                            <i class="fas fa-check mr-2 text-teal-400"></i>
+                            Gestão de múltiplos cenários
+                        </p>
+                        <p class="text-gray-300 text-sm">
+                            <i class="fas fa-check mr-2 text-teal-400"></i>
+                            Fórmulas compatíveis com Excel
                         </p>
                     </div>
                 </div>
@@ -257,7 +372,7 @@
             
             <div class="border-t border-gray-700 mt-8 pt-8 text-center">
                 <p class="text-gray-400">
-                    © 2024 Model AI. Todos os direitos reservados.
+                    © 2025 ModelAI. Sistema de análise VPL para empreendimentos imobiliários.
                 </p>
             </div>
         </div>

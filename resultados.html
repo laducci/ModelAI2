@@ -108,7 +108,7 @@
                 </div>
                 <div class="space-y-1">
                     <h3 id="descontoNominal" class="text-2xl md:text-3xl font-bold text-gray-800">0,00%</h3>
-                    <p class="text-sm text-gray-500">=(H30/C30)-1</p>
+                    <p class="text-sm text-gray-500">=(Valor Proposta/Valor Imóvel)-1</p>
                 </div>
             </div>
 
@@ -122,7 +122,7 @@
                 </div>
                 <div class="space-y-1">
                     <h3 id="deltaDesconto" class="text-2xl md:text-3xl font-bold text-gray-800">R$ 0,00</h3>
-                    <p class="text-sm text-gray-500">=C12-C19</p>
+                    <p class="text-sm text-gray-500">=Valor Imóvel - Valor Proposta</p>
                 </div>
             </div>
 
@@ -136,7 +136,7 @@
                 </div>
                 <div class="space-y-1">
                     <h3 id="vplTabela" class="text-2xl md:text-3xl font-bold text-gray-800">R$ 0,00</h3>
-                    <p class="text-sm text-gray-500">=VPL($C$9;C31:C280)</p>
+                    <p class="text-sm text-gray-500">=VPL(TMA_mês;Fluxo_mês1:mês250)</p>
                 </div>
             </div>
 
@@ -150,7 +150,7 @@
                 </div>
                 <div class="space-y-1">
                     <h3 id="vplProposta" class="text-2xl md:text-3xl font-bold text-gray-800">R$ 0,00</h3>
-                    <p class="text-sm text-gray-500">=VPL($C$9;H31:H279)</p>
+                    <p class="text-sm text-gray-500">=VPL(TMA_mês;Proposta_mês1:mês250)</p>
                 </div>
             </div>
 
@@ -164,7 +164,7 @@
                 </div>
                 <div class="space-y-1">
                     <h3 id="deltaVPL" class="text-2xl md:text-3xl font-bold text-gray-800">R$ 0,00</h3>
-                    <p class="text-sm text-gray-500">=E27-D27</p>
+                    <p class="text-sm text-gray-500">=VPL Proposta - VPL Tabela</p>
                 </div>
             </div>
 
@@ -178,7 +178,7 @@
                 </div>
                 <div class="space-y-1">
                     <h3 id="percentDeltaVPL" class="text-2xl md:text-3xl font-bold text-gray-800">0,00%</h3>
-                    <p class="text-sm text-gray-500">=SEERRO(F27/D27;0)</p>
+                    <p class="text-sm text-gray-500">=SE(VPL_Tabela=0;0;Delta_VPL/VPL_Tabela)</p>
                 </div>
             </div>
         </div>
