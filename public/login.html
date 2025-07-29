@@ -164,6 +164,19 @@
             </p>
         </div>
     </div>
+<script src="js/api.js"></script>
+<script src="js/alerts.js"></script>
+<script src="js/auth-guard.js"></script>
 <script src="js/login.js"></script>
+<script>
+    // Mostrar mensagem se redirecionado de página protegida
+    document.addEventListener('DOMContentLoaded', () => {
+        const message = localStorage.getItem('login_message');
+        if (message) {
+            localStorage.removeItem('login_message');
+            showWarning(message, 6000);
+        }
+    });
+</script>
 </body>
 </html>

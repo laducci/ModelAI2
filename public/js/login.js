@@ -11,12 +11,18 @@ const btnLoading = document.getElementById('btn-loading');
 
 // Utils
 function showError(message) {
-  errorText.textContent = message;
-  errorMessage.classList.remove('hidden');
-  errorMessage.classList.add('animate-pulse');
-  setTimeout(() => {
-    errorMessage.classList.remove('animate-pulse');
-  }, 1000);
+  // Usar sistema moderno de alertas se disponível
+  if (window.showError) {
+    window.showError(message);
+  } else {
+    // Fallback para método antigo
+    errorText.textContent = message;
+    errorMessage.classList.remove('hidden');
+    errorMessage.classList.add('animate-pulse');
+    setTimeout(() => {
+      errorMessage.classList.remove('animate-pulse');
+    }, 1000);
+  }
 }
 
 function hideError() {
@@ -102,14 +108,19 @@ if (loginForm) {
         localStorage.setItem('modelai_logged_in', 'true');
 
         btnText.innerHTML = '<i class="fas fa-check mr-2"></i>Sucesso!';
+        
+        // Mostrar alerta de sucesso
+        if (window.showSuccess) {
+          window.showSuccess(`Bem-vindo, ${data.user.name}!`, 2000);
+        }
 
         setTimeout(() => {
           if (data.user.role === 'admin') {
             window.location.href = 'usuarios.html';
           } else {
-            window.location.href = 'index.html';
+            window.location.href = 'inputs.html';
           }
-        }, 1000);
+        }, 1500);
       } else {
         throw new Error(data.message || data.error || 'Erro ao fazer login');
       }

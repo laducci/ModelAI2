@@ -88,7 +88,45 @@ class ApiClient {
 
     // Verificar se usuário está logado
     isAuthenticated() {
-        return !!this.token;
+        const token = localStorage.getItem('modelai_token');
+        const user = localStorage.getItem('modelai_user');
+        const loggedIn = localStorage.getItem('modelai_logged_in');
+        
+        return !!(token && user && loggedIn === 'true');
+    }
+
+    // Verificar se é admin
+    isAdmin() {
+        try {
+            const user = JSON.parse(localStorage.getItem('modelai_user') || '{}');
+            return user.role === 'admin';
+        } catch {
+            return false;
+        }
+    }
+
+    // Obter dados do usuário logado
+    getCurrentUser() {
+        try {
+            return JSON.parse(localStorage.getItem('modelai_user') || '{}');
+        } catch {
+            return null;
+        }
+    }
+
+    // Verificar autenticação via API
+    async verifyAuth() {
+        try {
+            const response = await this.get('/auth/verify');
+            if (response.valid && response.user) {
+                localStorage.setItem('modelai_user', JSON.stringify(response.user));
+                return response.user;
+            }
+            throw new Error('Token inválido');
+        } catch (error) {
+            this.logout();
+            throw error;
+        }
     }
 
     // Métodos da API
