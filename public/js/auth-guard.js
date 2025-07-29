@@ -1,25 +1,25 @@
-// Auth Guard - VERSÃO FINAL ULTRA ROBUSTA
-console.log('🔐 AUTH GUARD V3 - INICIANDO...');
+// Auth Guard - SISTEMA DE PRODUÇÃO FINAL
+console.log('🔐 AUTH GUARD PRODUÇÃO - INICIANDO...');
 
 // Estado global
 let currentUser = null;
 let isInitialized = false;
 
-// Configurações
+// Configurações da plataforma
 const CONFIG = {
     PROTECTED_PAGES: ['usuarios.html', 'inputs.html', 'cenarios.html', 'resultados.html'],
-    ADMIN_PAGES: ['usuarios.html', 'cenarios.html', 'resultados.html'],
+    ADMIN_PAGES: ['usuarios.html', 'cenarios.html', 'inputs.html', 'resultados.html'],
     USER_PAGES: ['inputs.html', 'cenarios.html', 'resultados.html']
 };
 
-// Função ROBUSTA para buscar dados do usuário
+// Função para buscar dados do usuário do localStorage
 function getUserData() {
     try {
-        // Buscar em todas as possíveis chaves do localStorage
+        // Buscar dados salvos no login
         let userData = null;
         let token = null;
 
-        // Tentar diferentes chaves
+        // Tentar diferentes chaves onde os dados podem estar
         const userKeys = ['user', 'modelai_user'];
         const tokenKeys = ['token', 'modelai_token'];
 
@@ -28,10 +28,10 @@ function getUserData() {
             if (data) {
                 try {
                     userData = JSON.parse(data);
-                    console.log('✅ Dados encontrados em:', key, userData);
+                    console.log('✅ Dados do usuário encontrados em:', key);
                     break;
                 } catch (e) {
-                    console.log('❌ Erro ao parsear:', key);
+                    console.log('❌ Erro ao parsear dados em:', key);
                 }
             }
         }
@@ -46,135 +46,142 @@ function getUserData() {
         }
 
         if (!userData || !token) {
-            console.log('❌ Dados ou token não encontrados');
+            console.log('❌ Dados de autenticação não encontrados');
             return null;
         }
 
         return { user: userData, token: token };
     } catch (error) {
-        console.error('❌ Erro ao buscar dados:', error);
+        console.error('❌ Erro ao buscar dados de autenticação:', error);
         return null;
     }
 }
 
-// Função SUPER ROBUSTA para atualizar UI
+// Função para atualizar a interface baseada no usuário
 function updateUserInterface() {
     if (!currentUser) {
-        console.log('❌ Usuário não definido para atualizar UI');
+        console.log('❌ Nenhum usuário para atualizar interface');
         return;
     }
 
-    console.log('🎨 ATUALIZANDO UI - Usuário:', currentUser.name, 'Role:', currentUser.role);
+    console.log('🎨 ATUALIZANDO INTERFACE - Usuário:', currentUser.name, 'Role:', currentUser.role);
 
-    // FORÇAR atualização do nome
+    // 1. ATUALIZAR NOME DO USUÁRIO
     setTimeout(() => {
-        const nameSelectors = ['#user-name', '#userName', '.user-name', '[data-user-name]'];
-        nameSelectors.forEach(selector => {
-            const element = document.querySelector(selector);
+        const nameElements = document.querySelectorAll('#user-name, #userName, .user-name');
+        nameElements.forEach(element => {
             if (element) {
                 element.textContent = currentUser.name;
-                console.log('✅ Nome atualizado via:', selector);
+                console.log('✅ Nome atualizado:', currentUser.name);
             }
         });
     }, 100);
 
-    // FORÇAR atualização do ícone
+    // 2. ATUALIZAR ÍCONE DO PERFIL
     setTimeout(() => {
-        const iconSelectors = ['#user-icon', '.user-icon', '[data-user-icon]'];
-        iconSelectors.forEach(selector => {
-            const icon = document.querySelector(selector);
+        const iconElements = document.querySelectorAll('#user-icon, .user-icon');
+        iconElements.forEach(icon => {
             if (icon) {
-                // LIMPAR todas as classes
-                icon.className = '';
+                // Limpar todas as classes de ícone
+                icon.className = 'fas text-white';
                 
-                // ADICIONAR classes base
-                icon.classList.add('fas', 'text-white');
-                
-                // ADICIONAR ícone correto baseado no role
+                // Definir ícone baseado no role
                 if (currentUser.role === 'admin') {
                     icon.classList.add('fa-crown');
-                    console.log('👑 ÍCONE ADMIN definido via:', selector);
+                    console.log('👑 Ícone ADMIN (coroa) definido');
                 } else {
                     icon.classList.add('fa-user');
-                    console.log('👤 ÍCONE USER definido via:', selector);
+                    console.log('👤 Ícone USER (pessoa) definido');
                 }
             }
         });
     }, 150);
 
-    // FORÇAR controle do menu de usuários
+    // 3. CONTROLAR MENU DE USUÁRIOS - CRÍTICO!
     setTimeout(() => {
         const menuUsuarios = document.querySelector('a[href="usuarios.html"]');
         if (menuUsuarios) {
-            const menuItem = menuUsuarios.closest('.sidebar-item, .nav-item, .menu-item');
+            const menuItem = menuUsuarios.closest('.sidebar-item, .nav-item');
             if (menuItem) {
                 if (currentUser.role === 'admin') {
-                    menuItem.style.display = 'block';
+                    // ADMIN: SEMPRE mostrar menu de usuários
+                    menuItem.style.display = 'flex';
                     menuItem.style.visibility = 'visible';
-                    console.log('👑 Menu USUÁRIOS MOSTRADO para admin');
+                    menuItem.style.opacity = '1';
+                    console.log('👑 Menu USUÁRIOS HABILITADO para admin');
                 } else {
+                    // USER: NUNCA mostrar menu de usuários
                     menuItem.style.display = 'none';
                     menuItem.style.visibility = 'hidden';
-                    console.log('👤 Menu USUÁRIOS OCULTO para user');
+                    menuItem.style.opacity = '0';
+                    console.log('👤 Menu USUÁRIOS DESABILITADO para usuário');
                 }
             }
         }
     }, 200);
 
-    // FORÇAR atualização do email
+    // 4. ATUALIZAR EMAIL
     setTimeout(() => {
-        const emailElement = document.querySelector('#userEmail, .user-email');
-        if (emailElement && currentUser.email) {
-            emailElement.textContent = currentUser.email;
-        }
+        const emailElements = document.querySelectorAll('#userEmail, .user-email');
+        emailElements.forEach(element => {
+            if (element && currentUser.email) {
+                element.textContent = currentUser.email;
+            }
+        });
     }, 250);
 }
 
-// Função para verificar acesso à página
+// Função para verificar se usuário tem acesso à página atual
 function checkPageAccess() {
     if (!currentUser) return false;
 
     const currentPage = window.location.pathname.split('/').pop();
     console.log('📄 Verificando acesso - Página:', currentPage, 'Role:', currentUser.role);
 
+    // Admin tem acesso a todas as páginas admin
     if (currentUser.role === 'admin') {
-        return CONFIG.ADMIN_PAGES.includes(currentPage);
+        const hasAccess = CONFIG.ADMIN_PAGES.includes(currentPage);
+        console.log('👑 Admin - Acesso à', currentPage, ':', hasAccess ? 'PERMITIDO' : 'NEGADO');
+        return hasAccess;
     } else {
-        return CONFIG.USER_PAGES.includes(currentPage);
+        // Usuário comum só acessa páginas permitidas
+        const hasAccess = CONFIG.USER_PAGES.includes(currentPage);
+        console.log('👤 User - Acesso à', currentPage, ':', hasAccess ? 'PERMITIDO' : 'NEGADO');
+        return hasAccess;
     }
 }
 
-// Função para redirecionar usuário para página correta
+// Função para redirecionar para página apropriada
 function redirectToCorrectPage() {
     if (!currentUser) return;
 
     if (currentUser.role === 'admin') {
-        console.log('👑 Redirecionando admin para usuarios.html');
+        console.log('👑 Redirecionando admin para página de usuários');
         window.location.replace('usuarios.html');
     } else {
-        console.log('👤 Redirecionando user para inputs.html');
+        console.log('👤 Redirecionando usuário para página de inputs');
         window.location.replace('inputs.html');
     }
 }
 
 // Função de logout
 function logout() {
-    console.log('🚪 Fazendo logout...');
+    console.log('🚪 Realizando logout...');
     
-    // Limpar TUDO
+    // Limpar todos os dados
     localStorage.clear();
     sessionStorage.clear();
     
-    // Reset estado
+    // Reset variáveis
     currentUser = null;
     isInitialized = false;
     
-    // Redirecionar
+    // Redirecionar para login
     window.location.replace('login.html');
 }
 
-// Configurar links de logout
-function setupLogoutLinks() {
+// Configurar botões/links de logout
+function setupLogoutHandlers() {
     const logoutSelectors = [
         'a[href="login.html"]',
         '[data-action="logout"]',
@@ -191,51 +198,60 @@ function setupLogoutLinks() {
             });
         });
     });
+    
+    console.log('🔗 Handlers de logout configurados');
 }
 
-// INICIALIZAÇÃO PRINCIPAL - SUPER ROBUSTA
+// INICIALIZAÇÃO PRINCIPAL
 async function initializeAuth() {
-    if (isInitialized) return;
+    if (isInitialized) {
+        console.log('⚠️ Auth já inicializado, forçando atualização da UI...');
+        if (currentUser) {
+            updateUserInterface();
+        }
+        return;
+    }
 
-    console.log('🚀 INICIALIZANDO AUTENTICAÇÃO...');
+    console.log('🚀 INICIALIZANDO SISTEMA DE AUTENTICAÇÃO...');
 
     const currentPage = window.location.pathname.split('/').pop();
     console.log('📄 Página atual:', currentPage);
 
     // Se for página de login, não verificar auth
     if (currentPage === 'login.html' || currentPage === '' || currentPage === 'index.html') {
-        console.log('📝 Página de login - sem verificação');
+        console.log('📝 Página de login - pular verificação');
+        isInitialized = true;
         return;
     }
 
-    // Buscar dados do usuário
+    // Buscar dados de autenticação
     const authData = getUserData();
     
     if (!authData) {
-        console.log('❌ Não autenticado - redirecionando para login');
-        localStorage.setItem('login_message', 'Sessão expirada. Faça login novamente.');
+        console.log('❌ Usuário não autenticado - redirecionando para login');
+        localStorage.setItem('login_message', 'Você precisa fazer login para acessar esta página.');
         window.location.replace('login.html');
         return;
     }
 
     // Definir usuário atual
     currentUser = authData.user;
-    console.log('✅ USUÁRIO CARREGADO:', currentUser.name, 'Role:', currentUser.role);
+    console.log('✅ USUÁRIO AUTENTICADO:', currentUser.name, '| Role:', currentUser.role);
 
     // Verificar se tem acesso à página atual
     if (!checkPageAccess()) {
-        console.log('🚫 SEM ACESSO à página atual - redirecionando');
+        console.log('🚫 Acesso negado à página atual - redirecionando');
         redirectToCorrectPage();
         return;
     }
 
-    console.log('✅ ACESSO PERMITIDO à página:', currentPage);
+    console.log('✅ Acesso autorizado à página:', currentPage);
 
-    // Atualizar interface
+    // Atualizar interface do usuário
     updateUserInterface();
     
     // Configurar logout
-    setupLogoutLinks();
+    setupLogoutHandlers();
     
     // Marcar como inicializado
     isInitialized = true;
@@ -245,27 +261,47 @@ async function initializeAuth() {
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('📋 DOM carregado - inicializando auth...');
-    initializeAuth();
+    console.log('📋 DOM carregado - inicializando autenticação...');
+    setTimeout(() => {
+        initializeAuth();
+    }, 100);
 });
 
-// Garantir que a UI seja atualizada mesmo que algo dê errado
+// Forçar atualização da UI quando a página carregar completamente
 window.addEventListener('load', function() {
-    console.log('🌐 Window load - forçando atualização da UI...');
-    if (currentUser) {
+    console.log('🌐 Página carregada - garantindo UI atualizada...');
+    setTimeout(() => {
+        if (currentUser) {
+            updateUserInterface();
+        }
+    }, 200);
+});
+
+// Garantir atualização da UI ao navegar entre páginas
+window.addEventListener('focus', function() {
+    if (currentUser && isInitialized) {
+        console.log('👁️ Página focada - atualizando UI...');
         updateUserInterface();
     }
 });
 
-// Exportar funções globais
+// Exportar funções para uso global
 window.authGuard = {
     getCurrentUser: () => currentUser,
     logout: logout,
     updateUI: updateUserInterface,
+    forceUpdate: () => {
+        if (currentUser) {
+            updateUserInterface();
+        }
+    },
     reinitialize: () => {
         isInitialized = false;
         initializeAuth();
     }
 };
 
-console.log('🔐 AUTH GUARD V3 - CONFIGURADO!');
+// Função global de logout
+window.logout = logout;
+
+console.log('🔐 AUTH GUARD PRODUÇÃO - CONFIGURADO E PRONTO!');

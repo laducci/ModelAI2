@@ -49,7 +49,10 @@ module.exports = async (req, res) => {
   if (url === '/api/auth/login' && method === 'POST') {
     const { email, password } = body;
 
-    console.log('🔐 Tentativa de login para:', email);
+    console.log('🔐 === INÍCIO DO LOGIN ===');
+    console.log('📧 Email recebido:', email);
+    console.log('🔑 Senha recebida:', password ? '***PRESENTE***' : '***AUSENTE***');
+    console.log('📦 Body completo:', JSON.stringify(body));
 
     if (!email || !password) {
       console.log('❌ Email ou senha em branco');
@@ -57,64 +60,28 @@ module.exports = async (req, res) => {
     }
 
     try {
-      // FALLBACK: Se for o usuário teste e não existir no DB, criar automaticamente
-      if (email.toLowerCase() === 'teste@modelai.com' && password === '123456') {
-        console.log('🔧 Criando usuário teste automaticamente...');
-        
-        let testUser = await User.findOne({ email: 'teste@modelai.com' });
-        
-        if (!testUser) {
-          const hashedPassword = await bcrypt.hash('123456', 10);
-          testUser = new User({
-            name: 'Usuario Teste',
-            email: 'teste@modelai.com',
-            password: hashedPassword,
-            role: 'user',
-            company: 'ModelAI Teste'
-          });
-          await testUser.save();
-          console.log('✅ Usuário teste criado automaticamente');
-        }
-        
-        // Gerar token
-        const token = jwt.sign(
-          { userId: testUser._id }, 
-          process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production',
-          { expiresIn: '7d' }
-        );
-
-        return res.status(200).json({ 
-          message: 'Login realizado com sucesso!',
-          token: token,
-          user: {
-            _id: testUser._id,
-            name: testUser.name,
-            email: testUser.email,
-            role: testUser.role
-          }
-        });
-      }
-
+      console.log('� Buscando usuário no banco de dados...');
+      
       // Buscar usuário por email (case insensitive)
       const user = await User.findOne({ email: email.toLowerCase() });
       console.log('👤 Usuário encontrado:', user ? 'SIM' : 'NÃO');
 
       if (!user) {
         console.log('❌ Usuário não encontrado para email:', email);
-        return res.status(401).json({ message: 'Credenciais inválidas.' });
+        return res.status(401).json({ message: 'Email ou senha incorretos.' });
       }
 
-      console.log('🔍 Verificando senha...');
+      console.log('🔍 Verificando senha para usuário:', user.name);
       // Verificar senha
       const isValidPassword = await bcrypt.compare(password, user.password);
       console.log('🔑 Senha válida:', isValidPassword ? 'SIM' : 'NÃO');
       
       if (!isValidPassword) {
         console.log('❌ Senha incorreta para usuário:', email);
-        return res.status(401).json({ message: 'Credenciais inválidas.' });
+        return res.status(401).json({ message: 'Email ou senha incorretos.' });
       }
 
-      console.log('✅ Login bem-sucedido para:', user.name);
+      console.log('✅ Login bem-sucedido para:', user.name, 'Role:', user.role);
 
       // Atualizar último login
       user.lastLogin = new Date();
@@ -139,8 +106,13 @@ module.exports = async (req, res) => {
         }
       });
     } catch (error) {
-      console.error('❌ Erro no login:', error);
-      return res.status(500).json({ message: 'Erro no servidor.' });
+      console.error('❌ ERRO CRÍTICO NO LOGIN:', error.message);
+      console.error('❌ Stack:', error.stack);
+      return res.status(500).json({ 
+        message: 'Erro no servidor.', 
+        error: error.message,
+        debug: 'Verifique os logs do servidor'
+      });
     }
   }
 
@@ -176,22 +148,35 @@ module.exports = async (req, res) => {
     }
   }
 
-  // CRIAR ADMIN
+  // CRIAR ADMIN INICIAL (sem autenticação necessária - apenas primeira vez)
   if (url === '/api/create-admin' && method === 'POST') {
     try {
-      // Verificar se já existe um admin
-      const existingAdmin = await User.findOne({ email: 'admin@modelai.com' });
+      // Verificar se já existe algum admin
+      const existingAdmin = await User.findOne({ role: 'admin' });
       if (existingAdmin) {
-        return res.status(200).json({ message: 'Admin já existe', user: existingAdmin });
+        return res.status(400).json({ 
+          message: 'Já existe um administrador no sistema.',
+          admin: {
+            name: existingAdmin.name,
+            email: existingAdmin.email
+          }
+        });
+      }
+      
+      // Criar primeiro admin
+      const { name, email, password } = body;
+      
+      if (!name || !email || !password) {
+        return res.status(400).json({ message: 'Nome, email e senha são obrigatórios.' });
       }
       
       // Criar hash da senha
-      const hashedPassword = await bcrypt.hash('admin123', 10);
+      const hashedPassword = await bcrypt.hash(password, 10);
       
       // Criar usuário admin
       const admin = new User({
-        name: 'Administrador',
-        email: 'admin@modelai.com',
+        name,
+        email: email.toLowerCase(),
         password: hashedPassword,
         role: 'admin',
         company: 'ModelAI'
@@ -199,10 +184,16 @@ module.exports = async (req, res) => {
       
       await admin.save();
       
+      console.log('👑 Primeiro admin criado:', admin.email);
+      
       return res.status(201).json({ 
-        message: 'Admin criado com sucesso!',
-        email: 'admin@modelai.com',
-        password: 'admin123' 
+        message: 'Administrador criado com sucesso!',
+        admin: {
+          name: admin.name,
+          email: admin.email,
+          role: admin.role
+        },
+        instructions: 'Use estas credenciais para fazer login como administrador.'
       });
     } catch (error) {
       console.error('Erro ao criar admin:', error);
@@ -213,10 +204,28 @@ module.exports = async (req, res) => {
   // REGISTRO DE USUÁRIO (para admins criarem usuários)
   if (url === '/api/auth/register' && method === 'POST') {
     try {
+      // Verificar se o usuário logado é admin
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      
+      if (token) {
+        try {
+          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
+          const requestUser = await User.findById(decoded.userId);
+          
+          if (!requestUser || requestUser.role !== 'admin') {
+            return res.status(403).json({ message: 'Acesso negado. Apenas administradores podem criar usuários.' });
+          }
+        } catch (tokenError) {
+          return res.status(401).json({ message: 'Token inválido.' });
+        }
+      }
+      
       const { name, email, password, company, role = 'user' } = body;
       
+      console.log('👥 Criando novo usuário:', email, 'Role:', role);
+      
       // Verificar se o usuário já existe
-      const existingUser = await User.findOne({ email });
+      const existingUser = await User.findOne({ email: email.toLowerCase() });
       if (existingUser) {
         return res.status(400).json({ message: 'Usuário já existe com este email' });
       }
@@ -227,7 +236,7 @@ module.exports = async (req, res) => {
       // Criar novo usuário
       const newUser = new User({
         name,
-        email,
+        email: email.toLowerCase(),
         password: hashedPassword,
         role,
         company: company || 'Não informado'
@@ -235,7 +244,7 @@ module.exports = async (req, res) => {
       
       await newUser.save();
       
-      console.log('✅ Usuário criado:', newUser.email);
+      console.log('✅ Usuário criado com sucesso:', newUser.email, 'Role:', newUser.role);
       
       return res.status(201).json({ 
         message: 'Usuário criado com sucesso!',
@@ -256,10 +265,23 @@ module.exports = async (req, res) => {
   // LISTAR USUÁRIOS (apenas para admins)
   if (url === '/api/users' && method === 'GET') {
     try {
-      // TODO: Verificar se o usuário é admin (por agora, permitir acesso)
+      // Verificar se o usuário é admin
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      
+      if (!token) {
+        return res.status(401).json({ message: 'Token de acesso necessário.' });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
+      const requestUser = await User.findById(decoded.userId);
+      
+      if (!requestUser || requestUser.role !== 'admin') {
+        return res.status(403).json({ message: 'Acesso negado. Apenas administradores podem listar usuários.' });
+      }
+      
       const users = await User.find({}, '-password').sort({ createdAt: -1 });
       
-      console.log('📋 Listando usuários:', users.length);
+      console.log('📋 Admin', requestUser.name, 'listando usuários:', users.length);
       
       return res.status(200).json({ 
         users: users,
