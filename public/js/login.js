@@ -96,15 +96,23 @@ if (loginForm) {
       // API Call direto (sem depender de ApiClient não carregado ainda)
       const baseURL = window.location.hostname === 'localhost' 
         ? 'http://localhost:3000/api' 
-        : 'https://model-ai2.vercel.app/api';
+        : '/api'; // Usar URL relativa para Vercel
 
-      const response = await fetch(`${baseURL}/auth/login`, {
+      console.log('🌐 Base URL:', baseURL);
+      const apiURL = `${baseURL}/auth/login`;
+      console.log('🔗 URL completa:', apiURL);
+      console.log('📤 Enviando dados:', { email, password: '***' });
+
+      const response = await fetch(apiURL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ email, password })
       });
+
+      console.log('📥 Status da resposta:', response.status);
+      console.log('📥 Headers da resposta:', Object.fromEntries(response.headers.entries()));
 
       const data = await response.json();
       console.log('📥 Resposta do servidor:', data);
@@ -157,6 +165,8 @@ if (loginForm) {
 document.addEventListener('DOMContentLoaded', function () {
   console.log('📋 Login page carregada');
   
+  // COMENTANDO O REDIRECIONAMENTO AUTOMÁTICO PARA PODER TESTAR
+  /*
   // Se já estiver logado, redirecionar
   const token = localStorage.getItem('token') || localStorage.getItem('modelai_token');
   const userData = localStorage.getItem('user') || localStorage.getItem('modelai_user');
@@ -176,6 +186,7 @@ document.addEventListener('DOMContentLoaded', function () {
       localStorage.clear();
     }
   }
+  */
 
   // Mostrar mensagem se houver
   const loginMessage = localStorage.getItem('login_message');
