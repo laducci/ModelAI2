@@ -40,12 +40,23 @@ document.addEventListener('DOMContentLoaded', async function() {
 // Carregar estatísticas do dashboard
 async function carregarDashboard() {
     try {
-        const stats = await api.get('/users/stats/dashboard');
+        // Buscar dados dos usuários para calcular estatísticas
+        const api = new ApiClient();
+        const response = await api.get('/users');
+        const usuarios = response.users || [];
         
-        document.getElementById('totalUsuarios').textContent = stats.stats.totalUsers || 0;
-        document.getElementById('usuariosAtivos').textContent = stats.stats.activeUsers || 0;
-        document.getElementById('novosUsuarios').textContent = stats.stats.newUsers || 0;
-        document.getElementById('totalCenarios').textContent = stats.stats.totalScenarios || 0;
+        const totalUsuarios = usuarios.length;
+        const usuariosAtivos = usuarios.filter(u => u.isActive !== false).length;
+        const hoje = new Date();
+        const umMesAtras = new Date(hoje.getFullYear(), hoje.getMonth() - 1, hoje.getDate());
+        const novosUsuarios = usuarios.filter(u => new Date(u.createdAt) > umMesAtras).length;
+        
+        document.getElementById('totalUsuarios').textContent = totalUsuarios;
+        document.getElementById('usuariosAtivos').textContent = usuariosAtivos;
+        document.getElementById('novosUsuarios').textContent = novosUsuarios;
+        document.getElementById('totalCenarios').textContent = '0'; // Por enquanto
+        
+        console.log('📊 Dashboard atualizado:', { totalUsuarios, usuariosAtivos, novosUsuarios });
         
     } catch (error) {
         console.error('Erro ao carregar dashboard:', error);
@@ -60,19 +71,22 @@ async function carregarDashboard() {
 // Carregar lista de usuários
 async function carregarUsuarios() {
     try {
+        const api = new ApiClient();
         const response = await api.get('/users');
         const usuarios = response.users || [];
+        
+        console.log('👥 Usuários carregados:', usuarios.length);
         
         const tbody = document.getElementById('tabelaUsuarios');
         const emptyState = document.getElementById('emptyState');
         
         if (usuarios.length === 0) {
             tbody.innerHTML = '';
-            emptyState.classList.remove('hidden');
+            if (emptyState) emptyState.classList.remove('hidden');
             return;
         }
         
-        emptyState.classList.add('hidden');
+        if (emptyState) emptyState.classList.add('hidden');
         
         tbody.innerHTML = usuarios.map(usuario => `
             <tr class="hover:bg-gray-50">
@@ -205,6 +219,7 @@ document.getElementById('formNovoUsuario').addEventListener('submit', async func
     };
     
     try {
+        const api = new ApiClient();
         await api.post('/auth/register', userData);
         showSuccess('Usuário criado com sucesso!');
         fecharModalNovoUsuario();
@@ -220,6 +235,7 @@ document.getElementById('formNovoUsuario').addEventListener('submit', async func
 // Alterar status do usuário
 async function alternarStatusUsuario(userId, novoStatus) {
     try {
+        const api = new ApiClient();
         await api.put(`/users/${userId}/status`, { isActive: novoStatus });
         showSuccess(`Usuário ${novoStatus ? 'ativado' : 'desativado'} com sucesso!`);
         await carregarUsuarios();
@@ -246,9 +262,10 @@ async function excluirUsuario(userId) {
     if (!confirmed) return;
     
     try {
+        const api = new ApiClient();
         await api.delete(`/users/${userId}`);
         showSuccess('Usuário excluído com sucesso!');
-        await carregarUsuarios();
+        await carregarUsuários();
         await carregarDashboard();
         
     } catch (error) {

@@ -205,6 +205,74 @@ module.exports = async (req, res) => {
     }
   }
 
+  // LISTAR USUÁRIOS (apenas para admins)
+  if (url === '/api/users' && method === 'GET') {
+    try {
+      // TODO: Verificar se o usuário é admin (por agora, permitir acesso)
+      const users = await User.find({}, '-password').sort({ createdAt: -1 });
+      
+      console.log('📋 Listando usuários:', users.length);
+      
+      return res.status(200).json({ 
+        users: users,
+        total: users.length
+      });
+    } catch (error) {
+      console.error('❌ Erro ao listar usuários:', error);
+      return res.status(500).json({ message: 'Erro no servidor.', error: error.message });
+    }
+  }
+
+  // ATUALIZAR STATUS DO USUÁRIO
+  if (url.startsWith('/api/users/') && url.endsWith('/status') && method === 'PUT') {
+    try {
+      const userId = url.split('/')[3]; // Extrair ID da URL
+      const { isActive } = body;
+      
+      const user = await User.findByIdAndUpdate(
+        userId, 
+        { isActive }, 
+        { new: true, select: '-password' }
+      );
+      
+      if (!user) {
+        return res.status(404).json({ message: 'Usuário não encontrado' });
+      }
+      
+      console.log('🔄 Status do usuário atualizado:', user.email, 'isActive:', isActive);
+      
+      return res.status(200).json({ 
+        message: 'Status atualizado com sucesso',
+        user: user
+      });
+    } catch (error) {
+      console.error('❌ Erro ao atualizar status:', error);
+      return res.status(500).json({ message: 'Erro no servidor.', error: error.message });
+    }
+  }
+
+  // EXCLUIR USUÁRIO
+  if (url.startsWith('/api/users/') && !url.includes('/status') && method === 'DELETE') {
+    try {
+      const userId = url.split('/')[3]; // Extrair ID da URL
+      
+      const user = await User.findByIdAndDelete(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'Usuário não encontrado' });
+      }
+      
+      console.log('🗑️ Usuário excluído:', user.email);
+      
+      return res.status(200).json({ 
+        message: 'Usuário excluído com sucesso'
+      });
+    } catch (error) {
+      console.error('❌ Erro ao excluir usuário:', error);
+      return res.status(500).json({ message: 'Erro no servidor.', error: error.message });
+    }
+  }
+
   // HEALTH CHECK
   if (url === '/api/health' && method === 'GET') {
     return res.json({ status: 'ok', time: new Date().toISOString() });
