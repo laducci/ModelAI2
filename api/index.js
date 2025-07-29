@@ -162,6 +162,49 @@ module.exports = async (req, res) => {
     }
   }
 
+  // REGISTRO DE USUÁRIO (para admins criarem usuários)
+  if (url === '/api/auth/register' && method === 'POST') {
+    try {
+      const { name, email, password, company, role = 'user' } = body;
+      
+      // Verificar se o usuário já existe
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ message: 'Usuário já existe com este email' });
+      }
+      
+      // Criar hash da senha
+      const hashedPassword = await bcrypt.hash(password, 10);
+      
+      // Criar novo usuário
+      const newUser = new User({
+        name,
+        email,
+        password: hashedPassword,
+        role,
+        company: company || 'Não informado'
+      });
+      
+      await newUser.save();
+      
+      console.log('✅ Usuário criado:', newUser.email);
+      
+      return res.status(201).json({ 
+        message: 'Usuário criado com sucesso!',
+        user: {
+          _id: newUser._id,
+          name: newUser.name,
+          email: newUser.email,
+          role: newUser.role,
+          company: newUser.company
+        }
+      });
+    } catch (error) {
+      console.error('❌ Erro ao criar usuário:', error);
+      return res.status(500).json({ message: 'Erro no servidor.', error: error.message });
+    }
+  }
+
   // HEALTH CHECK
   if (url === '/api/health' && method === 'GET') {
     return res.json({ status: 'ok', time: new Date().toISOString() });

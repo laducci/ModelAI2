@@ -3,23 +3,26 @@
 // Verificar se usuário é admin
 document.addEventListener('DOMContentLoaded', async function() {
     try {
-        // Verificar autenticação
+        // Verificar autenticação usando ApiClient
+        const api = new ApiClient();
         if (!api.isAuthenticated()) {
             window.location.href = '/login.html';
             return;
         }
 
-        // Verificar se é admin
-        const userProfile = await api.getProfile();
-        if (userProfile.user.role !== 'admin') {
-            showNotification('Acesso negado. Apenas administradores podem acessar esta página.', 'error');
-            window.location.href = '/index.html';
+        // Obter usuário atual
+        const currentUser = api.getCurrentUser();
+        if (!currentUser || currentUser.role !== 'admin') {
+            showError('Acesso negado. Apenas administradores podem acessar esta página.');
+            setTimeout(() => {
+                window.location.href = '/index.html';
+            }, 2000);
             return;
         }
 
         // Atualizar info do usuário no sidebar
-        document.getElementById('userName').textContent = userProfile.user.name;
-        document.getElementById('userEmail').textContent = userProfile.user.email;
+        document.getElementById('userName').textContent = currentUser.name;
+        document.getElementById('userEmail').textContent = currentUser.email;
 
         // Carregar dados
         await carregarDashboard();
@@ -30,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         
     } catch (error) {
         console.error('Erro ao inicializar página:', error);
-        showNotification('Erro ao carregar página de administração', 'error');
+        showError('Erro ao carregar página de administração');
     }
 });
 
@@ -135,7 +138,7 @@ async function carregarUsuarios() {
         
     } catch (error) {
         console.error('Erro ao carregar usuários:', error);
-        showNotification('Erro ao carregar lista de usuários', 'error');
+        showError('Erro ao carregar lista de usuários');
     }
 }
 
@@ -203,14 +206,14 @@ document.getElementById('formNovoUsuario').addEventListener('submit', async func
     
     try {
         await api.post('/auth/register', userData);
-        showNotification('Usuário criado com sucesso!', 'success');
+        showSuccess('Usuário criado com sucesso!');
         fecharModalNovoUsuario();
         await carregarUsuarios();
         await carregarDashboard();
         
     } catch (error) {
         console.error('Erro ao criar usuário:', error);
-        showNotification(error.message || 'Erro ao criar usuário', 'error');
+        showError(error.message || 'Erro ao criar usuário');
     }
 });
 
@@ -218,43 +221,66 @@ document.getElementById('formNovoUsuario').addEventListener('submit', async func
 async function alternarStatusUsuario(userId, novoStatus) {
     try {
         await api.put(`/users/${userId}/status`, { isActive: novoStatus });
-        showNotification(`Usuário ${novoStatus ? 'ativado' : 'desativado'} com sucesso!`, 'success');
+        showSuccess(`Usuário ${novoStatus ? 'ativado' : 'desativado'} com sucesso!`);
         await carregarUsuarios();
         await carregarDashboard();
         
     } catch (error) {
         console.error('Erro ao alterar status:', error);
-        showNotification('Erro ao alterar status do usuário', 'error');
+        showError('Erro ao alterar status do usuário');
     }
 }
 
 // Editar usuário (placeholder)
 function editarUsuario(userId) {
-    showNotification('Funcionalidade de edição em desenvolvimento', 'info');
+    showInfo('Funcionalidade de edição em desenvolvimento');
 }
 
 // Excluir usuário
 async function excluirUsuario(userId) {
-    if (!confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.')) {
-        return;
-    }
+    const confirmed = await confirmAction(
+        'Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.',
+        'Confirmar Exclusão'
+    );
+    
+    if (!confirmed) return;
     
     try {
         await api.delete(`/users/${userId}`);
-        showNotification('Usuário excluído com sucesso!', 'success');
+        showSuccess('Usuário excluído com sucesso!');
         await carregarUsuarios();
         await carregarDashboard();
         
     } catch (error) {
         console.error('Erro ao excluir usuário:', error);
-        showNotification('Erro ao excluir usuário', 'error');
+        showError('Erro ao excluir usuário');
     }
 }
 
-// Logout
-function logout() {
-    if (confirm('Tem certeza que deseja sair?')) {
-        api.logout();
-        window.location.href = '/login.html';
+// Logout usando o sistema moderno
+async function logout() {
+    const confirmed = await confirmAction(
+        'Tem certeza que deseja sair da sua conta?',
+        'Confirmar Logout'
+    );
+
+    if (confirmed) {
+        try {
+            const api = new ApiClient();
+            api.logout();
+            
+            showSuccess('Logout realizado com sucesso!');
+            
+            setTimeout(() => {
+                window.location.href = '/login.html';
+            }, 1000);
+            
+        } catch (error) {
+            console.error('Erro no logout:', error);
+            showError('Erro ao fazer logout. Redirecionando...');
+            setTimeout(() => {
+                window.location.href = '/login.html';
+            }, 1500);
+        }
     }
 }

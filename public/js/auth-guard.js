@@ -204,7 +204,8 @@ class AuthGuard {
         
         console.log('🚪 Redirecionando para login:', message);
         
-        if (message) {
+        // Só salvar mensagem se for importante e não for acesso direto à página
+        if (message && !message.includes('Você precisa estar logado para acessar esta página')) {
             localStorage.setItem('login_message', message);
         }
         

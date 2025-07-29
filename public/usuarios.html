@@ -15,47 +15,67 @@
         <!-- Logo Section -->
         <div class="p-6 border-b border-teal-700/50 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <img src="images/Logo-ModelAI.png" alt="ModelAI" class="h-8 w-auto">
-                <span class="text-white font-bold text-xl">ModelAI</span>
+                <img src="images/Logo-ModelAI-positiva.png" alt="Model AI" class="h-8">
             </div>
-            <button id="toggleSidebar" class="text-white p-2 hover:bg-teal-700/50 rounded-lg transition-colors">
-                <i class="fas fa-bars"></i>
+            <button id="toggleSidebar" class="text-white hover:text-teal-200 p-2">
+                <i class="fas fa-bars text-lg"></i>
             </button>
         </div>
 
         <!-- Navigation -->
-        <nav class="flex-1 p-4 space-y-2">
-            <a href="inputs.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-teal-100 hover:bg-teal-700/50 transition-colors">
-                <i class="fas fa-edit w-5"></i>
-                <span>Entrada de Dados</span>
-            </a>
-            <a href="cenarios.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-teal-100 hover:bg-teal-700/50 transition-colors">
-                <i class="fas fa-folder w-5"></i>
-                <span>Cenários</span>
-            </a>
-            <a href="resultados.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-teal-100 hover:bg-teal-700/50 transition-colors">
-                <i class="fas fa-chart-line w-5"></i>
-                <span>Resultados</span>
-            </a>
-            <a href="usuarios.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg bg-teal-700 text-white transition-colors">
-                <i class="fas fa-users w-5"></i>
-                <span>👑 Usuários (Admin)</span>
-            </a>
+        <nav class="flex-1 p-4">
+            <div class="space-y-2">
+                <a href="inputs.html" class="sidebar-item flex items-center p-3 text-teal-200 hover:text-white">
+                    <i class="fas fa-edit sidebar-icon mr-3 text-lg"></i>
+                    <span class="font-medium sidebar-text">Inputs</span>
+                </a>
+                
+                <a href="cenarios.html" class="sidebar-item flex items-center p-3 text-teal-200 hover:text-white">
+                    <i class="fas fa-folder sidebar-icon mr-3 text-lg"></i>
+                    <span class="font-medium sidebar-text">Cenários</span>
+                </a>
+                
+                <a href="resultados.html" class="sidebar-item flex items-center p-3 text-teal-200 hover:text-white">
+                    <i class="fas fa-chart-line sidebar-icon mr-3 text-lg"></i>
+                    <span class="font-medium sidebar-text">Resultados</span>
+                </a>
+                
+                <a href="usuarios.html" class="sidebar-item active flex items-center p-3 text-white">
+                    <i class="fas fa-users sidebar-icon mr-3 text-lg"></i>
+                    <span class="font-medium sidebar-text">👑 Usuários (Admin)</span>
+                </a>
+            </div>
+            
+            <!-- Divider -->
+            <div class="my-6 border-t border-teal-700/50"></div>
+            
+            <!-- Quick Actions -->
+            <div class="space-y-2">
+                <button class="sidebar-item w-full flex items-center p-3 text-teal-200 hover:text-white">
+                    <i class="fas fa-cog sidebar-icon mr-3 text-lg"></i>
+                    <span class="font-medium sidebar-text">Configurações</span>
+                </button>
+            </div>
         </nav>
 
-        <!-- User Info -->
+        <!-- User Profile -->
         <div class="p-4 border-t border-teal-700/50">
-            <div class="flex items-center space-x-3 text-teal-100">
-                <div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center">
-                    <i class="fas fa-crown text-yellow-300"></i>
+            <div class="flex items-center space-x-3 p-3 rounded-xl bg-teal-800/50">
+                <div class="w-10 h-10 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-crown text-white"></i>
                 </div>
-                <div class="flex-1">
-                    <p class="text-sm font-medium" id="userName">Administrador</p>
-                    <p class="text-xs text-teal-300" id="userEmail">administrador@modelai.com</p>
+                <div class="flex-1 min-w-0">
+                    <p class="text-white text-sm font-semibold truncate" id="userName">Administrador</p>
+                    <p class="text-teal-200 text-xs truncate" id="userEmail">admin@modelai.com</p>
                 </div>
-                <button onclick="logout()" class="text-teal-300 hover:text-white transition-colors" title="Sair">
-                    <i class="fas fa-sign-out-alt"></i>
-                </button>
+                <div class="flex space-x-1">
+                    <button class="text-teal-200 hover:text-white p-2 rounded-lg hover:bg-teal-700/50 transition-colors" title="Configurações">
+                        <i class="fas fa-cog text-sm"></i>
+                    </button>
+                    <button onclick="logout()" class="text-teal-200 hover:text-white p-2 rounded-lg hover:bg-teal-700/50 transition-colors" title="Sair">
+                        <i class="fas fa-sign-out-alt text-sm"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
