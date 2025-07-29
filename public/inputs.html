@@ -7,11 +7,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/inputs.css">
+    <link rel="stylesheet" href="css/sidebar.css">
     <script src="js/api.js"></script>
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+    <!-- Mobile Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+
     <!-- Modern Sidebar -->
-    <div id="sidebar" class="modern-sidebar fixed left-0 top-0 w-72 h-full z-50 flex flex-col">
+    <div id="sidebar" class="modern-sidebar fixed left-0 top-0 w-72 h-full z-50 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
         <!-- Logo Section -->
         <div class="p-6 border-b border-teal-700/50 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -76,12 +80,23 @@
     </div>
 
     <!-- Main Content -->
-    <div id="mainContent" class="main-content ml-72 min-h-screen">
+    <div id="mainContent" class="main-content ml-0 lg:ml-72 min-h-screen transition-all duration-300">
+        <!-- Mobile Header -->
+        <div class="lg:hidden bg-teal-600 p-4 flex items-center justify-between">
+            <button id="mobileMenuToggle" class="text-white">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            <img src="images/Logo-ModelAI-positiva.png" alt="Model AI" class="h-8">
+            <button onclick="logout()" class="text-white">
+                <i class="fas fa-sign-out-alt text-xl"></i>
+            </button>
+        </div>
+
         <div class="container mx-auto px-4 py-6 max-w-7xl">
             <!-- Header -->
-            <div class="mb-8">
-                <h1 class="text-3xl lg:text-4xl font-bold text-gray-800 mb-2">Análise de Empreendimento</h1>
-                <p class="text-base text-gray-600">Configure os parâmetros do seu empreendimento para análise detalhada.</p>
+            <div class="mb-6 md:mb-8">
+                <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-2">Análise de Empreendimento</h1>
+                <p class="text-sm md:text-base text-gray-600">Configure os parâmetros do seu empreendimento para análise detalhada.</p>
             </div>
 
             <!-- Scenario Name Card -->
@@ -567,5 +582,57 @@
     <script src="js/admin-menu.js"></script>
     <script src="js/sidebar.js"></script>
     <script src="js/inputs.js"></script>
+    
+    <script>
+        // Mobile menu toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+
+            function toggleMobileMenu() {
+                const isOpen = !sidebar.classList.contains('-translate-x-full');
+                
+                if (isOpen) {
+                    // Close menu
+                    sidebar.classList.add('-translate-x-full');
+                    overlay.classList.add('hidden');
+                    document.body.classList.remove('overflow-hidden');
+                } else {
+                    // Open menu
+                    sidebar.classList.remove('-translate-x-full');
+                    overlay.classList.remove('hidden');
+                    document.body.classList.add('overflow-hidden');
+                }
+            }
+
+            if (mobileMenuToggle) {
+                mobileMenuToggle.addEventListener('click', toggleMobileMenu);
+            }
+
+            if (overlay) {
+                overlay.addEventListener('click', toggleMobileMenu);
+            }
+
+            // Close menu when clicking on sidebar links (mobile)
+            const sidebarLinks = sidebar.querySelectorAll('a');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 1024) {
+                        toggleMobileMenu();
+                    }
+                });
+            });
+
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 1024) {
+                    sidebar.classList.remove('-translate-x-full');
+                    overlay.classList.add('hidden');
+                    document.body.classList.remove('overflow-hidden');
+                }
+            });
+        });
+    </script>
 </body>
 </html>

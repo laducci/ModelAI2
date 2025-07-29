@@ -9,8 +9,11 @@
     <link rel="stylesheet" href="css/sidebar.css">
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+    <!-- Mobile Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+
     <!-- Modern Sidebar -->
-    <div id="sidebar" class="modern-sidebar fixed left-0 top-0 w-72 h-full z-50 flex flex-col">
+    <div id="sidebar" class="modern-sidebar fixed left-0 top-0 w-72 h-full z-50 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
         <!-- Logo Section -->
         <div class="p-6 border-b border-teal-700/50 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -80,20 +83,31 @@
     </div>
 
     <!-- Main Content -->
-    <div id="mainContent" class="main-content ml-72 min-h-screen">
+    <div id="mainContent" class="main-content ml-0 lg:ml-72 min-h-screen transition-all duration-300">
+        <!-- Mobile Header -->
+        <div class="lg:hidden bg-teal-600 p-4 flex items-center justify-between">
+            <button id="mobileMenuToggle" class="text-white">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            <img src="images/Logo-ModelAI-positiva.png" alt="Model AI" class="h-8">
+            <button onclick="logout()" class="text-white">
+                <i class="fas fa-sign-out-alt text-xl"></i>
+            </button>
+        </div>
+
         <!-- Header -->
-        <div class="bg-white shadow-sm p-6 border-b">
-            <div class="flex items-center justify-between">
+        <div class="bg-white shadow-sm p-4 md:p-6 border-b">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-800 flex items-center">
+                    <h1 class="text-xl md:text-2xl font-bold text-gray-800 flex items-center">
                         <i class="fas fa-users text-teal-600 mr-3"></i>
                         Administração de Usuários
                     </h1>
-                    <p class="text-gray-600 mt-1">Gerencie usuários e permissões do sistema</p>
+                    <p class="text-gray-600 mt-1 text-sm md:text-base">Gerencie usuários e permissões do sistema</p>
                 </div>
-                <button id="btnNovoUsuario" class="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors font-semibold flex items-center">
+                <button id="btnNovoUsuario" class="w-full sm:w-auto bg-teal-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg hover:bg-teal-700 transition-colors font-semibold flex items-center justify-center">
                     <i class="fas fa-plus mr-2"></i>
-                    Novo Usuário
+                    <span class="hidden sm:inline">Novo </span>Usuário
                 </button>
             </div>
         </div>
@@ -261,5 +275,57 @@
     <script src="js/admin-menu.js"></script>
     <script src="js/sidebar.js"></script>
     <script src="js/usuarios.js"></script>
+    
+    <script>
+        // Mobile menu toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+
+            function toggleMobileMenu() {
+                const isOpen = !sidebar.classList.contains('-translate-x-full');
+                
+                if (isOpen) {
+                    // Close menu
+                    sidebar.classList.add('-translate-x-full');
+                    overlay.classList.add('hidden');
+                    document.body.classList.remove('overflow-hidden');
+                } else {
+                    // Open menu
+                    sidebar.classList.remove('-translate-x-full');
+                    overlay.classList.remove('hidden');
+                    document.body.classList.add('overflow-hidden');
+                }
+            }
+
+            if (mobileMenuToggle) {
+                mobileMenuToggle.addEventListener('click', toggleMobileMenu);
+            }
+
+            if (overlay) {
+                overlay.addEventListener('click', toggleMobileMenu);
+            }
+
+            // Close menu when clicking on sidebar links (mobile)
+            const sidebarLinks = sidebar.querySelectorAll('a');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 1024) {
+                        toggleMobileMenu();
+                    }
+                });
+            });
+
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 1024) {
+                    sidebar.classList.remove('-translate-x-full');
+                    overlay.classList.add('hidden');
+                    document.body.classList.remove('overflow-hidden');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
