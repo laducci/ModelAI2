@@ -4,6 +4,55 @@ console.log('👑 USUARIOS - Sistema Real Iniciando...');
 let allUsers = [];
 let currentUser = null;
 
+// DEFINIR FUNÇÕES GLOBAIS IMEDIATAMENTE
+window.abrirModalNovoUsuario = function() {
+    console.log('🔄 Tentando abrir modal...');
+    
+    const modal = document.getElementById('modalNovoUsuario');
+    const form = document.getElementById('formNovoUsuario');
+    
+    if (!modal) {
+        console.error('❌ Modal não encontrado!');
+        alert('Erro: Modal não encontrado no DOM');
+        return;
+    }
+    
+    if (!form) {
+        console.error('❌ Form não encontrado!');
+        alert('Erro: Formulário não encontrado no DOM');
+        return;
+    }
+    
+    console.log('✅ Modal e form encontrados, abrindo...');
+    modal.classList.remove('hidden');
+    form.reset();
+    console.log('✅ Modal aberto com sucesso!');
+};
+
+window.fecharModalNovoUsuario = function() {
+    const modal = document.getElementById('modalNovoUsuario');
+    const form = document.getElementById('formNovoUsuario');
+    
+    if (modal) modal.classList.add('hidden');
+    if (form) {
+        form.reset();
+        form.removeAttribute('data-editing');
+        const title = document.querySelector('#modalNovoUsuario h3');
+        if (title) title.textContent = 'Criar Novo Usuário';
+        const senhaField = document.getElementById('novaSenha');
+        if (senhaField) senhaField.setAttribute('required', '');
+    }
+    console.log('✅ Modal fechado');
+};
+
+// Função de logout global
+window.logout = function() {
+    console.log('🚪 Logout...');
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.replace('login.html');
+};
+
 // Inicialização
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('📋 DOM carregado - iniciando usuarios...');
@@ -36,7 +85,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.log('✅ Admin verificado - carregando...');
         
         console.log('📊 Carregando usuários...');
-        await carregarUsuarios();
+        await window.carregarUsuarios();
         
         console.log('📈 Carregando dashboard...');
         await carregarDashboard();
@@ -124,7 +173,7 @@ class UserAPI {
 const userAPI = new UserAPI();
 
 // Carregar usuários
-async function carregarUsuarios() {
+window.carregarUsuarios = async function() {
     console.log('📊 Carregando usuários...');
     console.log('🔗 userAPI disponível:', !!userAPI);
     
@@ -339,7 +388,7 @@ function fecharModalNovoUsuario() {
 }
 
 // Criar ou editar usuário
-async function criarUsuario(e) {
+window.criarUsuario = async function(e) {
     console.log('🚀 Função criarUsuario chamada!');
     e.preventDefault();
     
