@@ -250,6 +250,12 @@ class ScenarioManager {
             console.log('🔑 Token:', localStorage.getItem('token') ? 'PRESENTE' : 'AUSENTE');
 
             // Salvar via API
+            console.log('🚀 Enviando requisição para /api/scenarios...');
+            console.log('📦 Headers:', {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')?.substring(0,20)}...`
+            });
+            
             const response = await fetch('/api/scenarios', {
                 method: 'POST',
                 headers: {
@@ -260,6 +266,7 @@ class ScenarioManager {
             });
 
             console.log('📈 Status da resposta:', response.status);
+            console.log('📋 Headers da resposta:', Object.fromEntries(response.headers.entries()));
 
             if (response.ok) {
                 const result = await response.json();

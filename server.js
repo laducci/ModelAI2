@@ -179,6 +179,23 @@ app.post('/api/create-admin', async (req, res) => {
   }
 });
 
+// Middleware para rotas da API (direciona para o handler universal)
+app.use('/api', async (req, res, next) => {
+    // Pular as rotas já definidas acima
+    if (req.path === '/auth/login' || req.path === '/auth/verify' || req.path === '/create-admin' || req.path === '/health') {
+        return next();
+    }
+    
+    // Usar o handler universal para outras rotas da API
+    try {
+        const apiHandler = require('./api/index.js');
+        await apiHandler(req, res);
+    } catch (error) {
+        console.error('❌ Erro no handler da API:', error);
+        res.status(500).json({ message: 'Erro interno do servidor', error: error.message });
+    }
+});
+
 // Rota de health check
 app.get('/api/health', (req, res) => {
     res.json({

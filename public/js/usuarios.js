@@ -1,18 +1,22 @@
-// USUARIOS.JS - VERSÃO SIMPLIFICADA
-console.log('🚀 USUARIOS.JS - Iniciando versão simplificada...');
+// USUARIOS.JS - VERSÃO COMPLETA E FUNCIONAL
+console.log('🚀 USUARIOS.JS - Iniciando versão completa...');
 
 // Variáveis globais
 let usuarios = [];
 let usuarioAtual = null;
 
-// 1. FUNÇÃO PARA ABRIR MODAL - GLOBAL
+//===============================
+// FUNÇÕES DE MODAL
+//===============================
+
+// Função para abrir modal novo usuário
 window.abrirModalNovoUsuario = function() {
     console.log('🔵 abrirModalNovoUsuario chamada!');
     
     const modal = document.getElementById('modalNovoUsuario');
     if (!modal) {
         console.error('❌ Modal modalNovoUsuario não encontrado!');
-        alert('Erro: Modal não encontrado');
+        showError('Erro: Modal não encontrado');
         return;
     }
     
@@ -28,7 +32,7 @@ window.abrirModalNovoUsuario = function() {
     console.log('✅ Modal aberto com sucesso!');
 };
 
-// 2. FUNÇÃO PARA FECHAR MODAL - GLOBAL
+// Função para fechar modal novo usuário
 window.fecharModalNovoUsuario = function() {
     console.log('🔄 fecharModalNovoUsuario chamada!');
     
@@ -39,7 +43,45 @@ window.fecharModalNovoUsuario = function() {
     }
 };
 
-// 3. FUNÇÃO PARA CRIAR USUÁRIO - GLOBAL
+// Função para abrir modal editar usuário
+window.editarUsuario = function(userId) {
+    console.log('✏️ === EDITANDO USUÁRIO ===');
+    console.log('🆔 User ID:', userId);
+    
+    const usuario = usuarios.find(u => u._id === userId);
+    if (!usuario) {
+        showError('Usuário não encontrado.');
+        return;
+    }
+    
+    console.log('👤 Usuário encontrado:', usuario);
+    
+    // Preencher o modal com os dados
+    document.getElementById('editarUsuarioId').value = usuario._id;
+    document.getElementById('editarNome').value = usuario.name;
+    document.getElementById('editarEmail').value = usuario.email;
+    document.getElementById('editarEmpresa').value = usuario.company || '';
+    document.getElementById('editarRole').value = usuario.role;
+    document.getElementById('editarStatus').value = usuario.active !== false ? 'true' : 'false';
+    
+    // Abrir modal
+    const modal = document.getElementById('modalEditarUsuario');
+    modal.classList.remove('hidden');
+    
+    showInfo(`Editando usuário: ${usuario.name}`);
+};
+
+// Função para fechar modal editar usuário
+window.fecharModalEditarUsuario = function() {
+    const modal = document.getElementById('modalEditarUsuario');
+    modal.classList.add('hidden');
+};
+
+//===============================
+// FUNÇÕES DE CRUD
+//===============================
+
+// Função para criar usuário
 window.criarUsuario = async function(event) {
     console.log('📝 criarUsuario chamada!');
     event.preventDefault();
@@ -59,7 +101,7 @@ window.criarUsuario = async function(event) {
     
     // Validação simples
     if (!dadosUsuario.name || !dadosUsuario.email || !dadosUsuario.password) {
-        alert('Por favor, preencha todos os campos obrigatórios');
+        showError('Por favor, preencha todos os campos obrigatórios');
         return;
     }
     
@@ -81,7 +123,7 @@ window.criarUsuario = async function(event) {
             const resultado = await response.json();
             console.log('✅ Usuário criado:', resultado);
             
-            alert('Usuário criado com sucesso!');
+            showSuccess('Usuário criado com sucesso!');
             window.fecharModalNovoUsuario();
             
             // Recarregar lista
@@ -90,16 +132,201 @@ window.criarUsuario = async function(event) {
         } else {
             const erro = await response.json();
             console.error('❌ Erro da API:', erro);
-            alert(`Erro: ${erro.message || 'Erro ao criar usuário'}`);
+            showError(`Erro: ${erro.message || 'Erro ao criar usuário'}`);
         }
         
     } catch (error) {
         console.error('❌ Erro de rede:', error);
-        alert('Erro de conexão. Verifique sua internet.');
+        showError('Erro de conexão. Verifique sua internet.');
     }
 };
 
-// 4. FUNÇÃO PARA CARREGAR USUÁRIOS - GLOBAL
+// Função para salvar edição do usuário
+window.salvarEdicaoUsuario = async function(event) {
+    event.preventDefault();
+    
+    const userId = document.getElementById('editarUsuarioId').value;
+    const dadosAtualizacao = {
+        name: document.getElementById('editarNome').value,
+        email: document.getElementById('editarEmail').value,
+        company: document.getElementById('editarEmpresa').value,
+        role: document.getElementById('editarRole').value,
+        active: document.getElementById('editarStatus').value === 'true'
+    };
+    
+    // Só incluir senha se foi preenchida
+    const novaSenha = document.getElementById('editarSenha').value;
+    if (novaSenha.trim()) {
+        dadosAtualizacao.password = novaSenha;
+    }
+    
+    console.log('💾 Salvando usuário:', userId, dadosAtualizacao);
+    
+    try {
+        const response = await fetch(`/api/users/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(dadosAtualizacao)
+        });
+        
+        if (response.ok) {
+            const resultado = await response.json();
+            console.log('✅ Usuário atualizado:', resultado);
+            
+            showSuccess(`Usuário "${dadosAtualizacao.name}" atualizado com sucesso!`);
+            window.fecharModalEditarUsuario();
+            await window.carregarUsuarios();
+            
+        } else {
+            const erro = await response.json();
+            console.error('❌ Erro ao atualizar:', erro);
+            showError(`Erro ao atualizar: ${erro.message}`);
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro de rede:', error);
+        showError('Erro de conexão ao atualizar usuário.');
+    }
+};
+
+// Função para deletar usuário
+window.deletarUsuario = function(userId) {
+    console.log('🗑️ === DELETANDO USUÁRIO ===');
+    console.log('🆔 User ID:', userId);
+    
+    const usuario = usuarios.find(u => u._id === userId);
+    if (!usuario) {
+        showError('Usuário não encontrado.');
+        return;
+    }
+    
+    // Confirmação personalizada usando alertas do sistema
+    const confirmar = confirm(`⚠️ ATENÇÃO!\n\nDeseja realmente EXCLUIR o usuário "${usuario.name}"?\n\n📧 Email: ${usuario.email}\n👤 Role: ${usuario.role}\n\n⚠️ Esta ação NÃO pode ser desfeita!\n\nClique OK para confirmar a exclusão.`);
+    
+    if (!confirmar) {
+        showInfo('Exclusão cancelada pelo usuário.');
+        return;
+    }
+    
+    // Prosseguir com a exclusão
+    window.confirmarDelecaoUsuario(userId);
+};
+
+// Função para confirmar deleção
+window.confirmarDelecaoUsuario = async function(userId) {
+    try {
+        console.log('🔥 Executando deleção do usuário:', userId);
+        
+        const response = await fetch(`/api/users/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (response.ok) {
+            const resultado = await response.json();
+            console.log('✅ Usuário deletado:', resultado);
+            
+            showSuccess('Usuário excluído com sucesso!');
+            await window.carregarUsuarios();
+            
+        } else {
+            const erro = await response.json();
+            console.error('❌ Erro ao deletar:', erro);
+            showError(`Erro ao excluir: ${erro.message}`);
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro de rede:', error);
+        showError('Erro de conexão ao excluir usuário.');
+    }
+};
+
+// Função para toggle status do usuário
+window.toggleUsuario = async function(userId) {
+    console.log('🔄 === TOGGLE USUÁRIO ===');
+    console.log('🆔 User ID:', userId);
+    
+    const usuario = usuarios.find(u => u._id === userId);
+    if (!usuario) {
+        showError('Usuário não encontrado.');
+        return;
+    }
+    
+    const novoStatus = !usuario.active;
+    const acao = novoStatus ? 'ativar' : 'desativar';
+    
+    console.log(`🔄 ${acao} usuário:`, usuario.name);
+    
+    try {
+        const response = await fetch(`/api/users/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ active: novoStatus })
+        });
+        
+        if (response.ok) {
+            console.log(`✅ Usuário ${acao}do com sucesso`);
+            showSuccess(`Usuário "${usuario.name}" ${acao}do com sucesso!`);
+            await window.carregarUsuarios();
+            
+        } else {
+            const erro = await response.json();
+            console.error(`❌ Erro ao ${acao}:`, erro);
+            showError(`Erro ao ${acao} usuário: ${erro.message}`);
+        }
+        
+    } catch (error) {
+        console.error(`❌ Erro de rede ao ${acao}:`, error);
+        showError(`Erro de conexão ao ${acao} usuário.`);
+    }
+};
+
+//===============================
+// LOGOUT COM ALERTAS PADRONIZADOS
+//===============================
+
+// Função de logout padronizada
+window.logout = function() {
+    console.log('🚪 === LOGOUT SOLICITADO ===');
+    
+    // Usar o sistema de alertas padronizado em vez de confirm()
+    const confirmar = confirm('🚪 Deseja realmente sair do sistema?\n\nVocê precisará fazer login novamente para acessar o sistema.');
+    
+    if (confirmar) {
+        console.log('✅ Logout confirmado');
+        
+        // Limpar dados de autenticação
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('currentInputs');
+        localStorage.removeItem('scenarios');
+        
+        showInfo('Logout realizado com sucesso. Redirecionando...');
+        
+        // Redirecionar após 1 segundo
+        setTimeout(() => {
+            window.location.href = '/login.html';
+        }, 1000);
+        
+    } else {
+        console.log('❌ Logout cancelado');
+        showInfo('Logout cancelado.');
+    }
+};
+
+//===============================
+// FUNÇÕES DE CARREGAMENTO
+//===============================
+
+// Função para carregar usuários
 window.carregarUsuarios = async function() {
     console.log('📋 carregarUsuarios chamada!');
     
@@ -117,71 +344,49 @@ window.carregarUsuarios = async function() {
         if (response.ok) {
             const data = await response.json();
             usuarios = data.users || [];
+            console.log('✅ Usuários carregados:', usuarios.length);
             
-            console.log(`✅ ${usuarios.length} usuários carregados:`, usuarios);
-            
-            // Renderizar usuários
-            renderizarUsuarios();
-            atualizarEstatisticas();
+            window.renderizarUsuarios();
+            window.atualizarEstatisticas();
             
         } else {
-            const erro = await response.json();
+            const erro = await response.text();
             console.error('❌ Erro da API:', erro);
-            
-            // Mostrar erro na tabela
-            const tabela = document.getElementById('tabelaUsuarios');
-            if (tabela) {
-                tabela.innerHTML = `
-                    <tr>
-                        <td colspan="7" class="text-center text-red-500 p-4">
-                            ❌ Erro ao carregar usuários: ${erro.message}
-                        </td>
-                    </tr>
-                `;
-            }
+            showError('Erro ao carregar usuários');
         }
         
     } catch (error) {
-        console.error('❌ Erro de rede:', error);
-        
-        const tabela = document.getElementById('tabelaUsuarios');
-        if (tabela) {
-            tabela.innerHTML = `
-                <tr>
-                    <td colspan="7" class="text-center text-red-500 p-4">
-                        ❌ Erro de conexão: ${error.message}
-                    </td>
-                </tr>
-            `;
-        }
+        console.error('❌ Erro ao carregar usuários:', error);
+        showError('Erro de conexão ao carregar usuários');
     }
 };
 
-// 5. FUNÇÃO PARA RENDERIZAR USUÁRIOS
-function renderizarUsuarios() {
+// Função para renderizar usuários na tabela
+window.renderizarUsuarios = function() {
     console.log('🎨 Renderizando usuários...');
     
-    const tabela = document.getElementById('tabelaUsuarios');
-    if (!tabela) {
-        console.error('❌ Tabela tabelaUsuarios não encontrada!');
+    const tbody = document.getElementById('tabelaUsuarios');
+    if (!tbody) {
+        console.error('❌ Tabela de usuários não encontrada!');
         return;
     }
     
     if (usuarios.length === 0) {
-        tabela.innerHTML = `
+        tbody.innerHTML = `
             <tr>
                 <td colspan="7" class="text-center text-gray-500 p-8">
-                    👥 Nenhum usuário encontrado
+                    <i class="fas fa-users text-4xl mb-4"></i>
+                    <p>Nenhum usuário encontrado</p>
                 </td>
             </tr>
         `;
         return;
     }
     
-    const html = usuarios.map(usuario => {
-        const status = usuario.isActive ? 
-            '<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Ativo</span>' :
-            '<span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Inativo</span>';
+    tbody.innerHTML = usuarios.map(usuario => {
+        const status = usuario.active !== false ? 
+            '<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">✅ Ativo</span>' : 
+            '<span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">❌ Inativo</span>';
             
         const role = usuario.role === 'admin' ? 
             '<span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">👑 Admin</span>' :
@@ -215,10 +420,8 @@ function renderizarUsuarios() {
                         <button onclick="editarUsuario('${usuario._id}')" class="text-blue-600 hover:text-blue-900 px-2 py-1 rounded">
                             <i class="fas fa-edit"></i> Editar
                         </button>
-                        <button onclick="toggleUsuarioStatus('${usuario._id}', ${usuario.isActive})" 
-                                class="px-2 py-1 rounded ${usuario.isActive ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'}">
-                            <i class="fas fa-${usuario.isActive ? 'ban' : 'check'}"></i> 
-                            ${usuario.isActive ? 'Desativar' : 'Ativar'}
+                        <button onclick="toggleUsuario('${usuario._id}')" class="text-yellow-600 hover:text-yellow-900 px-2 py-1 rounded">
+                            <i class="fas fa-toggle-${usuario.active !== false ? 'on' : 'off'}"></i> ${usuario.active !== false ? 'Desativar' : 'Ativar'}
                         </button>
                         <button onclick="deletarUsuario('${usuario._id}')" class="text-red-600 hover:text-red-900 px-2 py-1 rounded">
                             <i class="fas fa-trash"></i> Excluir
@@ -229,197 +432,58 @@ function renderizarUsuarios() {
         `;
     }).join('');
     
-    tabela.innerHTML = html;
-    console.log('✅ Usuários renderizados na tabela!');
-}
+    console.log('✅ Usuários renderizados!');
+};
 
-// 6. FUNÇÃO PARA ATUALIZAR ESTATÍSTICAS
-function atualizarEstatisticas() {
+// Função para atualizar estatísticas
+window.atualizarEstatisticas = function() {
     console.log('📊 Atualizando estatísticas...');
     
     const total = usuarios.length;
-    const ativos = usuarios.filter(u => u.isActive).length;
+    const ativos = usuarios.filter(u => u.active !== false).length;
     const admins = usuarios.filter(u => u.role === 'admin').length;
     
-    // Atualizar elementos
-    const elementoTotal = document.getElementById('totalUsuarios');
-    const elementoAtivos = document.getElementById('usuariosAtivos');
-    const elementoNovos = document.getElementById('novosUsuarios');
+    document.getElementById('totalUsuarios').textContent = total;
+    document.getElementById('usuariosAtivos').textContent = ativos;
+    document.getElementById('novosUsuarios').textContent = admins;
     
-    if (elementoTotal) elementoTotal.textContent = total;
-    if (elementoAtivos) elementoAtivos.textContent = ativos;
-    if (elementoNovos) elementoNovos.textContent = admins;
-    
-    console.log(`📈 Stats: ${total} total, ${ativos} ativos, ${admins} admins`);
-}
-
-// 7. FUNÇÃO PARA EDITAR USUÁRIO - GLOBAL
-window.editarUsuario = function(userId) {
-    console.log('✏️ Editando usuário:', userId);
-    const usuario = usuarios.find(u => u._id === userId);
-    if (!usuario) {
-        alert('Usuário não encontrado');
-        return;
-    }
-    
-    const novoNome = prompt(`Editar nome do usuário:\n\nNome atual: ${usuario.name}`, usuario.name);
-    if (novoNome && novoNome.trim() && novoNome.trim() !== usuario.name) {
-        updateUsuario(userId, { name: novoNome.trim() });
-    }
+    console.log('✅ Estatísticas atualizadas:', { total, ativos, admins });
 };
 
-// Função auxiliar para atualizar usuário
-async function updateUsuario(userId, updateData) {
-    try {
-        console.log('📝 Atualizando usuário:', userId, updateData);
-        console.log('🔑 Token:', localStorage.getItem('token') ? 'PRESENTE' : 'AUSENTE');
-        
-        const url = `/api/users/${userId}`;
-        console.log('🌐 URL da requisição:', url);
-        
-        const response = await fetch(url, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify(updateData)
-        });
-        
-        console.log('📈 Resposta da API atualizar:', response.status, response.statusText);
-        
-        if (response.ok) {
-            const result = await response.json();
-            console.log('✅ Usuário atualizado:', result);
-            alert('Usuário atualizado com sucesso!');
-            await window.carregarUsuarios();
-        } else {
-            const erro = await response.text(); // Usar text() primeiro
-            console.error('❌ Erro da API (text):', erro);
-            
-            try {
-                const erroJson = JSON.parse(erro);
-                alert(`Erro ao atualizar usuário: ${erroJson.message}`);
-            } catch {
-                alert(`Erro ao atualizar usuário: ${response.status} - ${erro}`);
-            }
-        }
-        
-    } catch (error) {
-        console.error('❌ Erro ao atualizar usuário:', error);
-        alert('Erro de conexão. Tente novamente.');
-    }
-}
+//===============================
+// INICIALIZAÇÃO
+//===============================
 
-// 8. FUNÇÃO PARA DELETAR USUÁRIO - GLOBAL
-window.deletarUsuario = async function(userId) {
-    console.log('🗑️ Deletando usuário:', userId);
-    
-    const usuario = usuarios.find(u => u._id === userId);
-    if (!usuario) {
-        alert('Usuário não encontrado');
-        return;
-    }
-    
-    if (!confirm(`Tem certeza que deseja excluir o usuário "${usuario.name}"?\n\nEsta ação não pode ser desfeita.`)) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/api/users/${userId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-        
-        if (response.ok) {
-            alert('Usuário deletado com sucesso!');
-            await window.carregarUsuarios();
-        } else {
-            const erro = await response.json();
-            alert(`Erro ao deletar usuário: ${erro.message}`);
-        }
-        
-    } catch (error) {
-        console.error('❌ Erro ao deletar usuário:', error);
-        alert('Erro de conexão. Tente novamente.');
-    }
-};
-
-// 9. FUNÇÃO PARA ATIVAR/DESATIVAR USUÁRIO - GLOBAL
-window.toggleUsuarioStatus = async function(userId, currentStatus) {
-    console.log('🔄 Toggle status usuário:', userId, 'Status atual:', currentStatus);
-    
-    const usuario = usuarios.find(u => u._id === userId);
-    if (!usuario) {
-        alert('Usuário não encontrado');
-        return;
-    }
-    
-    const acao = currentStatus ? 'desativar' : 'ativar';
-    const novoStatus = !currentStatus;
-    
-    if (!confirm(`Tem certeza que deseja ${acao} o usuário "${usuario.name}"?`)) {
-        return;
-    }
-    
-    await updateUsuario(userId, { isActive: novoStatus });
-};
-
-// 10. FUNÇÃO LOGOUT
-window.logout = function() {
-    console.log('🚪 Logout...');
-    localStorage.clear();
-    sessionStorage.clear();
-    window.location.replace('login.html');
-};
-
-// 8. INICIALIZAÇÃO QUANDO DOM CARREGA
+// Inicializar quando DOM carregar
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('🚀 DOM carregado - Inicializando usuarios.js...');
+    console.log('🚀 DOM carregado, inicializando usuários...');
     
     try {
-        // Verificar autenticação
-        const token = localStorage.getItem('token');
-        const userData = localStorage.getItem('user');
-        
-        if (!token || !userData) {
-            console.log('❌ Não autenticado, redirecionando...');
-            window.location.replace('login.html');
-            return;
-        }
-        
-        usuarioAtual = JSON.parse(userData);
-        console.log('👤 Usuário atual:', usuarioAtual.name, usuarioAtual.role);
-        
-        if (usuarioAtual.role !== 'admin') {
-            console.log('🚫 Não é admin, redirecionando...');
-            alert('Acesso negado. Apenas administradores.');
-            window.location.replace('inputs.html');
-            return;
-        }
-        
-        // Configurar botão
+        // Configurar botão novo usuário
         const btnNovoUsuario = document.getElementById('btnNovoUsuario');
         if (btnNovoUsuario) {
-            btnNovoUsuario.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('🔵 Botão clicado via addEventListener!');
-                window.abrirModalNovoUsuario();
-            });
-            console.log('✅ Botão configurado!');
+            btnNovoUsuario.addEventListener('click', window.abrirModalNovoUsuario);
+            console.log('✅ Botão novo usuário configurado!');
         } else {
             console.error('❌ Botão btnNovoUsuario não encontrado!');
         }
         
-        // Configurar form
+        // Configurar form novo usuário
         const form = document.getElementById('formNovoUsuario');
         if (form) {
             form.addEventListener('submit', window.criarUsuario);
-            console.log('✅ Form configurado!');
+            console.log('✅ Form novo usuário configurado!');
         } else {
             console.error('❌ Form formNovoUsuario não encontrado!');
+        }
+        
+        // Configurar form editar usuário
+        const formEditar = document.getElementById('formEditarUsuario');
+        if (formEditar) {
+            formEditar.addEventListener('submit', window.salvarEdicaoUsuario);
+            console.log('✅ Form editar usuário configurado!');
+        } else {
+            console.error('❌ Form formEditarUsuario não encontrado!');
         }
         
         // Carregar usuários
@@ -430,7 +494,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         
     } catch (error) {
         console.error('❌ Erro na inicialização:', error);
-        alert('Erro ao inicializar a página: ' + error.message);
+        showError('Erro ao inicializar a página: ' + error.message);
     }
 });
 
