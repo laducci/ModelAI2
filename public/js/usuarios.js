@@ -40,8 +40,9 @@ class UserAPI {
     constructor() {
         this.baseURL = window.location.hostname === 'localhost' ? 
             'http://localhost:3000/api' : 
-            'https://model-ai2.vercel.app/api';
+            '/api'; // URL relativa para Vercel
         this.token = localStorage.getItem('token') || localStorage.getItem('modelai_token');
+        console.log('🔗 UserAPI Base URL:', this.baseURL);
     }
 
     async request(endpoint, options = {}) {
