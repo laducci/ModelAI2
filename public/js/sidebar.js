@@ -98,29 +98,30 @@ async function setupAdminNavigation() {
         const userProfile = await api.getProfile();
         
         if (userProfile.user.role === 'admin') {
+            // DESABILITADO - Menu já está fixo no HTML das páginas
             // Não adicionar menu duplicado na própria página de usuários
-            const currentPage = window.location.pathname.split('/').pop();
-            if (currentPage !== 'usuarios.html') {
-                // Verificar se já existe o link de usuários
-                const existingUsersLink = document.querySelector('a[href="usuarios.html"]');
-                if (!existingUsersLink) {
-                    // Adicionar aba de usuários no menu
-                    const nav = document.querySelector('nav');
-                    if (nav) {
-                        const usuariosLink = document.createElement('a');
-                        usuariosLink.href = 'usuarios.html';
-                        usuariosLink.className = 'nav-item flex items-center space-x-3 p-3 rounded-lg text-teal-100 hover:bg-teal-700/50 transition-colors';
-                        usuariosLink.innerHTML = `
-                            <i class="fas fa-users w-5"></i>
-                            <span>👑 Usuários (Admin)</span>
-                        `;
-                        nav.appendChild(usuariosLink);
-                    }
-                }
-            }
+            // const currentPage = window.location.pathname.split('/').pop();
+            // if (currentPage !== 'usuarios.html') {
+            //     // Verificar se já existe o link de usuários
+            //     const existingUsersLink = document.querySelector('a[href="usuarios.html"]');
+            //     if (!existingUsersLink) {
+            //         // Adicionar aba de usuários no menu
+            //         const nav = document.querySelector('nav');
+            //         if (nav) {
+            //             const usuariosLink = document.createElement('a');
+            //             usuariosLink.href = 'usuarios.html';
+            //             usuariosLink.className = 'nav-item flex items-center space-x-3 p-3 rounded-lg text-teal-100 hover:bg-teal-700/50 transition-colors';
+            //             usuariosLink.innerHTML = `
+            //                 <i class="fas fa-users w-5"></i>
+            //                 <span>👑 Usuários (Admin)</span>
+            //             `;
+            //             nav.appendChild(usuariosLink);
+            //         }
+            //     }
+            // }
             
             // Adicionar ícone de coroa no info do usuário
-            const userIcon = document.querySelector('.sidebar .w-8.h-8');
+            const userIcon = document.querySelector('.sidebar .w-8.h-8, .sidebar .w-10.h-10');
             if (userIcon && !userIcon.querySelector('.fa-crown')) {
                 userIcon.innerHTML = '<i class="fas fa-crown text-yellow-300"></i>';
                 userIcon.classList.add('bg-teal-500');

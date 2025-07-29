@@ -27,6 +27,9 @@ function getUserData() {
 
 // FORÇA MENU USUÁRIOS SEMPRE VISÍVEL PARA ADMIN
 function forceAdminMenu() {
+    // DESABILITADO - Menu já está fixo no HTML das páginas
+    return;
+    
     if (!currentUser || currentUser.role !== 'admin') return;
     
     // Não adicionar menu duplicado na própria página de usuários

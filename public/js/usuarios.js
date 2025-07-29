@@ -272,8 +272,12 @@ window.editarUsuario = function(userId) {
 async function updateUsuario(userId, updateData) {
     try {
         console.log('📝 Atualizando usuário:', userId, updateData);
+        console.log('🔑 Token:', localStorage.getItem('token') ? 'PRESENTE' : 'AUSENTE');
         
-        const response = await fetch(`/api/users/${userId}`, {
+        const url = `/api/users/${userId}`;
+        console.log('🌐 URL da requisição:', url);
+        
+        const response = await fetch(url, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -282,7 +286,7 @@ async function updateUsuario(userId, updateData) {
             body: JSON.stringify(updateData)
         });
         
-        console.log('📈 Resposta da API atualizar:', response.status);
+        console.log('📈 Resposta da API atualizar:', response.status, response.statusText);
         
         if (response.ok) {
             const result = await response.json();
@@ -290,9 +294,15 @@ async function updateUsuario(userId, updateData) {
             alert('Usuário atualizado com sucesso!');
             await window.carregarUsuarios();
         } else {
-            const erro = await response.json();
-            console.error('❌ Erro da API:', erro);
-            alert(`Erro ao atualizar usuário: ${erro.message}`);
+            const erro = await response.text(); // Usar text() primeiro
+            console.error('❌ Erro da API (text):', erro);
+            
+            try {
+                const erroJson = JSON.parse(erro);
+                alert(`Erro ao atualizar usuário: ${erroJson.message}`);
+            } catch {
+                alert(`Erro ao atualizar usuário: ${response.status} - ${erro}`);
+            }
         }
         
     } catch (error) {
