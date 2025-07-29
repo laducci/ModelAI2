@@ -53,6 +53,9 @@ const connectDB = async () => {
     }
 };
 
+// Conectar ao banco quando o módulo for carregado
+connectDB();
+
 // Auth routes
 app.use('/auth', require('../backend/routes/auth'));
 app.use('/scenarios', require('../backend/routes/scenarios'));
@@ -67,7 +70,11 @@ app.get('/health', (req, res) => {
     });
 });
 
+// Para Vercel (serverless)
 module.exports = async (req, res) => {
     await connectDB();
     return app(req, res);
 };
+
+// Para desenvolvimento local (export do Express app)
+module.exports.app = app;
