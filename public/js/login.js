@@ -117,15 +117,15 @@ if (loginForm) {
         console.log('✅ Login realizado com sucesso, dados do usuário:', data.user);
 
         setTimeout(() => {
-          // Redirecionar baseado no role do usuário
+          // Redirecionar baseado no role do usuário - SIMPLES
           if (data.user.role === 'admin') {
             console.log('👑 Redirecionando admin para usuarios.html');
-            window.location.href = 'usuarios.html';
+            window.location.replace('usuarios.html');
           } else {
             console.log('👤 Redirecionando usuário comum para inputs.html');
-            window.location.href = 'inputs.html';
+            window.location.replace('inputs.html');
           }
-        }, 2000);
+        }, 1500);
       } else {
         throw new Error(data.message || data.error || 'Erro ao fazer login');
       }
