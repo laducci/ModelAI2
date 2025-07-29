@@ -252,7 +252,16 @@
                         body: JSON.stringify({ email, password })
                     });
 
-                    const data = await response.json();
+                    const text = await response.text();
+                    console.log('🧾 Resposta bruta:', text);
+
+                    let data;
+                    try {
+                    data = JSON.parse(text);
+                    } catch (err) {
+                    showError("Resposta inválida do servidor.");
+                    throw new Error("Falha ao interpretar resposta: não é JSON");
+                    }
 
                     if (response.ok) {
                         localStorage.setItem('token', data.token);
