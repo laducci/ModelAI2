@@ -261,6 +261,9 @@ window.toggleUsuario = async function(userId) {
     const acao = novoStatus ? 'ativar' : 'desativar';
     
     console.log(`🔄 ${acao} usuário:`, usuario.name);
+    console.log('📊 Status atual:', usuario.active);
+    console.log('📊 Novo status:', novoStatus);
+    console.log('📦 Enviando body:', { active: novoStatus });
     
     try {
         const response = await fetch(`/api/users/${userId}`, {
@@ -272,15 +275,24 @@ window.toggleUsuario = async function(userId) {
             body: JSON.stringify({ active: novoStatus })
         });
         
+        console.log('📈 Status da resposta:', response.status);
+        
         if (response.ok) {
-            console.log(`✅ Usuário ${acao}do com sucesso`);
+            const resultado = await response.json();
+            console.log(`✅ Usuário ${acao}do com sucesso:`, resultado);
             showSuccess(`Usuário "${usuario.name}" ${acao}do com sucesso!`);
             await window.carregarUsuarios();
             
         } else {
-            const erro = await response.json();
-            console.error(`❌ Erro ao ${acao}:`, erro);
-            showError(`Erro ao ${acao} usuário: ${erro.message}`);
+            const erro = await response.text();
+            console.error(`❌ Erro ao ${acao} (text):`, erro);
+            
+            try {
+                const erroJson = JSON.parse(erro);
+                showError(`Erro ao ${acao} usuário: ${erroJson.message}`);
+            } catch {
+                showError(`Erro ao ${acao} usuário: ${response.status} - ${erro}`);
+            }
         }
         
     } catch (error) {
@@ -457,11 +469,24 @@ window.atualizarEstatisticas = function() {
 // Inicializar quando DOM carregar
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('🚀 DOM carregado, inicializando usuários...');
+    console.log('🔍 Verificando dependências...');
+    
+    // Verificar se as funções de alerta estão disponíveis
+    if (typeof showSuccess === 'undefined') {
+        console.error('❌ showSuccess não definida - alerts.js não carregado!');
+        window.showSuccess = (msg) => alert('✅ ' + msg);
+        window.showError = (msg) => alert('❌ ' + msg);
+        window.showInfo = (msg) => alert('ℹ️ ' + msg);
+    } else {
+        console.log('✅ Sistema de alertas carregado');
+    }
     
     try {
         // Configurar botão novo usuário
         const btnNovoUsuario = document.getElementById('btnNovoUsuario');
         if (btnNovoUsuario) {
+            // Remover event listeners antigos
+            btnNovoUsuario.removeEventListener('click', window.abrirModalNovoUsuario);
             btnNovoUsuario.addEventListener('click', window.abrirModalNovoUsuario);
             console.log('✅ Botão novo usuário configurado!');
         } else {
@@ -471,6 +496,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Configurar form novo usuário
         const form = document.getElementById('formNovoUsuario');
         if (form) {
+            form.removeEventListener('submit', window.criarUsuario);
             form.addEventListener('submit', window.criarUsuario);
             console.log('✅ Form novo usuário configurado!');
         } else {
@@ -480,11 +506,25 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Configurar form editar usuário
         const formEditar = document.getElementById('formEditarUsuario');
         if (formEditar) {
+            formEditar.removeEventListener('submit', window.salvarEdicaoUsuario);
             formEditar.addEventListener('submit', window.salvarEdicaoUsuario);
             console.log('✅ Form editar usuário configurado!');
         } else {
             console.error('❌ Form formEditarUsuario não encontrado!');
         }
+        
+        // Verificar token de autenticação
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error('❌ Token não encontrado - redirecionando para login');
+            showError('Você precisa fazer login primeiro!');
+            setTimeout(() => {
+                window.location.href = '/login.html';
+            }, 2000);
+            return;
+        }
+        
+        console.log('🔑 Token encontrado:', token.substring(0, 20) + '...');
         
         // Carregar usuários
         console.log('📋 Carregando usuários...');

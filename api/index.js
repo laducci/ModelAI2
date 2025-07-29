@@ -344,7 +344,7 @@ const handler = async (req, res) => {
           email: newUser.email,
           role: newUser.role,
           company: newUser.company,
-          isActive: newUser.isActive
+          active: newUser.isActive // MAPEAMENTO: isActive -> active
         }
       });
     } catch (error) {
@@ -374,9 +374,22 @@ const handler = async (req, res) => {
       
       console.log('📋 Admin', requestUser.name, 'listando usuários:', users.length);
       
+      // Mapear isActive para active para compatibilidade com frontend
+      const usersFormatted = users.map(user => ({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        company: user.company,
+        role: user.role,
+        active: user.isActive, // MAPEAMENTO: isActive -> active
+        lastLogin: user.lastLogin,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      }));
+      
       return res.status(200).json({ 
-        users: users,
-        total: users.length
+        users: usersFormatted,
+        total: usersFormatted.length
       });
     } catch (error) {
       console.error('❌ Erro ao listar usuários:', error);
@@ -456,8 +469,38 @@ const handler = async (req, res) => {
       }
 
       const userId = url.split('/')[3]; // /api/users/{id}
-      const { name, email, company, role } = body;
+      const { name, email, company, role, active, password } = body;
 
+      console.log('🔄 Atualizando usuário:', userId, body);
+
+      // Se é apenas toggle de status (active), não validar name/email
+      if (Object.keys(body).length === 1 && typeof active === 'boolean') {
+        console.log('🔄 Toggle de status apenas:', active);
+        
+        const updatedUser = await User.findByIdAndUpdate(
+          userId,
+          { isActive: active }, // CORRIGIDO: mapear active -> isActive
+          { new: true, runValidators: true }
+        ).select('-password');
+
+        if (!updatedUser) {
+          return res.status(404).json({ message: 'Usuário não encontrado.' });
+        }
+
+        return res.status(200).json({ 
+          message: `Usuário ${active ? 'ativado' : 'desativado'} com sucesso!`,
+          user: {
+            _id: updatedUser._id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            role: updatedUser.role,
+            company: updatedUser.company,
+            active: updatedUser.isActive // MAPEAMENTO: isActive -> active
+          }
+        });
+      }
+
+      // Para edição completa, validar name e email
       if (!name || !email) {
         return res.status(400).json({ message: 'Nome e email são obrigatórios.' });
       }
@@ -472,21 +515,50 @@ const handler = async (req, res) => {
         return res.status(400).json({ message: 'Email já está em uso por outro usuário.' });
       }
 
+      // Preparar dados para atualização
+      const updateData = {
+        name: name.trim(),
+        email: email.toLowerCase().trim(),
+        company: company?.trim(),
+        role: role || 'user'
+      };
+
+      // Se foi fornecida uma nova senha, incluir no update
+      if (password && password.trim()) {
+        const bcrypt = require('bcryptjs');
+        updateData.password = await bcrypt.hash(password.trim(), 10);
+        console.log('🔑 Senha será atualizada para o usuário');
+      }
+
+      // Se active foi especificado, incluir
+      if (typeof active === 'boolean') {
+        updateData.isActive = active; // CORRIGIDO: mapear active -> isActive
+      }
+
+      console.log('💾 Dados de atualização:', { ...updateData, password: updateData.password ? '[HIDDEN]' : undefined });
+
       // Atualizar usuário
       const updatedUser = await User.findByIdAndUpdate(
         userId,
-        {
-          name: name.trim(),
-          email: email.toLowerCase().trim(),
-          company: company?.trim(),
-          role: role || 'user'
-        },
+        updateData,
         { new: true, runValidators: true }
       ).select('-password');
 
       if (!updatedUser) {
         return res.status(404).json({ message: 'Usuário não encontrado.' });
       }
+
+      return res.status(200).json({ 
+        message: 'Usuário atualizado com sucesso!',
+        user: {
+          _id: updatedUser._id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          role: updatedUser.role,
+          company: updatedUser.company,
+          active: updatedUser.isActive // MAPEAMENTO: isActive -> active
+        }
+      });
 
       console.log('✅ Usuário editado com sucesso:', updatedUser.email);
 
@@ -579,53 +651,6 @@ const handler = async (req, res) => {
 
   // ==================== ROTAS DE GERENCIAMENTO DE USUÁRIOS ====================
   
-  // Atualizar usuário (ativar/desativar, editar)
-  if (url.startsWith('/api/users/') && method === 'PUT') {
-    try {
-      const userId = url.split('/')[3];
-      const token = req.headers.authorization?.replace('Bearer ', '');
-      
-      if (!token) {
-        return sendResponse(401, { message: 'Token não fornecido.' });
-      }
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
-      
-      // Verificar se é admin
-      const adminUser = await User.findById(decoded.userId);
-      if (!adminUser || adminUser.role !== 'admin') {
-        return sendResponse(403, { message: 'Acesso negado. Apenas administradores.' });
-      }
-
-      const updateData = body;
-      
-      const user = await User.findByIdAndUpdate(
-        userId,
-        { ...updateData, updatedAt: new Date() },
-        { new: true }
-      );
-
-      if (!user) {
-        return sendResponse(404, { message: 'Usuário não encontrado.' });
-      }
-
-      return sendResponse(200, { 
-        message: 'Usuário atualizado com sucesso!',
-        user: {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          isActive: user.isActive
-        }
-      });
-
-    } catch (error) {
-      console.error('❌ Erro ao atualizar usuário:', error);
-      return sendResponse(500, { message: 'Erro no servidor.', error: error.message });
-    }
-  }
-
   // Deletar usuário
   if (url.startsWith('/api/users/') && method === 'DELETE') {
     try {

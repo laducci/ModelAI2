@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste API Usuários</title>
+</head>
+<body>
+    <h1>Teste API Usuários</h1>
+    <button onclick="testarLogin()">1. Testar Login</button>
+    <button onclick="testarListarUsuarios()">2. Listar Usuários</button>
+    <button onclick="testarCriarUsuario()">3. Criar Usuário</button>
+    
+    <div id="resultado" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc;"></div>
+    
+    <script>
+        async function testarLogin() {
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'administrador@modelai.com',
+                        password: 'ModelAI123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    document.getElementById('resultado').innerHTML = '✅ Login OK: ' + JSON.stringify(data, null, 2);
+                } else {
+                    document.getElementById('resultado').innerHTML = '❌ Erro no login: ' + JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                document.getElementById('resultado').innerHTML = '❌ Erro: ' + error.message;
+            }
+        }
+        
+        async function testarListarUsuarios() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    document.getElementById('resultado').innerHTML = '❌ Faça login primeiro!';
+                    return;
+                }
+                
+                const response = await fetch('/api/users', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                document.getElementById('resultado').innerHTML = 
+                    response.ok ? 
+                    '✅ Usuários: ' + JSON.stringify(data, null, 2) :
+                    '❌ Erro: ' + JSON.stringify(data, null, 2);
+                    
+            } catch (error) {
+                document.getElementById('resultado').innerHTML = '❌ Erro: ' + error.message;
+            }
+        }
+        
+        async function testarCriarUsuario() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    document.getElementById('resultado').innerHTML = '❌ Faça login primeiro!';
+                    return;
+                }
+                
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        name: 'Usuário Teste ' + Date.now(),
+                        email: 'teste' + Date.now() + '@modelai.com',
+                        password: '123456',
+                        company: 'Teste Inc'
+                    })
+                });
+                
+                const data = await response.json();
+                document.getElementById('resultado').innerHTML = 
+                    response.ok ? 
+                    '✅ Usuário criado: ' + JSON.stringify(data, null, 2) :
+                    '❌ Erro: ' + JSON.stringify(data, null, 2);
+                    
+            } catch (error) {
+                document.getElementById('resultado').innerHTML = '❌ Erro: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
