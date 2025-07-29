@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 
 // MODELS
 const User = require('../backend/models/User');
+const Scenario = require('../backend/models/Scenario');
 
 // DB CONNECT
 const connectDB = async () => {
@@ -678,8 +679,6 @@ const handler = async (req, res) => {
       if (!name || !data) {
         return sendResponse(400, { message: 'Nome e dados do cenário são obrigatórios.' });
       }
-
-      const Scenario = require('../backend/models/Scenario');
       
       const scenario = new Scenario({
         name,
@@ -718,8 +717,6 @@ const handler = async (req, res) => {
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
       
-      const Scenario = require('../backend/models/Scenario');
-      
       const scenarios = await Scenario.find({ userId: decoded.userId })
         .sort({ createdAt: -1 });
 
@@ -751,8 +748,6 @@ const handler = async (req, res) => {
       }
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
-      
-      const Scenario = require('../backend/models/Scenario');
       
       const scenario = await Scenario.findOne({ _id: scenarioId, userId: decoded.userId });
       

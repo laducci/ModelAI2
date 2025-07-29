@@ -98,20 +98,24 @@ async function setupAdminNavigation() {
         const userProfile = await api.getProfile();
         
         if (userProfile.user.role === 'admin') {
-            // Verificar se já existe o link de usuários
-            const existingUsersLink = document.querySelector('a[href="usuarios.html"]');
-            if (!existingUsersLink) {
-                // Adicionar aba de usuários no menu
-                const nav = document.querySelector('nav');
-                if (nav) {
-                    const usuariosLink = document.createElement('a');
-                    usuariosLink.href = 'usuarios.html';
-                    usuariosLink.className = 'nav-item flex items-center space-x-3 p-3 rounded-lg text-teal-100 hover:bg-teal-700/50 transition-colors';
-                    usuariosLink.innerHTML = `
-                        <i class="fas fa-users w-5"></i>
-                        <span>👑 Usuários (Admin)</span>
-                    `;
-                    nav.appendChild(usuariosLink);
+            // Não adicionar menu duplicado na própria página de usuários
+            const currentPage = window.location.pathname.split('/').pop();
+            if (currentPage !== 'usuarios.html') {
+                // Verificar se já existe o link de usuários
+                const existingUsersLink = document.querySelector('a[href="usuarios.html"]');
+                if (!existingUsersLink) {
+                    // Adicionar aba de usuários no menu
+                    const nav = document.querySelector('nav');
+                    if (nav) {
+                        const usuariosLink = document.createElement('a');
+                        usuariosLink.href = 'usuarios.html';
+                        usuariosLink.className = 'nav-item flex items-center space-x-3 p-3 rounded-lg text-teal-100 hover:bg-teal-700/50 transition-colors';
+                        usuariosLink.innerHTML = `
+                            <i class="fas fa-users w-5"></i>
+                            <span>👑 Usuários (Admin)</span>
+                        `;
+                        nav.appendChild(usuariosLink);
+                    }
                 }
             }
             

@@ -262,13 +262,44 @@ window.editarUsuario = function(userId) {
         return;
     }
     
-    // Preencher modal com dados do usuário
-    document.getElementById('scenarioName').value = usuario.name;
-    document.getElementById('scenarioDescription').value = usuario.email;
-    // TODO: Implementar modal de edição completo
-    
-    alert(`Edição do usuário ${usuario.name} será implementada em breve`);
+    const novoNome = prompt(`Editar nome do usuário:\n\nNome atual: ${usuario.name}`, usuario.name);
+    if (novoNome && novoNome.trim() && novoNome.trim() !== usuario.name) {
+        updateUsuario(userId, { name: novoNome.trim() });
+    }
 };
+
+// Função auxiliar para atualizar usuário
+async function updateUsuario(userId, updateData) {
+    try {
+        console.log('📝 Atualizando usuário:', userId, updateData);
+        
+        const response = await fetch(`/api/users/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(updateData)
+        });
+        
+        console.log('📈 Resposta da API atualizar:', response.status);
+        
+        if (response.ok) {
+            const result = await response.json();
+            console.log('✅ Usuário atualizado:', result);
+            alert('Usuário atualizado com sucesso!');
+            await window.carregarUsuarios();
+        } else {
+            const erro = await response.json();
+            console.error('❌ Erro da API:', erro);
+            alert(`Erro ao atualizar usuário: ${erro.message}`);
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao atualizar usuário:', error);
+        alert('Erro de conexão. Tente novamente.');
+    }
+}
 
 // 8. FUNÇÃO PARA DELETAR USUÁRIO - GLOBAL
 window.deletarUsuario = async function(userId) {
@@ -323,30 +354,7 @@ window.toggleUsuarioStatus = async function(userId, currentStatus) {
         return;
     }
     
-    try {
-        const response = await fetch(`/api/users/${userId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({
-                isActive: novoStatus
-            })
-        });
-        
-        if (response.ok) {
-            alert(`Usuário ${acao === 'ativar' ? 'ativado' : 'desativado'} com sucesso!`);
-            await window.carregarUsuarios();
-        } else {
-            const erro = await response.json();
-            alert(`Erro ao ${acao} usuário: ${erro.message}`);
-        }
-        
-    } catch (error) {
-        console.error(`❌ Erro ao ${acao} usuário:`, error);
-        alert('Erro de conexão. Tente novamente.');
-    }
+    await updateUsuario(userId, { isActive: novoStatus });
 };
 
 // 10. FUNÇÃO LOGOUT

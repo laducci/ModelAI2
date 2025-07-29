@@ -10,6 +10,10 @@ class ScenarioManager {
         try {
             console.log('🎬 Inicializando ScenarioManager...');
             
+            // LIMPAR CENÁRIOS ANTIGOS DO LOCALSTORAGE (temporário para debug)
+            console.log('🧹 Limpando cenários antigos do localStorage...');
+            localStorage.removeItem('scenarios');
+            
             // Verificar autenticação
             if (!this.api.isAuthenticated()) {
                 console.log('❌ Usuário não autenticado, redirecionando...');
@@ -438,4 +442,16 @@ function closeModal() {
 
 function openSaveModal() {
     scenarioManager.openSaveModal();
+}
+
+// ==================== FUNÇÕES GLOBAIS ====================
+
+function createNewScenario() {
+    console.log('🆕 Criando novo cenário...');
+    if (scenarioManager) {
+        scenarioManager.openSaveModal();
+    } else {
+        console.error('❌ ScenarioManager não inicializado');
+        alert('Erro: Sistema não inicializado. Recarregue a página.');
+    }
 }
