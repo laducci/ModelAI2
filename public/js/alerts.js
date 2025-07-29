@@ -136,6 +136,73 @@ class AlertSystem {
         });
     }
 
+    // Confirmação especial para exclusão
+    confirmDelete(message, title = 'Confirmar Exclusão', itemName = '') {
+        return new Promise((resolve) => {
+            const modal = this.createDeleteModal(message, title, itemName, resolve);
+            document.body.appendChild(modal);
+            
+            // Animação de entrada
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('.transform').classList.remove('scale-95');
+                modal.querySelector('.transform').classList.add('scale-100');
+            }, 10);
+        });
+    }
+
+    createDeleteModal(message, title, itemName, resolve) {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 opacity-0 transition-opacity duration-300';
+        modal.style.zIndex = '9999';
+
+        modal.innerHTML = `
+            <div class="bg-white rounded-xl shadow-2xl transform scale-95 transition-transform duration-300 max-w-md w-full mx-4">
+                <div class="p-6">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-trash-alt text-red-600 text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-gray-900">${title}</h3>
+                            ${itemName ? `<p class="text-sm text-gray-500">${itemName}</p>` : ''}
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <p class="text-gray-700 leading-relaxed">${message}</p>
+                        <div class="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <p class="text-sm text-red-800 font-medium">Esta ação não pode ser desfeita.</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button onclick="this.cancelDelete()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium">
+                            Cancelar
+                        </button>
+                        <button onclick="this.confirmDelete()" class="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors font-medium">
+                            Excluir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Adicionar evento de confirmação
+        const buttons = modal.querySelectorAll('button');
+        buttons[0].onclick = () => this.closeModal(modal, resolve, false);
+        buttons[1].onclick = () => this.closeModal(modal, resolve, true);
+
+        // Fechar ao clicar fora
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                this.closeModal(modal, resolve, false);
+            }
+        };
+
+        return modal;
+    }
+
     createConfirmModal(message, title, resolve) {
         const modal = document.createElement('div');
         modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 opacity-0 transition-opacity duration-300';
@@ -204,3 +271,4 @@ window.showError = (message, duration) => alerts.error(message, duration);
 window.showWarning = (message, duration) => alerts.warning(message, duration);
 window.showInfo = (message, duration) => alerts.info(message, duration);
 window.confirmAction = (message, title) => alerts.confirm(message, title);
+window.confirmDelete = (message, title, itemName) => alerts.confirmDelete(message, title, itemName);

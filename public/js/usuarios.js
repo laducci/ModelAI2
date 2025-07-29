@@ -45,8 +45,7 @@ window.fecharModalNovoUsuario = function() {
 
 // Função para abrir modal editar usuário
 window.editarUsuario = function(userId) {
-    console.log('✏️ === EDITANDO USUÁRIO ===');
-    console.log('🆔 User ID:', userId);
+    console.log('Editando usuário:', userId);
     
     const usuario = usuarios.find(u => u._id === userId);
     if (!usuario) {
@@ -54,7 +53,7 @@ window.editarUsuario = function(userId) {
         return;
     }
     
-    console.log('👤 Usuário encontrado:', usuario);
+    console.log('Usuário encontrado:', usuario);
     
     // Preencher o modal com os dados
     document.getElementById('editarUsuarioId').value = usuario._id;
@@ -160,7 +159,7 @@ window.salvarEdicaoUsuario = async function(event) {
         dadosAtualizacao.password = novaSenha;
     }
     
-    console.log('💾 Salvando usuário:', userId, dadosAtualizacao);
+    console.log('Salvando usuário:', userId, dadosAtualizacao);
     
     try {
         const response = await fetch(`/api/users/${userId}`, {
@@ -174,7 +173,7 @@ window.salvarEdicaoUsuario = async function(event) {
         
         if (response.ok) {
             const resultado = await response.json();
-            console.log('✅ Usuário atualizado:', resultado);
+            console.log('Usuário atualizado:', resultado);
             
             showSuccess(`Usuário "${dadosAtualizacao.name}" atualizado com sucesso!`);
             window.fecharModalEditarUsuario();
@@ -182,20 +181,19 @@ window.salvarEdicaoUsuario = async function(event) {
             
         } else {
             const erro = await response.json();
-            console.error('❌ Erro ao atualizar:', erro);
+            console.error('Erro ao atualizar:', erro);
             showError(`Erro ao atualizar: ${erro.message}`);
         }
         
     } catch (error) {
-        console.error('❌ Erro de rede:', error);
+        console.error('Erro de rede:', error);
         showError('Erro de conexão ao atualizar usuário.');
     }
 };
 
 // Função para deletar usuário
 window.deletarUsuario = async function(userId) {
-    console.log('🗑️ === DELETANDO USUÁRIO ===');
-    console.log('🆔 User ID:', userId);
+    console.log('Deletando usuário:', userId);
     
     const usuario = usuarios.find(u => u._id === userId);
     if (!usuario) {
@@ -203,15 +201,16 @@ window.deletarUsuario = async function(userId) {
         return;
     }
     
-    // Usar o sistema de confirmação moderno
+    // Usar o sistema de confirmação elegante para exclusão
     try {
-        const confirmar = await confirmAction(
-            `Deseja realmente EXCLUIR o usuário "${usuario.name}"?\n\n📧 Email: ${usuario.email}\n👤 Role: ${usuario.role}\n\n⚠️ Esta ação NÃO pode ser desfeita!`,
-            '⚠️ Confirmar Exclusão'
+        const confirmar = await confirmDelete(
+            `Tem certeza que deseja excluir este usuário? Todos os dados associados serão permanentemente removidos.`,
+            'Excluir Usuário',
+            `${usuario.name} (${usuario.email})`
         );
         
         if (!confirmar) {
-            showInfo('Exclusão cancelada pelo usuário.');
+            showInfo('Exclusão cancelada.');
             return;
         }
         
@@ -219,7 +218,7 @@ window.deletarUsuario = async function(userId) {
         await window.confirmarDelecaoUsuario(userId);
         
     } catch (error) {
-        console.error('❌ Erro na confirmação:', error);
+        console.error('Erro na confirmação:', error);
         showError('Erro ao exibir confirmação.');
     }
 };
@@ -227,7 +226,7 @@ window.deletarUsuario = async function(userId) {
 // Função para confirmar deleção
 window.confirmarDelecaoUsuario = async function(userId) {
     try {
-        console.log('🔥 Executando deleção do usuário:', userId);
+        console.log('Executando deleção do usuário:', userId);
         
         const response = await fetch(`/api/users/${userId}`, {
             method: 'DELETE',
@@ -238,27 +237,26 @@ window.confirmarDelecaoUsuario = async function(userId) {
         
         if (response.ok) {
             const resultado = await response.json();
-            console.log('✅ Usuário deletado:', resultado);
+            console.log('Usuário deletado:', resultado);
             
             showSuccess('Usuário excluído com sucesso!');
             await window.carregarUsuarios();
             
         } else {
             const erro = await response.json();
-            console.error('❌ Erro ao deletar:', erro);
+            console.error('Erro ao deletar:', erro);
             showError(`Erro ao excluir: ${erro.message}`);
         }
         
     } catch (error) {
-        console.error('❌ Erro de rede:', error);
+        console.error('Erro de rede:', error);
         showError('Erro de conexão ao excluir usuário.');
     }
 };
 
 // Função para toggle status do usuário
 window.toggleUsuario = async function(userId) {
-    console.log('🔄 === TOGGLE USUÁRIO ===');
-    console.log('🆔 User ID:', userId);
+    console.log('Toggle usuário:', userId);
     
     const usuario = usuarios.find(u => u._id === userId);
     if (!usuario) {
@@ -269,10 +267,10 @@ window.toggleUsuario = async function(userId) {
     const novoStatus = !usuario.active;
     const acao = novoStatus ? 'ativar' : 'desativar';
     
-    console.log(`🔄 ${acao} usuário:`, usuario.name);
-    console.log('📊 Status atual:', usuario.active);
-    console.log('📊 Novo status:', novoStatus);
-    console.log('📦 Enviando body:', { active: novoStatus });
+    console.log(`${acao} usuário:`, usuario.name);
+    console.log('Status atual:', usuario.active);
+    console.log('Novo status:', novoStatus);
+    console.log('Enviando body:', { active: novoStatus });
     
     try {
         const response = await fetch(`/api/users/${userId}`, {
@@ -284,17 +282,17 @@ window.toggleUsuario = async function(userId) {
             body: JSON.stringify({ active: novoStatus })
         });
         
-        console.log('📈 Status da resposta:', response.status);
+        console.log('Status da resposta:', response.status);
         
         if (response.ok) {
             const resultado = await response.json();
-            console.log(`✅ Usuário ${acao}do com sucesso:`, resultado);
+            console.log(`Usuário ${acao}do com sucesso:`, resultado);
             showSuccess(`Usuário "${usuario.name}" ${acao}do com sucesso!`);
             await window.carregarUsuarios();
             
         } else {
             const erro = await response.text();
-            console.error(`❌ Erro ao ${acao} (text):`, erro);
+            console.error(`Erro ao ${acao} (text):`, erro);
             
             try {
                 const erroJson = JSON.parse(erro);
@@ -305,7 +303,7 @@ window.toggleUsuario = async function(userId) {
         }
         
     } catch (error) {
-        console.error(`❌ Erro de rede ao ${acao}:`, error);
+        console.error(`Erro de rede ao ${acao}:`, error);
         showError(`Erro de conexão ao ${acao} usuário.`);
     }
 };
@@ -316,17 +314,17 @@ window.toggleUsuario = async function(userId) {
 
 // Função de logout padronizada
 window.logout = async function() {
-    console.log('🚪 === LOGOUT SOLICITADO ===');
+    console.log('Logout solicitado');
     
     try {
         // Usar o sistema de confirmação moderno
         const confirmar = await confirmAction(
-            'Deseja realmente sair do sistema?\n\nVocê precisará fazer login novamente para acessar o sistema.',
-            '🚪 Confirmar Logout'
+            'Deseja realmente sair do sistema? Você precisará fazer login novamente para acessar o sistema.',
+            'Confirmar Logout'
         );
         
         if (confirmar) {
-            console.log('✅ Logout confirmado');
+            console.log('Logout confirmado');
             
             // Limpar dados de autenticação
             localStorage.removeItem('token');
@@ -342,11 +340,11 @@ window.logout = async function() {
             }, 1000);
             
         } else {
-            console.log('❌ Logout cancelado');
+            console.log('Logout cancelado');
             showInfo('Logout cancelado.');
         }
     } catch (error) {
-        console.error('❌ Erro na confirmação de logout:', error);
+        console.error('Erro na confirmação de logout:', error);
         showError('Erro ao exibir confirmação.');
     }
 };
@@ -357,10 +355,10 @@ window.logout = async function() {
 
 // Função para carregar usuários
 window.carregarUsuarios = async function() {
-    console.log('📋 carregarUsuarios chamada!');
+    console.log('carregarUsuarios chamada!');
     
     try {
-        console.log('📡 Buscando usuários da API...');
+        console.log('Buscando usuários da API...');
         
         const response = await fetch('/api/users', {
             headers: {
@@ -368,33 +366,33 @@ window.carregarUsuarios = async function() {
             }
         });
         
-        console.log('📈 Resposta da API:', response.status);
+        console.log('Resposta da API:', response.status);
         
         if (response.ok) {
             const data = await response.json();
             usuarios = data.users || [];
-            console.log('✅ Usuários carregados:', usuarios.length);
+            console.log('Usuários carregados:', usuarios.length);
             
             window.renderizarUsuarios();
             window.atualizarEstatisticas();
             
         } else {
             const erro = await response.text();
-            console.error('❌ Erro da API:', erro);
+            console.error('Erro da API:', erro);
             showError('Erro ao carregar usuários');
         }
         
     } catch (error) {
-        console.error('❌ Erro ao carregar usuários:', error);
+        console.error('Erro ao carregar usuários:', error);
         showError('Erro de conexão ao carregar usuários');
     }
 };
 
 // Função para renderizar usuários na tabela
 window.renderizarUsuarios = function() {
-    console.log('🎨 Renderizando usuários...');
+    console.log('Renderizando usuários...');
     
-    const tbody = document.getElementById('tabelaUsuarios');
+    const tbody = document.getElementById('tabelaUsuários');
     if (!tbody) {
         console.error('❌ Tabela de usuários não encontrada!');
         return;

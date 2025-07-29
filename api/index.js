@@ -13,7 +13,7 @@ const connectDB = async () => {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
-  console.log('📦 MongoDB conectado');
+  console.log('MongoDB conectado');
   
   // Criar usuário admin padrão se não existir
   try {
@@ -31,12 +31,12 @@ const connectDB = async () => {
       });
       
       await adminUser.save();
-      console.log('👑 Usuário administrador criado:', adminEmail);
+      console.log('Usuário administrador criado:', adminEmail);
     } else {
-      console.log('👑 Usuário administrador já existe:', adminEmail);
+      console.log('Usuário administrador já existe:', adminEmail);
     }
   } catch (error) {
-    console.error('❌ Erro ao criar admin:', error);
+    console.error('Erro ao criar admin:', error);
   }
 };
 
@@ -485,15 +485,15 @@ const handler = async (req, res) => {
       const userId = cleanUrl.split('/')[3]; // /api/users/{id}
       const { name, email, company, role, active, password } = body;
 
-      console.log('🔄 Atualizando usuário:', userId);
-      console.log('📦 Body recebido:', body);
-      console.log('📊 Chaves do body:', Object.keys(body));
-      console.log('📊 Quantidade de chaves:', Object.keys(body).length);
-      console.log('📊 Tipo de active:', typeof active, active);
+      console.log('Atualizando usuário:', userId);
+      console.log('Body recebido:', body);
+      console.log('Chaves do body:', Object.keys(body));
+      console.log('Quantidade de chaves:', Object.keys(body).length);
+      console.log('Tipo de active:', typeof active, active);
 
       // Se é apenas toggle de status (active), não validar name/email
       if (Object.keys(body).length === 1 && typeof active === 'boolean') {
-        console.log('🔄 Toggle de status apenas:', active);
+        console.log('Toggle de status apenas:', active);
         
         const updatedUser = await User.findByIdAndUpdate(
           userId,
@@ -567,7 +567,7 @@ const handler = async (req, res) => {
         return sendResponse(404, { message: 'Usuário não encontrado.' });
       }
 
-      console.log('✅ Usuário editado com sucesso:', updatedUser.email);
+      console.log('Usuário editado com sucesso:', updatedUser.email);
 
       return sendResponse(200, { 
         success: true,
@@ -599,14 +599,14 @@ const handler = async (req, res) => {
         return sendResponse(404, { message: 'Usuário não encontrado' });
       }
       
-      console.log('🗑️ Usuário excluído:', user.email);
+      console.log('Usuário excluído:', user.email);
       
       return sendResponse(200, { 
         success: true,
         message: 'Usuário excluído com sucesso'
       });
     } catch (error) {
-      console.error('❌ Erro ao excluir usuário:', error);
+      console.error('Erro ao excluir usuário:', error);
       return sendResponse(500, { message: 'Erro no servidor.', error: error.message });
     }
   }
