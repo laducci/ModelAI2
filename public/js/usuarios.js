@@ -8,31 +8,48 @@ let currentUser = null;
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('📋 DOM carregado - iniciando usuarios...');
     
-    // Verificar autenticação
-    const userData = localStorage.getItem('user') || localStorage.getItem('modelai_user');
-    const token = localStorage.getItem('token') || localStorage.getItem('modelai_token');
-    
-    if (!userData || !token) {
-        console.log('❌ Não autenticado');
-        window.location.replace('login.html');
-        return;
+    try {
+        // Verificar autenticação
+        const userData = localStorage.getItem('user') || localStorage.getItem('modelai_user');
+        const token = localStorage.getItem('token') || localStorage.getItem('modelai_token');
+        
+        console.log('🔍 Verificando autenticação...');
+        console.log('👤 userData:', userData ? 'Existe' : 'Não existe');
+        console.log('🔑 token:', token ? 'Existe' : 'Não existe');
+        
+        if (!userData || !token) {
+            console.log('❌ Não autenticado');
+            window.location.replace('login.html');
+            return;
+        }
+
+        currentUser = JSON.parse(userData);
+        console.log('👤 Usuário atual:', currentUser.name, 'Role:', currentUser.role);
+
+        if (currentUser.role !== 'admin') {
+            console.log('🚫 Não é admin');
+            showError('Acesso negado. Apenas administradores.');
+            setTimeout(() => window.location.replace('inputs.html'), 2000);
+            return;
+        }
+
+        console.log('✅ Admin verificado - carregando...');
+        
+        console.log('📊 Carregando usuários...');
+        await carregarUsuarios();
+        
+        console.log('📈 Carregando dashboard...');
+        await carregarDashboard();
+        
+        console.log('🎛️ Configurando event listeners...');
+        setupEventListeners();
+        
+        console.log('🎉 Inicialização completa!');
+        
+    } catch (error) {
+        console.error('❌ Erro na inicialização:', error);
+        showError('Erro ao inicializar a página: ' + error.message);
     }
-
-    currentUser = JSON.parse(userData);
-    console.log('👤 Usuário atual:', currentUser.name, 'Role:', currentUser.role);
-
-    if (currentUser.role !== 'admin') {
-        console.log('🚫 Não é admin');
-        showError('Acesso negado. Apenas administradores.');
-        setTimeout(() => window.location.replace('inputs.html'), 2000);
-        return;
-    }
-
-    console.log('✅ Admin verificado - carregando...');
-    
-    await carregarUsuarios();
-    await carregarDashboard();
-    setupEventListeners();
 });
 
 // API Real para Usuários
@@ -109,21 +126,32 @@ const userAPI = new UserAPI();
 // Carregar usuários
 async function carregarUsuarios() {
     console.log('📊 Carregando usuários...');
+    console.log('🔗 userAPI disponível:', !!userAPI);
+    
     showLoading(true);
     
     try {
+        console.log('🔄 Fazendo chamada para userAPI.getUsers()...');
         const response = await userAPI.getUsers();
+        console.log('📥 Resposta recebida:', response);
+        
         allUsers = response.users || [];
         
         console.log('✅ Usuários carregados:', allUsers.length);
+        console.log('👥 Lista de usuários:', allUsers);
         
+        console.log('🎨 Renderizando usuários...');
         renderUsuarios(allUsers);
+        
+        console.log('📊 Atualizando estatísticas...');
         updateStats();
         
     } catch (error) {
         console.error('❌ Erro ao carregar usuários:', error);
+        console.error('❌ Stack trace:', error.stack);
         showError('Erro ao carregar usuários: ' + error.message);
     } finally {
+        console.log('🏁 Finalizando carregamento...');
         showLoading(false);
     }
 }
@@ -274,8 +302,27 @@ function setupEventListeners() {
 
 // Modal functions
 function abrirModalNovoUsuario() {
-    document.getElementById('modalNovoUsuario').classList.remove('hidden');
-    document.getElementById('formNovoUsuario').reset();
+    console.log('🔄 Tentando abrir modal...');
+    
+    const modal = document.getElementById('modalNovoUsuario');
+    const form = document.getElementById('formNovoUsuario');
+    
+    if (!modal) {
+        console.error('❌ Modal não encontrado!');
+        alert('Erro: Modal não encontrado no DOM');
+        return;
+    }
+    
+    if (!form) {
+        console.error('❌ Form não encontrado!');
+        alert('Erro: Formulário não encontrado no DOM');
+        return;
+    }
+    
+    console.log('✅ Modal e form encontrados, abrindo...');
+    modal.classList.remove('hidden');
+    form.reset();
+    console.log('✅ Modal aberto com sucesso!');
 }
 
 function fecharModalNovoUsuario() {
@@ -293,12 +340,16 @@ function fecharModalNovoUsuario() {
 
 // Criar ou editar usuário
 async function criarUsuario(e) {
+    console.log('🚀 Função criarUsuario chamada!');
     e.preventDefault();
     
     const form = e.target;
+    console.log('📝 Form:', form);
+    
     const editingId = form.getAttribute('data-editing');
     const isEditing = !!editingId;
 
+    console.log('📋 Coletando dados do formulário...');
     const formData = new FormData(form);
     const userData = {
         name: formData.get('name'),
@@ -307,36 +358,48 @@ async function criarUsuario(e) {
         role: formData.get('role') || 'user'
     };
 
+    console.log('📊 Dados coletados:', userData);
+
     // Só incluir senha se não estiver editando ou se foi preenchida
     const password = formData.get('password');
     if (!isEditing && !password) {
+        console.error('❌ Senha obrigatória para novos usuários');
         showError('Senha é obrigatória para novos usuários');
         return;
     }
     if (password) {
         userData.password = password;
+        console.log('🔑 Senha adicionada aos dados');
     }
 
     console.log(isEditing ? '✏️ Editando usuário:' : '👤 Criando usuário:', userData.email);
 
     try {
+        console.log('⏳ Mostrando loading...');
         showLoading(true);
         
         if (isEditing) {
+            console.log('📝 Chamando updateUser...');
             await userAPI.updateUser(editingId, userData);
             showSuccess('Usuário atualizado com sucesso!');
         } else {
+            console.log('➕ Chamando createUser...');
+            console.log('🔗 userAPI:', userAPI);
             await userAPI.createUser(userData);
             showSuccess('Usuário criado com sucesso!');
         }
         
+        console.log('✅ Operação bem-sucedida, fechando modal...');
         fecharModalNovoUsuario();
+        
+        console.log('🔄 Recarregando lista de usuários...');
         await carregarUsuarios();
         
     } catch (error) {
         console.error('❌ Erro ao salvar usuário:', error);
         showError('Erro ao salvar usuário: ' + error.message);
     } finally {
+        console.log('🏁 Escondendo loading...');
         showLoading(false);
     }
 }
