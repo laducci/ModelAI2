@@ -39,18 +39,73 @@ const connectDB = async () => {
   }
 };
 
-// EXPORTAÇÃO PARA VERCEL - Função principal que trata todas as rotas da API
-module.exports = async (req, res) => {
-  // Configurar CORS para Vercel
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+// EXPORTAÇÃO UNIVERSAL - Para Vercel e Netlify
+const handler = async (req, res) => {
+  // Configurar CORS
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Content-Type': 'application/json'
+  };
+
+  // Para Netlify Functions
+  if (req.httpMethod) {
+    if (req.httpMethod === 'OPTIONS') {
+      return {
+        statusCode: 200,
+        headers: corsHeaders,
+        body: ''
+      };
+    }
+    
+    // Adaptar req para compatibilidade
+    req.method = req.httpMethod;
+    req.url = req.path;
+    req.body = req.body ? JSON.parse(req.body) : {};
+    
+    // Objeto res simulado para Netlify
+    res = {
+      statusCode: 200,
+      headers: corsHeaders,
+      json: (data) => ({
+        statusCode: res.statusCode,
+        headers: corsHeaders,
+        body: JSON.stringify(data)
+      }),
+      status: (code) => {
+        res.statusCode = code;
+        return res;
+      },
+      setHeader: () => {}
+    };
+  } else {
+    // Para Vercel
+    Object.keys(corsHeaders).forEach(key => {
+      res.setHeader(key, corsHeaders[key]);
+    });
+    
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
   }
 
   await connectDB();
+
+  // Helper para retornar resposta normalizada
+  const sendResponse = (statusCode, data) => {
+    if (req.httpMethod) {
+      // Netlify
+      return {
+        statusCode,
+        headers: corsHeaders,
+        body: JSON.stringify(data)
+      };
+    } else {
+      // Vercel
+      return res.status(statusCode).json(data);
+    }
+  };
 
   // Parse da URL para identificar a rota
   const { url, method } = req;
@@ -80,7 +135,7 @@ module.exports = async (req, res) => {
 
     if (!email || !password) {
       console.log('❌ Email ou senha em branco');
-      return res.status(400).json({ message: 'E-mail e senha obrigatórios.' });
+      return sendResponse(400, { message: 'E-mail e senha obrigatórios.' });
     }
 
     try {
@@ -523,9 +578,15 @@ module.exports = async (req, res) => {
 
   // HEALTH CHECK
   if (url === '/api/health' && method === 'GET') {
-    return res.json({ status: 'ok', time: new Date().toISOString() });
+    const result = res.json({ status: 'ok', time: new Date().toISOString() });
+    return req.httpMethod ? result : result;
   }
 
   // Rota não encontrada
-  return res.status(404).json({ message: 'Rota não encontrada' });
+  const notFoundResult = res.status(404).json({ message: 'Rota não encontrada' });
+  return req.httpMethod ? notFoundResult : notFoundResult;
 };
+
+// Exportação universal para Vercel e Netlify
+module.exports = handler;
+module.exports.handler = handler;
