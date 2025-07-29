@@ -66,37 +66,66 @@ function calculateTotalValue(data) {
         const entrada = parseCurrency(data.propostaEntradaValor) || 0;
         const parcelas = parseCurrency(data.propostaParcelasValor) || 0;
         const reforco = parseCurrency(data.propostaReforcoValor) || 0;
-        return entrada + parcelas + reforco;
+        const nasChaves = parseCurrency(data.propostaBemMovelImovel) || 0;
+        return entrada + parcelas + reforco + nasChaves;
     }
     
     return 0;
 }
 
-// Função para calcular VPL (Valor Presente Líquido)
+// Função para calcular TMA mensal - Excel: (1+TMA_ANUAL)^(1/12)-1
+function calcularTmaMensal(tmaAnual) {
+    return Math.pow(1 + tmaAnual, 1 / 12) - 1;
+}
+
+// Função para gerar fluxo de caixa simples (entrada + parcelas, sem reforços)
+function gerarFluxoCaixa(entrada, valorParcela, quantidadeParcelas) {
+    const fluxo = [entrada]; // entrada no mês 1
+    for (let i = 0; i < quantidadeParcelas; i++) {
+        fluxo.push(valorParcela); // parcelas mensais a partir do mês 2
+    }
+    return fluxo;
+}
+
+// Função para calcular VPL simples (para VPL Tabela) - Excel method
+function calcularVPL(tmaMensal, fluxo) {
+    return fluxo.reduce((vpl, valor, index) => {
+        const periodo = index + 1; // Excel começa do período 1
+        return vpl + valor / Math.pow(1 + tmaMensal, periodo);
+    }, 0);
+}
+
+// Função para calcular VPL (Valor Presente Líquido) - versão completa para proposta
 function calculateVPL(rate, cashFlows) {
     let vpl = 0;
     for (let i = 0; i < cashFlows.length; i++) {
-        vpl += cashFlows[i] / Math.pow(1 + rate, i + 1);
+        const periodo = i + 1; // Excel começa do período 1
+        vpl += cashFlows[i] / Math.pow(1 + rate, periodo);
     }
     return vpl;
 }
 
-// Função para calcular TMA mensal
+// Função para calcular TMA mensal - versão original
 function calculateTMAMensal(tmaAnual) {
     return Math.pow(1 + (tmaAnual / 100), 1/12) - 1;
 }
 
-// Função para gerar fluxo de caixa mensal
-function generateMonthlyFlow(dadosGerais, tabelaVendas, propostaCliente, periodo = 240) {
+// Função para gerar fluxo de caixa mensal com reforços a cada 6 meses
+function generateMonthlyFlow(dadosGerais, tabelaVendas, propostaCliente, periodo = 250) {
     const mesVenda = parseInt(propostaCliente.mesVenda) || 1;
-    const tmaAnual = parseFloat(dadosGerais.tmaAno) || 12;
-    const tmaMensal = calculateTMAMensal(tmaAnual);
+    
+    // Usar a mesma TMA do cálculo principal
+    let tmaAnual = parseFloat(dadosGerais.tmaAno) / 100;
+    if (!tmaAnual || tmaAnual === 0) {
+        tmaAnual = 0.22; // 22% padrão
+    }
+    const tmaMensal = calcularTmaMensal(tmaAnual); // Usar a mesma função
     
     const fluxo = [];
     const fluxoTabela = [];
     const fluxoProposta = [];
     
-    // Valores da tabela de vendas (usando nomes corretos dos campos)
+    // Valores da tabela de vendas
     const entradaTabela = parseCurrency(tabelaVendas.vendaEntradaValor) || 0;
     const parcelasTabela = parseCurrency(tabelaVendas.vendaParcelasValor) || 0;
     const reforcosTabela = parseCurrency(tabelaVendas.vendaReforcoValor) || 0;
@@ -105,62 +134,89 @@ function generateMonthlyFlow(dadosGerais, tabelaVendas, propostaCliente, periodo
     const qtdReforcosTabela = parseInt(tabelaVendas.vendaReforcoQtd) || 1;
     const qtdEntradaTabela = parseInt(tabelaVendas.vendaEntradaParcelas) || 1;
     
-    // Valores da proposta cliente (usando nomes corretos dos campos)
+    // Valores da proposta cliente
     const entradaProposta = parseCurrency(propostaCliente.propostaEntradaValor) || 0;
     const parcelasProposta = parseCurrency(propostaCliente.propostaParcelasValor) || 0;
     const reforcosProposta = parseCurrency(propostaCliente.propostaReforcoValor) || 0;
+    const nasChavesProposta = parseCurrency(propostaCliente.propostaBemMovelImovel) || 0;
     const qtdParcelasProposta = parseInt(propostaCliente.propostaParcelasQtd) || 1;
     const qtdReforcosProposta = parseInt(propostaCliente.propostaReforcoQtd) || 1;
     const qtdEntradaProposta = parseInt(propostaCliente.propostaEntradaParcelas) || 1;
     
-    for (let mes = 1; mes <= periodo; mes++) {
+    // Calcular valores unitários para tabela
+    const valorEntradaUnitTabela = entradaTabela / qtdEntradaTabela;
+    const valorParcelaMensalTabela = parcelasTabela / qtdParcelasTabela;
+    const valorReforcoUnitTabela = reforcosTabela / qtdReforcosTabela;
+    
+    // Calcular valores unitários para proposta
+    const valorEntradaUnitProposta = entradaProposta / qtdEntradaProposta;
+    const valorParcelaMensalProposta = parcelasProposta / qtdParcelasProposta;
+    const valorReforcoUnitProposta = reforcosProposta / qtdReforcosProposta;
+    
+    // Determinar período máximo baseado nos fluxos mais longos
+    const periodoMaximoTabela = Math.max(
+        mesVenda + qtdEntradaTabela + qtdParcelasTabela,
+        qtdReforcosTabela > 0 ? mesVenda + (qtdReforcosTabela * 6) : 0
+    );
+    const periodoMaximoProposta = Math.max(
+        mesVenda + qtdEntradaProposta + qtdParcelasProposta,
+        qtdReforcosProposta > 0 ? mesVenda + (qtdReforcosProposta * 6) : 0
+    );
+    const periodoFinal = Math.min(Math.max(periodoMaximoTabela, periodoMaximoProposta), periodo);
+    
+    let reforcosUtilizadosTabela = 0;
+    let reforcosUtilizadosProposta = 0;
+    
+    for (let mes = 1; mes <= periodoFinal; mes++) {
         let valorTabela = 0;
         let valorProposta = 0;
         
-        // Calcular entrada (pode ser parcelada)
+        // TABELA DE VENDAS
+        // Entrada (nos primeiros meses a partir do mês de venda)
         if (mes >= mesVenda && mes < mesVenda + qtdEntradaTabela) {
-            valorTabela += entradaTabela / qtdEntradaTabela;
+            valorTabela += valorEntradaUnitTabela;
         }
         
-        if (mes >= mesVenda && mes < mesVenda + qtdEntradaProposta) {
-            valorProposta += entradaProposta / qtdEntradaProposta;
-        }
-        
-        // Parcelas (começam após a entrada)
+        // Parcelas (após entrada)
         const inicioParcelasTabela = mesVenda + qtdEntradaTabela;
         const fimParcelasTabela = inicioParcelasTabela + qtdParcelasTabela;
         if (mes >= inicioParcelasTabela && mes < fimParcelasTabela) {
-            valorTabela += parcelasTabela / qtdParcelasTabela;
+            valorTabela += valorParcelaMensalTabela;
         }
         
+        // Reforços a cada 6 meses (começando do mês 6 após início da venda)
+        const mesRelativoTabela = mes - mesVenda + 1;
+        if (mesRelativoTabela > 0 && mesRelativoTabela % 6 === 0 && 
+            reforcosUtilizadosTabela < qtdReforcosTabela && mes >= mesVenda + 5) {
+            valorTabela += valorReforcoUnitTabela;
+            reforcosUtilizadosTabela++;
+        }
+        
+        // PROPOSTA CLIENTE
+        // Entrada (nos primeiros meses a partir do mês de venda)
+        if (mes >= mesVenda && mes < mesVenda + qtdEntradaProposta) {
+            valorProposta += valorEntradaUnitProposta;
+        }
+        
+        // Parcelas (após entrada)
         const inicioParcelasProposta = mesVenda + qtdEntradaProposta;
         const fimParcelasProposta = inicioParcelasProposta + qtdParcelasProposta;
         if (mes >= inicioParcelasProposta && mes < fimParcelasProposta) {
-            valorProposta += parcelasProposta / qtdParcelasProposta;
+            valorProposta += valorParcelaMensalProposta;
         }
         
-        // Reforços (distribuídos ao longo do período após as parcelas)
-        const inicioReforcosTabela = fimParcelasTabela;
-        if (qtdReforcosTabela > 0 && mes >= inicioReforcosTabela) {
-            const intervalReforcoTabela = Math.max(1, Math.floor((periodo - inicioReforcosTabela) / qtdReforcosTabela));
-            const posicaoReforco = mes - inicioReforcosTabela;
-            if (posicaoReforco < qtdReforcosTabela * intervalReforcoTabela && posicaoReforco % intervalReforcoTabela === 0) {
-                valorTabela += reforcosTabela / qtdReforcosTabela;
-            }
+        // Reforços a cada 6 meses (começando do mês 6 após início da venda)
+        const mesRelativoProposta = mes - mesVenda + 1;
+        if (mesRelativoProposta > 0 && mesRelativoProposta % 6 === 0 && 
+            reforcosUtilizadosProposta < qtdReforcosProposta && mes >= mesVenda + 5) {
+            valorProposta += valorReforcoUnitProposta;
+            reforcosUtilizadosProposta++;
         }
         
-        const inicioReforcosProposta = fimParcelasProposta;
-        if (qtdReforcosProposta > 0 && mes >= inicioReforcosProposta) {
-            const intervalReforcoProposta = Math.max(1, Math.floor((periodo - inicioReforcosProposta) / qtdReforcosProposta));
-            const posicaoReforcoProp = mes - inicioReforcosProposta;
-            if (posicaoReforcoProp < qtdReforcosProposta * intervalReforcoProposta && posicaoReforcoProp % intervalReforcoProposta === 0) {
-                valorProposta += reforcosProposta / qtdReforcosProposta;
-            }
-        }
-        
-        // Nas chaves (último mês)
-        if (mes === periodo) {
+        // Nas chaves (último mês do período)
+        if (mes === periodoFinal) {
             valorTabela += nasChavesTabela;
+            valorProposta += nasChavesProposta;
         }
         
         fluxoTabela.push(valorTabela);
@@ -173,6 +229,21 @@ function generateMonthlyFlow(dadosGerais, tabelaVendas, propostaCliente, periodo
             diferenca: valorProposta - valorTabela
         });
     }
+    
+    console.log('Fluxo Proposta - Debug:', {
+        entradaProposta: entradaProposta,
+        parcelasProposta: parcelasProposta,
+        reforcosProposta: reforcosProposta,
+        qtdEntradaProposta: qtdEntradaProposta,
+        qtdParcelasProposta: qtdParcelasProposta,
+        qtdReforcosProposta: qtdReforcosProposta,
+        valorEntradaUnit: valorEntradaUnitProposta,
+        valorParcelaUnit: valorParcelaMensalProposta,
+        valorReforcoUnit: valorReforcoUnitProposta,
+        reforcosUtilizados: reforcosUtilizadosProposta,
+        periodoFinal: periodoFinal,
+        fluxoPrimeiros10: fluxoProposta.slice(0, 10)
+    });
     
     return {
         fluxo: fluxo,
@@ -204,28 +275,193 @@ function updateResultados() {
             return;
         }
         
-        // Gerar fluxo de caixa
-        const { fluxo, fluxoTabela, fluxoProposta, tmaMensal } = generateMonthlyFlow(dadosGerais, tabelaVendas, propostaCliente);
+        // Calcular VPL Tabela usando o método Excel correto com reforços a cada 6 meses
+        // Usar TMA informada pelo usuário ou padrão 22%
+        let tmaAnual = parseFloat(dadosGerais.tmaAno) / 100;
+        if (!tmaAnual || tmaAnual === 0) {
+            tmaAnual = 0.22; // 22% padrão
+        }
         
-        // Calcular VPLs usando as fórmulas do Excel
-        const vplTabela = calculateVPL(tmaMensal, fluxoTabela);
-        const vplProposta = calculateVPL(tmaMensal, fluxoProposta);
+        const tmaMensalSimples = calcularTmaMensal(tmaAnual);
         
-        // Delta de VPL = VPL Proposta - VPL Tabela (E27-D27)
-        const deltaVPL = vplProposta - vplTabela;
+        // Extrair dados da tabela de vendas para o cálculo do VPL Tabela
+        const entradaTabela = parseCurrency(tabelaVendas.vendaEntradaValor) || 0;
+        const parcelasTabela = parseCurrency(tabelaVendas.vendaParcelasValor) || 0;
+        const qtdParcelasTabela = parseInt(tabelaVendas.vendaParcelasQtd) || 0;
+        const qtdEntradaTabela = parseInt(tabelaVendas.vendaEntradaParcelas) || 1;
+        const reforcoTabela = parseCurrency(tabelaVendas.vendaReforcoValor) || 0;
+        const qtdReforcoTabela = parseInt(tabelaVendas.vendaReforcoQtd) || 0;
+        const nasChavesTabela = parseCurrency(tabelaVendas.vendaBemMovelImovel) || 0;
         
-        // % Delta VPL = Delta VPL / VPL Tabela (F27/D27) - SEERRO(F27/D27;0)
-        const percentDeltaVPL = vplTabela !== 0 ? (deltaVPL / vplTabela) * 100 : 0;
+        // Gerar fluxo de caixa mês a mês como no Excel
+        const fluxoCaixaVPL = [];
+        
+        // Calcular valores unitários
+        const valorPorParcelaEntrada = qtdEntradaTabela > 0 ? entradaTabela / qtdEntradaTabela : 0;
+        const valorParcelaMensal = qtdParcelasTabela > 0 ? parcelasTabela / qtdParcelasTabela : 0;
+        const valorReforcoUnitario = qtdReforcoTabela > 0 ? reforcoTabela / qtdReforcoTabela : 0;
+        
+        // Definir período total de análise (até que todas as parcelas e reforços sejam pagos)
+        const periodoMaximo = Math.max(qtdEntradaTabela + qtdParcelasTabela, qtdReforcoTabela * 6);
+        
+        let reforcosJaUtilizados = 0;
+        
+        for (let mes = 1; mes <= periodoMaximo; mes++) {
+            let valorMes = 0;
+            
+            // Entrada (nos primeiros meses conforme qtdEntradaTabela)
+            if (mes <= qtdEntradaTabela) {
+                valorMes += valorPorParcelaEntrada;
+            }
+            
+            // Parcelas (começam após a entrada e vão até qtdParcelasTabela)
+            const inicioParcelasNormalMes = qtdEntradaTabela + 1;
+            const fimParcelasNormalMes = qtdEntradaTabela + qtdParcelasTabela;
+            if (mes >= inicioParcelasNormalMes && mes <= fimParcelasNormalMes) {
+                valorMes += valorParcelaMensal;
+            }
+            
+            // Reforços (a cada 6 meses, começando do mês 6)
+            if (mes % 6 === 0 && reforcosJaUtilizados < qtdReforcoTabela && mes >= 6) {
+                valorMes += valorReforcoUnitario;
+                reforcosJaUtilizados++;
+            }
+            
+            // Nas chaves (último mês do período)
+            if (mes === periodoMaximo && nasChavesTabela > 0) {
+                valorMes += nasChavesTabela;
+            }
+            
+            if (valorMes > 0) {
+                fluxoCaixaVPL.push(valorMes);
+            } else if (fluxoCaixaVPL.length > 0) {
+                // Se já começou o fluxo mas este mês é zero, adicionar zero para manter sequência
+                fluxoCaixaVPL.push(0);
+            }
+        }
+        
+        // Calcular VPL Tabela usando a fórmula Excel
+        let vplTabelaSimples = 0;
+        for (let i = 0; i < fluxoCaixaVPL.length; i++) {
+            const periodo = i + 1;
+            vplTabelaSimples += fluxoCaixaVPL[i] / Math.pow(1 + tmaMensalSimples, periodo);
+        }
+        
+        console.log('Dados VPL Tabela:', {
+            tmaAnual: tmaAnual * 100 + '%',
+            tmaMensal: (tmaMensalSimples * 100).toFixed(6) + '%',
+            entradaTabela: entradaTabela,
+            parcelasTabela: parcelasTabela,
+            reforcoTabela: reforcoTabela,
+            qtdEntradaTabela: qtdEntradaTabela,
+            qtdParcelasTabela: qtdParcelasTabela,
+            qtdReforcoTabela: qtdReforcoTabela,
+            valorParcelaMensal: valorParcelaMensal,
+            valorReforcoUnitario: valorReforcoUnitario,
+            reforcosUtilizados: reforcosJaUtilizados,
+            totalMeses: fluxoCaixaVPL.length,
+            fluxoPrimeiros10: fluxoCaixaVPL.slice(0, 10),
+            vplCalculado: vplTabelaSimples
+        });
+        
+        // Gerar fluxo de caixa para VPL Proposta usando os mesmos dados mas com lógica correta
+        const entradaProposta = parseCurrency(propostaCliente.propostaEntradaValor) || 0;
+        const parcelasProposta = parseCurrency(propostaCliente.propostaParcelasValor) || 0;
+        const qtdParcelasProposta = parseInt(propostaCliente.propostaParcelasQtd) || 0;
+        const qtdEntradaProposta = parseInt(propostaCliente.propostaEntradaParcelas) || 1;
+        const reforcosProposta = parseCurrency(propostaCliente.propostaReforcoValor) || 0;
+        const qtdReforcosProposta = parseInt(propostaCliente.propostaReforcoQtd) || 0;
+        const nasChavesProposta = parseCurrency(propostaCliente.propostaBemMovelImovel) || 0;
+        
+        // Gerar fluxo de caixa proposta mês a mês como no Excel
+        const fluxoCaixaProposta = [];
+        
+        // Calcular valores unitários para proposta
+        const valorPorParcelaEntradaProp = qtdEntradaProposta > 0 ? entradaProposta / qtdEntradaProposta : 0;
+        const valorParcelaMensalProp = qtdParcelasProposta > 0 ? parcelasProposta / qtdParcelasProposta : 0;
+        const valorReforcoUnitarioProp = qtdReforcosProposta > 0 ? reforcosProposta / qtdReforcosProposta : 0;
+        
+        // Definir período total para proposta
+        const periodoMaximoProposta = Math.max(qtdEntradaProposta + qtdParcelasProposta, qtdReforcosProposta * 6);
+        
+        let reforcosJaUtilizadosProp = 0;
+        
+        for (let mes = 1; mes <= periodoMaximoProposta; mes++) {
+            let valorMesProp = 0;
+            
+            // Entrada (nos primeiros meses conforme qtdEntradaProposta)
+            if (mes <= qtdEntradaProposta) {
+                valorMesProp += valorPorParcelaEntradaProp;
+            }
+            
+            // Parcelas (começam após a entrada e vão até qtdParcelasProposta)
+            const inicioParcelasPropMes = qtdEntradaProposta + 1;
+            const fimParcelasPropMes = qtdEntradaProposta + qtdParcelasProposta;
+            if (mes >= inicioParcelasPropMes && mes <= fimParcelasPropMes) {
+                valorMesProp += valorParcelaMensalProp;
+            }
+            
+            // Reforços (a cada 6 meses, começando do mês 6)
+            if (mes % 6 === 0 && reforcosJaUtilizadosProp < qtdReforcosProposta && mes >= 6) {
+                valorMesProp += valorReforcoUnitarioProp;
+                reforcosJaUtilizadosProp++;
+            }
+            
+            // Nas chaves (último mês do período)
+            if (mes === periodoMaximoProposta && nasChavesProposta > 0) {
+                valorMesProp += nasChavesProposta;
+            }
+            
+            if (valorMesProp > 0) {
+                fluxoCaixaProposta.push(valorMesProp);
+            } else if (fluxoCaixaProposta.length > 0) {
+                // Se já começou o fluxo mas este mês é zero, adicionar zero para manter sequência
+                fluxoCaixaProposta.push(0);
+            }
+        }
+        
+        // Calcular VPL Proposta usando a fórmula Excel
+        let vplProposta = 0;
+        for (let i = 0; i < fluxoCaixaProposta.length; i++) {
+            const periodo = i + 1;
+            vplProposta += fluxoCaixaProposta[i] / Math.pow(1 + tmaMensalSimples, periodo);
+        }
+        
+        console.log('Dados VPL Proposta:', {
+            tmaAnual: tmaAnual * 100 + '%',
+            tmaMensal: (tmaMensalSimples * 100).toFixed(6) + '%',
+            entradaProposta: entradaProposta,
+            parcelasProposta: parcelasProposta,
+            reforcosProposta: reforcosProposta,
+            qtdEntradaProposta: qtdEntradaProposta,
+            qtdParcelasProposta: qtdParcelasProposta,
+            qtdReforcosProposta: qtdReforcosProposta,
+            valorParcelaMensalProp: valorParcelaMensalProp,
+            valorReforcoUnitarioProp: valorReforcoUnitarioProp,
+            reforcosUtilizados: reforcosJaUtilizadosProp,
+            totalMeses: fluxoCaixaProposta.length,
+            fluxoPrimeiros10: fluxoCaixaProposta.slice(0, 10),
+            vplCalculado: vplProposta
+        });
+        
+        // Gerar fluxo de caixa para tabelas (usando função antiga mas com TMA correta)
+        const { fluxo, fluxoTabela, fluxoProposta: fluxoPropostaAntigo } = generateMonthlyFlow(dadosGerais, tabelaVendas, propostaCliente);
+        
+        // Delta de VPL = VPL Proposta - VPL Tabela
+        const deltaVPL = vplProposta - vplTabelaSimples;
+        
+        // % Delta VPL = SE(VPL_Tabela=0;0;Delta_VPL/VPL_Tabela)
+        const percentDeltaVPL = vplTabelaSimples !== 0 ? (deltaVPL / vplTabelaSimples) * 100 : 0;
         
         // Calcular valores totais para as outras fórmulas
         const valorTotalTabela = calculateTotalValue(tabelaVendas);
         const valorTotalProposta = calculateTotalValue(propostaCliente);
         
-        // Desconto Nominal = (Valor Proposta / Valor Tabela) - 1 (H30/C30)-1
-        const descontoNominal = valorTotalTabela !== 0 ? ((valorTotalProposta / valorTotalTabela) - 1) * 100 : 0;
+        // Desconto Nominal (%) = (Valor do Imóvel Proposta do Cliente/Valor do Imóvel)-1
+        const descontoNominalPercent = valorTotalTabela !== 0 ? ((valorTotalProposta / valorTotalTabela) - 1) * 100 : 0;
         
-        // Delta Desconto = Valor Tabela - Valor Proposta (C12-C19)
-        const deltaDesconto = valorTotalTabela - valorTotalProposta;
+        // Desconto Nominal (R$) = Valor do Imóvel - Valor do Imóvel Proposta do Cliente
+        const descontoNominalReais = valorTotalTabela - valorTotalProposta;
         
         // Atualizar todos os 6 cards
         const descontoNominalEl = document.getElementById('descontoNominal');
@@ -235,9 +471,9 @@ function updateResultados() {
         const deltaVPLEl = document.getElementById('deltaVPL');
         const percentDeltaVPLEl = document.getElementById('percentDeltaVPL');
         
-        if (descontoNominalEl) descontoNominalEl.textContent = formatPercent(descontoNominal);
-        if (deltaDescontoEl) deltaDescontoEl.textContent = formatCurrency(deltaDesconto);
-        if (vplTabelaEl) vplTabelaEl.textContent = formatCurrency(vplTabela);
+        if (descontoNominalEl) descontoNominalEl.textContent = formatPercent(descontoNominalPercent);
+        if (deltaDescontoEl) deltaDescontoEl.textContent = formatCurrency(descontoNominalReais);
+        if (vplTabelaEl) vplTabelaEl.textContent = formatCurrency(vplTabelaSimples);
         if (vplPropostaEl) vplPropostaEl.textContent = formatCurrency(vplProposta);
         if (deltaVPLEl) deltaVPLEl.textContent = formatCurrency(deltaVPL);
         if (percentDeltaVPLEl) percentDeltaVPLEl.textContent = formatPercent(percentDeltaVPL);
@@ -255,13 +491,13 @@ function updateResultados() {
         if (dadosUnidadeEl) dadosUnidadeEl.textContent = dadosGerais.unidade || '-';
         if (dadosAreaEl) dadosAreaEl.textContent = dadosGerais.areaPrivativa ? `${dadosGerais.areaPrivativa} m²` : '-';
         if (dadosTMAanoEl) dadosTMAanoEl.textContent = dadosGerais.tmaAno ? `${dadosGerais.tmaAno}% a.a.` : '-';
-        if (dadosTMAmêsEl) dadosTMAmêsEl.textContent = tmaMensal ? `${(tmaMensal * 100).toFixed(4)}% a.m.` : '-';
+        if (dadosTMAmêsEl) dadosTMAmêsEl.textContent = tmaMensalSimples ? `${(tmaMensalSimples * 100).toFixed(4)}% a.m.` : '-';
         
-        // Atualizar tabela de fluxo de caixa
+        // Atualizar tabela de fluxo de caixa (usar fluxo da função generateMonthlyFlow)
         updateFluxoTable(fluxo);
         
-        // Atualizar gráficos
-        updateCharts(fluxoTabela, fluxoProposta, vplTabela, vplProposta);
+        // Atualizar gráficos (usar VPLs calculados corretamente)
+        updateCharts(fluxoTabela, fluxoCaixaProposta, vplTabelaSimples, vplProposta);
         
     } catch (error) {
         console.error('Erro ao atualizar resultados:', error);

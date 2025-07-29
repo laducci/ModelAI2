@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Navegação - ModelAI</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-link { 
+            display: inline-block; 
+            background: #0d9488; 
+            color: white; 
+            padding: 10px 20px; 
+            text-decoration: none; 
+            border-radius: 5px; 
+            margin: 10px;
+        }
+        .test-link:hover { background: #0f766e; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Teste de Navegação ModelAI</h1>
+    
+    <h2>Links Diretos:</h2>
+    <a href="inputs.html" class="test-link">➡️ Inputs (HTML)</a>
+    <a href="login.html" class="test-link">➡️ Login (HTML)</a>
+    <a href="cenarios.html" class="test-link">➡️ Cenários (HTML)</a>
+    <a href="resultados.html" class="test-link">➡️ Resultados (HTML)</a>
+    
+    <h2>Links Limpos (sem .html):</h2>
+    <a href="inputs" class="test-link">➡️ Inputs</a>
+    <a href="login" class="test-link">➡️ Login</a>
+    <a href="cenarios" class="test-link">➡️ Cenários</a>
+    <a href="resultados" class="test-link">➡️ Resultados</a>
+    
+    <h2>JavaScript Navigation Test:</h2>
+    <button onclick="window.location.href='inputs.html'" class="test-link">🔗 JS → Inputs</button>
+    <button onclick="window.open('inputs.html', '_blank')" class="test-link">🪟 JS → Inputs (Nova Aba)</button>
+    
+    <h2>Debug Info:</h2>
+    <div id="debug"></div>
+    
+    <script>
+        document.getElementById('debug').innerHTML = `
+            <p><strong>URL Atual:</strong> ${window.location.href}</p>
+            <p><strong>User Agent:</strong> ${navigator.userAgent}</p>
+            <p><strong>Protocolo:</strong> ${window.location.protocol}</p>
+            <p><strong>Host:</strong> ${window.location.host}</p>
+        `;
+        
+        // Testar se console funciona
+        console.log('🧪 Teste de navegação carregado');
+        console.log('URL:', window.location.href);
+    </script>
+</body>
+</html>

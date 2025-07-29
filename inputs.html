@@ -556,6 +556,26 @@
         </div>
     </div>
 
+    <script src="js/sidebar.js"></script>
     <script src="js/inputs.js"></script>
+    <script>
+        // Verificar autenticação ao carregar página
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Verificar se está logado
+            if (!api.isAuthenticated()) {
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            // Configurar sidebar e navegação
+            initializeSidebar();
+            await setupAdminNavigation();
+            await updateUserInfo();
+            
+            // Configurar resize responsivo
+            window.addEventListener('resize', handleSidebarResize);
+            handleSidebarResize();
+        });
+    </script>
 </body>
 </html>

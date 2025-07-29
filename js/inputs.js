@@ -578,45 +578,45 @@ function loadSavedData() {
         // NÃO limpar a flag aqui - será limpa ao salvar
     } else {
         // Se não está editando, garantir que todos os campos estejam limpos
-        // Limpar campos de dados gerais
-        document.getElementById('cliente').value = '';
-        document.getElementById('imobiliaria').value = '';
-        document.getElementById('incorporadora').value = '';
-        document.getElementById('empreendimento').value = '';
-        document.getElementById('unidade').value = '';
-        document.getElementById('areaPrivativa').value = '';
-        document.getElementById('tmaAno').value = '';
-        
-        // Limpar tabela de vendas
-        document.getElementById('vendaEntradaValor').value = '';
-        document.getElementById('vendaEntradaParcelas').value = '';
-        document.getElementById('vendaParcelasValor').value = '';
-        document.getElementById('vendaParcelasQtd').value = '';
-        document.getElementById('vendaReforcoValor').value = '';
-        document.getElementById('vendaReforcoQtd').value = '';
-        document.getElementById('vendaBemMovelImovel').value = '';
-        document.getElementById('vendaDesagio').value = '';
-        
-        // Limpar proposta cliente
-        document.getElementById('mesVenda').value = '';
-        document.getElementById('propostaEntradaValor').value = '';
-        document.getElementById('propostaEntradaParcelas').value = '';
-        document.getElementById('propostaParcelasValor').value = '';
-        document.getElementById('propostaParcelasQtd').value = '';
-        document.getElementById('propostaReforcoValor').value = '';
-        document.getElementById('propostaReforcoQtd').value = '';
-        
-        // Limpar campo de nome do cenário
-        document.getElementById('scenarioName').value = '';
-        
-        // Limpar dados do localStorage que não devem estar quando não editando
-        localStorage.removeItem('dadosGerais');
-        localStorage.removeItem('tabelaVendas');
-        localStorage.removeItem('propostaCliente');
-        localStorage.removeItem('currentScenarioId');
+        clearAllFields();
     }
 }
 
+// Função para limpar todos os campos quando não está editando
+function clearAllFields() {
+    // Limpar dados gerais
+    const generalFields = ['cliente', 'imobiliaria', 'incorporadora', 'empreendimento', 'unidade', 'areaPrivativa', 'tmaAno', 'tmaMes'];
+    generalFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) field.value = '';
+    });
+    
+    // Limpar tabela de vendas
+    const vendaFields = ['vendaEntradaValor', 'vendaEntradaParcelas', 'vendaParcelasValor', 'vendaParcelasQtd', 
+                        'vendaReforcoValor', 'vendaReforcoQtd', 'vendaBemMovelImovel', 'vendaDesagio'];
+    vendaFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) field.value = '';
+    });
+    
+    // Limpar proposta cliente
+    const propostaFields = ['mesVenda', 'propostaEntradaValor', 'propostaEntradaParcelas', 'propostaParcelasValor', 
+                           'propostaParcelasQtd', 'propostaReforcoValor', 'propostaReforcoQtd'];
+    propostaFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) field.value = '';
+    });
+    
+    // Limpar nome do cenário
+    const scenarioNameField = document.getElementById('scenarioName');
+    if (scenarioNameField) scenarioNameField.value = '';
+    
+    // Limpar dados do localStorage que não devem estar quando não editando
+    localStorage.removeItem('dadosGerais');
+    localStorage.removeItem('tabelaVendas');
+    localStorage.removeItem('propostaCliente');
+    localStorage.removeItem('currentScenarioId');
+}
 // Initialize page
 document.addEventListener('DOMContentLoaded', function() {
     loadSavedData();
@@ -634,6 +634,13 @@ document.addEventListener('DOMContentLoaded', function() {
         calculateValorProposta();
         updateResumos();
     }, 100);
+    
+    // Event listeners para TMA
+    const tmaAnoInput = document.getElementById('tmaAno');
+    if (tmaAnoInput) {
+        tmaAnoInput.addEventListener('input', calculateTMAMes);
+        tmaAnoInput.addEventListener('change', calculateTMAMes);
+    }
     
     // Tabela de Vendas event listeners
     const vendaEntradaValorEl = document.getElementById('vendaEntradaValor');

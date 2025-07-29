@@ -57,9 +57,9 @@
                         <a href="#benefits" class="text-gray-700 hover:text-teal-600 transition-colors">Benefícios</a>
                         <a href="cenarios.html" class="text-gray-700 hover:text-teal-600 transition-colors">Cenários</a>
                     </nav>
-                    <a href="inputs.html" class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition-colors font-semibold">
-                        <i class="fas fa-calculator mr-2"></i>
-                        Começar Análise
+                    <a href="login.html" class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition-colors font-semibold">
+                        <i class="fas fa-sign-in-alt mr-2"></i>
+                        Login
                     </a>
                 </div>
             </div>
@@ -79,10 +79,10 @@
                         Compare cenários, calcule Valor Presente Líquido e tome decisões financeiras inteligentes com análises precisas em tempo real
                     </p>
                     <div class="flex justify-center lg:justify-start">
-                        <a href="inputs.html" class="btn-primary text-white px-10 py-4 rounded-lg text-xl font-semibold inline-flex items-center justify-center shadow-lg">
+                        <button onclick="irParaInputs()" class="btn-primary text-white px-10 py-4 rounded-lg text-xl font-semibold inline-flex items-center justify-center shadow-lg cursor-pointer">
                             <i class="fas fa-calculator mr-3"></i>
                             Iniciar Análise VPL
-                        </a>
+                        </button>
                     </div>
                 </div>
                 <div class="flex justify-center">
@@ -379,6 +379,21 @@
     </footer>
 
     <script>
+        // Debug de navegação
+        function irParaInputs() {
+            console.log('🎯 Botão Iniciar Análise clicado');
+            console.log('URL atual:', window.location.href);
+            
+            // Tentar múltiplas formas de navegação
+            try {
+                window.location.href = 'inputs.html';
+            } catch (e) {
+                console.error('Erro na navegação:', e);
+                // Fallback
+                window.open('inputs.html', '_self');
+            }
+        }
+        
         // Smooth scrolling for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
