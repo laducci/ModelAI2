@@ -16,11 +16,15 @@ class AuthGuard {
             // Verificar se estamos na página de login
             if (window.location.pathname.includes('login.html')) {
                 console.log('📝 Página de login detectada');
-                // Se já está logado, redirecionar
+                // Se já está logado, redirecionar (mas com delay para evitar piscar)
                 if (this.api.isAuthenticated()) {
                     console.log('✅ Usuário já autenticado, redirecionando...');
                     const user = this.api.getCurrentUser();
-                    this.redirectAfterLogin(user);
+                    
+                    // Delay maior para evitar piscar
+                    setTimeout(() => {
+                        this.redirectAfterLogin(user);
+                    }, 500);
                 }
                 this.isInitialized = true;
                 return;
@@ -194,28 +198,53 @@ class AuthGuard {
     redirectToLogin(message = '') {
         // Evitar loop se já estamos na página de login
         if (window.location.pathname.includes('login.html')) {
+            console.log('🔄 Já na página de login, evitando loop');
             return;
         }
+        
+        console.log('🚪 Redirecionando para login:', message);
         
         if (message) {
             localStorage.setItem('login_message', message);
         }
         
-        // Pequeno delay para evitar loops
+        // Fade out antes de redirecionar para evitar piscar
+        const mainContent = document.getElementById('mainContent');
+        const sidebar = document.getElementById('sidebar');
+        
+        if (mainContent) {
+            mainContent.style.opacity = '0';
+        }
+        if (sidebar) {
+            sidebar.style.opacity = '0';
+        }
+        
+        // Delay maior para suavizar transição
         setTimeout(() => {
             window.location.href = '/login.html';
-        }, 100);
+        }, 300);
     }
 
     redirectAfterLogin(user) {
-        // Pequeno delay para evitar loops
+        // Evitar redirecionamento se já estamos na página correta
+        const currentPath = window.location.pathname;
+        const targetPath = user.role === 'admin' ? '/usuarios.html' : '/inputs.html';
+        
+        if (currentPath.includes(targetPath.substring(1))) {
+            console.log('🎯 Já na página correta, não redirecionando');
+            return;
+        }
+        
+        console.log('🏠 Redirecionando após login para:', targetPath);
+        
+        // Delay maior para evitar piscar
         setTimeout(() => {
             if (user.role === 'admin') {
                 window.location.href = '/usuarios.html';
             } else {
                 window.location.href = '/inputs.html';
             }
-        }, 100);
+        }, 1000);
     }
 
     getCurrentUser() {
@@ -263,24 +292,33 @@ const authGuard = new AuthGuard();
 
 // Inicializar quando a página carregar
 document.addEventListener('DOMContentLoaded', () => {
-    // Esconder conteúdo inicialmente para evitar piscar
-    const mainContent = document.getElementById('mainContent');
-    const sidebar = document.getElementById('sidebar');
+    console.log('🌟 DOM carregado, configurando AuthGuard...');
     
-    if (mainContent && !window.location.pathname.includes('login.html')) {
-        mainContent.style.visibility = 'hidden';
-        mainContent.style.opacity = '0';
-        mainContent.style.transition = 'opacity 0.3s ease-in-out';
-    }
-    
-    if (sidebar && !window.location.pathname.includes('login.html')) {
-        sidebar.style.visibility = 'hidden';
-        sidebar.style.opacity = '0';
-        sidebar.style.transition = 'opacity 0.3s ease-in-out';
+    // Esconder conteúdo inicialmente para evitar piscar (apenas se não for login)
+    if (!window.location.pathname.includes('login.html')) {
+        const mainContent = document.getElementById('mainContent');
+        const sidebar = document.getElementById('sidebar');
+        
+        if (mainContent) {
+            mainContent.style.visibility = 'hidden';
+            mainContent.style.opacity = '0';
+            mainContent.style.transition = 'opacity 0.5s ease-in-out';
+        }
+        
+        if (sidebar) {
+            sidebar.style.visibility = 'hidden';
+            sidebar.style.opacity = '0';
+            sidebar.style.transition = 'opacity 0.5s ease-in-out';
+        }
+        
+        // Adicionar classe de loading ao body
+        document.body.classList.add('loading');
     }
 
-    // Inicializar autenticação
-    authGuard.init().catch(console.error);
+    // Pequeno delay antes de inicializar para evitar conflitos
+    setTimeout(() => {
+        authGuard.init().catch(console.error);
+    }, 100);
 });
 
 // Exportar para uso global

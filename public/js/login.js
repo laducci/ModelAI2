@@ -133,43 +133,18 @@ if (loginForm) {
   });
 }
 
-// Token verification
+// Verificação de autenticação removida para evitar conflito com auth-guard.js
+// O auth-guard.js já lida com redirecionamentos automáticos
 document.addEventListener('DOMContentLoaded', function () {
-  const token = localStorage.getItem('token');
-  const modelaiToken = localStorage.getItem('modelai_token');
-
-  if (token || modelaiToken) {
-    const authToken = token || modelaiToken;
-
-    fetch('/api/auth/verify', {
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-      },
-    })
-      .then((response) => {
-        if (response.ok) return response.json();
-        throw new Error('Token inválido');
-      })
-      .then((data) => {
-        if (data.valid) {
-          const user =
-            data.user ||
-            JSON.parse(localStorage.getItem('user') || localStorage.getItem('modelai_user') || '{}');
-          if (user && user.role === 'admin') {
-            window.location.href = 'usuarios.html';
-          } else {
-            window.location.href = 'index.html';
-          }
-        }
-      })
-      .catch((error) => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('modelai_token');
-        localStorage.removeItem('modelai_user');
-        localStorage.removeItem('modelai_logged_in');
-        console.log('Token inválido, mantendo na página de login');
-      });
+  console.log('🚀 Login page loaded');
+  
+  // Mostrar mensagem se redirecionado de página protegida
+  const message = localStorage.getItem('login_message');
+  if (message) {
+    localStorage.removeItem('login_message');
+    if (window.showWarning) {
+      window.showWarning(message, 6000);
+    }
   }
 
   // Input animations
