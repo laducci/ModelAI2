@@ -255,17 +255,14 @@
                     const data = await response.json();
 
                     if (response.ok) {
-                        // Store authentication data (ambos os formatos para compatibilidade)
                         localStorage.setItem('token', data.token);
                         localStorage.setItem('user', JSON.stringify(data.user));
                         localStorage.setItem('modelai_token', data.token);
                         localStorage.setItem('modelai_user', JSON.stringify(data.user));
                         localStorage.setItem('modelai_logged_in', 'true');
-                        
-                        // Success feedback
+
                         btnText.innerHTML = '<i class="fas fa-check mr-2"></i>Sucesso!';
-                        
-                        // Redirect based on user role
+
                         setTimeout(() => {
                             if (data.user.role === 'admin') {
                                 window.location.href = 'usuarios.html';
