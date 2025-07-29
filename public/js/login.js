@@ -1,35 +1,57 @@
-document.getElementById("login-form").addEventListener("submit", async function (e) {
-  e.preventDefault();
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.querySelector("form");
 
-  const email = document.getElementById("email").value.trim();
-  const senha = document.getElementById("senha").value.trim();
-  const statusMessage = document.getElementById("status-message");
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
 
-  statusMessage.innerHTML = "Carregando...";
-  statusMessage.style.color = "black";
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
 
-  try {
-    const response = await fetch("https://model-ai-2.vercel.app/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ email, senha })
-    });
+    const mensagemErro = document.getElementById("error-text");
+    const erroBox = document.getElementById("error-message");
 
-    const data = await response.json();
+    mensagemErro.textContent = "";
+    erroBox.classList.add("hidden");
 
-    if (response.ok) {
-      statusMessage.innerHTML = "Login realizado com sucesso!";
-      statusMessage.style.color = "green";
-      // redirecionar, salvar token, etc.
-    } else {
-      statusMessage.innerHTML = data.message || "Erro ao fazer login";
-      statusMessage.style.color = "red";
+    if (!email || !password) {
+      mensagemErro.textContent = "E-mail e senha obrigatórios.";
+      erroBox.classList.remove("hidden");
+      return;
     }
-  } catch (err) {
-    statusMessage.innerHTML = "Erro inesperado: não foi possível conectar ao servidor.";
-    statusMessage.style.color = "red";
-    console.error(err);
-  }
+
+    try {
+      const response = await fetch("https://model-ai-2.vercel.app/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const text = await response.text();
+      console.log("🧾 Resposta:", text);
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        mensagemErro.textContent = "Resposta inválida do servidor.";
+        erroBox.classList.remove("hidden");
+        return;
+      }
+
+      if (response.ok) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        window.location.href = "index.html";
+      } else {
+        mensagemErro.textContent = data.message || "Erro ao fazer login.";
+        erroBox.classList.remove("hidden");
+      }
+    } catch (error) {
+      console.error("Erro de conexão:", error);
+      mensagemErro.textContent = "Falha na conexão com o servidor.";
+      erroBox.classList.remove("hidden");
+    }
+  });
 });
