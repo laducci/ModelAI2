@@ -1,9 +1,11 @@
-// USUARIOS.JS - VERSÃO COMPLETA E FUNCIONAL
-console.log('🚀 USUARIOS.JS - Iniciando versão completa...');
+// USUARIOS.JS - VERSÃO SIMPLIFICADA
+console.log('USUARIOS.JS - Iniciando versão simplificada...');
 
 // Variáveis globais
 let usuarios = [];
 let usuarioAtual = null;
+let inicializacaoRealizada = false;
+let carregandoUsuarios = false;
 
 //===============================
 // FUNÇÕES DE MODAL
@@ -357,6 +359,14 @@ window.logout = async function() {
 window.carregarUsuarios = async function() {
     console.log('carregarUsuarios chamada!');
     
+    // Evitar múltiplas chamadas simultâneas
+    if (carregandoUsuarios) {
+        console.log('Já está carregando usuários, ignorando...');
+        return;
+    }
+    
+    carregandoUsuarios = true;
+    
     try {
         console.log('Buscando usuários da API...');
         
@@ -385,6 +395,8 @@ window.carregarUsuarios = async function() {
     } catch (error) {
         console.error('Erro ao carregar usuários:', error);
         showError('Erro de conexão ao carregar usuários');
+    } finally {
+        carregandoUsuarios = false;
     }
 };
 
@@ -392,9 +404,9 @@ window.carregarUsuarios = async function() {
 window.renderizarUsuarios = function() {
     console.log('Renderizando usuários...');
     
-    const tbody = document.getElementById('tabelaUsuários');
+    const tbody = document.getElementById('tabelaUsuarios');
     if (!tbody) {
-        console.error('❌ Tabela de usuários não encontrada!');
+        console.error('Tabela de usuários não encontrada!');
         return;
     }
     
@@ -412,12 +424,12 @@ window.renderizarUsuarios = function() {
     
     tbody.innerHTML = usuarios.map(usuario => {
         const status = usuario.active !== false ? 
-            '<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">✅ Ativo</span>' : 
-            '<span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">❌ Inativo</span>';
+            '<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Ativo</span>' : 
+            '<span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Inativo</span>';
             
         const role = usuario.role === 'admin' ? 
-            '<span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">👑 Admin</span>' :
-            '<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">👤 Usuário</span>';
+            '<span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">Admin</span>' :
+            '<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Usuário</span>';
             
         const ultimoLogin = usuario.lastLogin ? 
             new Date(usuario.lastLogin).toLocaleDateString('pt-BR') : 
@@ -459,12 +471,12 @@ window.renderizarUsuarios = function() {
         `;
     }).join('');
     
-    console.log('✅ Usuários renderizados!');
+    console.log('Usuários renderizados!');
 };
 
 // Função para atualizar estatísticas
 window.atualizarEstatisticas = function() {
-    console.log('📊 Atualizando estatísticas...');
+    console.log('Atualizando estatísticas...');
     
     const total = usuarios.length;
     const ativos = usuarios.filter(u => u.active !== false).length;
@@ -526,31 +538,53 @@ document.addEventListener('DOMContentLoaded', async function() {
             console.log('✅ Form editar usuário configurado!');
         } else {
             console.error('❌ Form formEditarUsuario não encontrado!');
-        }
-        
-        // Verificar token de autenticação
+// INICIALIZAÇÃO SIMPLIFICADA
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('Inicializando página de usuários...');
+    
+    // Evitar múltipla inicialização
+    if (inicializacaoRealizada) {
+        console.log('Inicialização já realizada, ignorando...');
+        return;
+    }
+    inicializacaoRealizada = true;
+    
+    try {
+        // Verificar token
         const token = localStorage.getItem('token');
         if (!token) {
-            console.error('❌ Token não encontrado - redirecionando para login');
+            console.error('Token não encontrado');
             showError('Você precisa fazer login primeiro!');
-            setTimeout(() => {
-                window.location.href = '/login.html';
-            }, 2000);
+            setTimeout(() => window.location.href = '/login.html', 2000);
             return;
         }
         
-        console.log('🔑 Token encontrado:', token.substring(0, 20) + '...');
+        // Configurar eventos apenas uma vez
+        const btnNovoUsuario = document.getElementById('btnNovoUsuario');
+        if (btnNovoUsuario) {
+            btnNovoUsuario.onclick = window.abrirModalNovoUsuario;
+        }
         
-        // Carregar usuários
-        console.log('📋 Carregando usuários...');
+        const formNovoUsuario = document.getElementById('formNovoUsuario');
+        if (formNovoUsuario) {
+            formNovoUsuario.onsubmit = window.criarUsuario;
+        }
+        
+        const formEditarUsuario = document.getElementById('formEditarUsuario');
+        if (formEditarUsuario) {
+            formEditarUsuario.onsubmit = window.salvarEdicaoUsuario;
+        }
+        
+        // Carregar usuários uma única vez
+        console.log('Carregando usuários...');
         await window.carregarUsuarios();
         
-        console.log('🎉 Inicialização completa!');
+        console.log('Inicialização completa!');
         
     } catch (error) {
-        console.error('❌ Erro na inicialização:', error);
-        showError('Erro ao inicializar a página: ' + error.message);
+        console.error('Erro na inicialização:', error);
+        showError('Erro ao inicializar: ' + error.message);
     }
 });
 
-console.log('✅ usuarios.js carregado - Funções definidas globalmente!');
+console.log('usuarios.js carregado!');

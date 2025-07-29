@@ -379,7 +379,7 @@ const handler = async (req, res) => {
       const requestUser = await User.findById(decoded.userId);
       
       if (!requestUser || requestUser.role !== 'admin') {
-        return res.status(403).json({ message: 'Acesso negado. Apenas administradores podem listar usuários.' });
+        return sendResponse(403, { message: 'Acesso negado. Apenas administradores podem listar usuários.' });
       }
       
       const users = await User.find({}, '-password').sort({ createdAt: -1 });
@@ -399,15 +399,15 @@ const handler = async (req, res) => {
         updatedAt: user.updatedAt
       }));
       
-      return res.status(200).json({ 
+      return sendResponse(200, { 
         success: true,
         message: 'Usuários carregados com sucesso',
         users: usersFormatted,
         total: usersFormatted.length
       });
     } catch (error) {
-      console.error('❌ Erro ao listar usuários:', error);
-      return res.status(500).json({ message: 'Erro no servidor.', error: error.message });
+      console.error('Erro ao listar usuários:', error);
+      return sendResponse(500, { message: 'Erro no servidor.', error: error.message });
     }
   }
 
