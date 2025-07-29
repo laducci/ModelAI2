@@ -22,7 +22,7 @@ const loginLimiter = rateLimit({
 // @access  Public
 router.post('/register', async (req, res) => {
     try {
-        const { name, email, password, company } = req.body;
+        const { name, email, password, company, role } = req.body;
 
         // Validações
         if (!name || !email || !password) {
@@ -50,10 +50,14 @@ router.post('/register', async (req, res) => {
             name: name.trim(),
             email: email.toLowerCase().trim(),
             password,
-            company: company?.trim()
+            company: company?.trim(),
+            role: role || 'user',
+            isActive: true // Garantir que o usuário está ativo
         });
 
         await user.save();
+
+        console.log('✅ Usuário criado:', user.email, 'Role:', user.role, 'Active:', user.isActive);
 
         // Gerar token
         const token = jwt.sign(
@@ -70,7 +74,8 @@ router.post('/register', async (req, res) => {
                 name: user.name,
                 email: user.email,
                 company: user.company,
-                role: user.role
+                role: user.role,
+                isActive: user.isActive
             }
         });
 

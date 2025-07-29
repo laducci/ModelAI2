@@ -83,6 +83,13 @@ class UserAPI {
         });
     }
 
+    async updateUser(userId, userData) {
+        return this.request(`/users/${userId}`, {
+            method: 'PUT',
+            body: JSON.stringify(userData)
+        });
+    }
+
     async updateUserStatus(userId, isActive) {
         return this.request(`/users/${userId}/status`, {
             method: 'PUT',
@@ -178,12 +185,17 @@ function renderUsuarios(usuarios) {
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div class="flex space-x-2">
+                    <button onclick="editUser('${user._id}')" 
+                            class="text-blue-600 hover:text-blue-900 transition-colors" 
+                            title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
                     <button onclick="toggleUserStatus('${user._id}', ${user.isActive !== false})" 
                             class="text-${user.isActive !== false ? 'red' : 'green'}-600 hover:text-${user.isActive !== false ? 'red' : 'green'}-900 transition-colors" 
                             title="${user.isActive !== false ? 'Desativar' : 'Ativar'}">
                         <i class="fas fa-${user.isActive !== false ? 'user-slash' : 'user-check'}"></i>
                     </button>
-                    ${user.role !== 'admin' ? `
+                    ${user.role !== 'admin' || user.email !== 'administrador@modelai.com' ? `
                         <button onclick="deleteUser('${user._id}', '${user.name}')" 
                                 class="text-red-600 hover:text-red-900 transition-colors" 
                                 title="Excluir">
@@ -267,38 +279,97 @@ function abrirModalNovoUsuario() {
 }
 
 function fecharModalNovoUsuario() {
-    document.getElementById('modalNovoUsuario').classList.add('hidden');
+    const modal = document.getElementById('modalNovoUsuario');
+    const form = document.getElementById('formNovoUsuario');
+    
+    modal.classList.add('hidden');
+    form.reset();
+    
+    // Resetar estado de edição
+    form.removeAttribute('data-editing');
+    document.querySelector('#modalNovoUsuario h3').textContent = 'Criar Novo Usuário';
+    document.getElementById('novaSenha').setAttribute('required', '');
 }
 
-// Criar usuário
+// Criar ou editar usuário
 async function criarUsuario(e) {
     e.preventDefault();
     
-    const formData = new FormData(e.target);
+    const form = e.target;
+    const editingId = form.getAttribute('data-editing');
+    const isEditing = !!editingId;
+
+    const formData = new FormData(form);
     const userData = {
         name: formData.get('name'),
         email: formData.get('email'),
-        password: formData.get('password'),
         company: formData.get('company'),
         role: formData.get('role') || 'user'
     };
 
-    console.log('👤 Criando usuário:', userData.email);
+    // Só incluir senha se não estiver editando ou se foi preenchida
+    const password = formData.get('password');
+    if (!isEditing && !password) {
+        showError('Senha é obrigatória para novos usuários');
+        return;
+    }
+    if (password) {
+        userData.password = password;
+    }
+
+    console.log(isEditing ? '✏️ Editando usuário:' : '👤 Criando usuário:', userData.email);
 
     try {
         showLoading(true);
-        await userAPI.createUser(userData);
         
-        showSuccess('Usuário criado com sucesso!');
+        if (isEditing) {
+            await userAPI.updateUser(editingId, userData);
+            showSuccess('Usuário atualizado com sucesso!');
+        } else {
+            await userAPI.createUser(userData);
+            showSuccess('Usuário criado com sucesso!');
+        }
+        
         fecharModalNovoUsuario();
-        
         await carregarUsuarios();
         
     } catch (error) {
-        console.error('❌ Erro ao criar usuário:', error);
-        showError('Erro ao criar usuário: ' + error.message);
+        console.error('❌ Erro ao salvar usuário:', error);
+        showError('Erro ao salvar usuário: ' + error.message);
     } finally {
         showLoading(false);
+    }
+}
+
+// Editar usuário
+async function editUser(userId) {
+    try {
+        const user = allUsers.find(u => u._id === userId);
+        if (!user) {
+            showError('Usuário não encontrado');
+            return;
+        }
+
+        // Preencher modal com dados existentes
+        document.getElementById('novoNome').value = user.name;
+        document.getElementById('novoEmail').value = user.email;
+        document.getElementById('novaEmpresa').value = user.company || '';
+        document.getElementById('novoRole').value = user.role;
+        document.getElementById('novaSenha').value = '';
+        document.getElementById('novaSenha').removeAttribute('required');
+
+        // Mudar título do modal
+        document.querySelector('#modalNovoUsuario h3').textContent = 'Editar Usuário';
+        
+        // Alterar comportamento do form
+        const form = document.getElementById('formNovoUsuario');
+        form.setAttribute('data-editing', userId);
+        
+        abrirModalNovoUsuario();
+
+    } catch (error) {
+        console.error('❌ Erro ao editar usuário:', error);
+        showError('Erro ao carregar dados do usuário');
     }
 }
 
@@ -419,6 +490,7 @@ function confirmDialog(message, title = 'Confirmar') {
 // Exportar para uso global
 window.carregarUsuarios = carregarUsuarios;
 window.criarUsuario = criarUsuario;
+window.editUser = editUser;
 window.toggleUserStatus = toggleUserStatus;
 window.deleteUser = deleteUser;
 window.abrirModalNovoUsuario = abrirModalNovoUsuario;

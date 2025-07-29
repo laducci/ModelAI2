@@ -301,6 +301,113 @@ router.put('/:id/status', adminAuth, async (req, res) => {
     }
 });
 
+// @route   DELETE /api/users/:id
+// @desc    Excluir usuário (admin)
+// @access  Private/Admin
+router.delete('/:id', adminAuth, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({
+                error: 'Usuário não encontrado.'
+            });
+        }
+
+        // Não permitir excluir admin principal
+        if (user.email === 'administrador@modelai.com' || user.email === 'admin@modelai.com') {
+            return res.status(400).json({
+                error: 'Não é possível excluir o administrador principal.'
+            });
+        }
+
+        // Excluir usuário
+        await User.findByIdAndDelete(req.params.id);
+        
+        // Desativar cenários do usuário
+        await Scenario.updateMany(
+            { userId: req.params.id },
+            { isActive: false }
+        );
+
+        res.json({
+            message: 'Usuário excluído com sucesso!'
+        });
+
+    } catch (error) {
+        console.error('Erro ao excluir usuário:', error);
+        res.status(500).json({
+            error: 'Erro interno do servidor.'
+        });
+    }
+});
+
+// @route   PUT /api/users/:id
+// @desc    Editar usuário (admin)
+// @access  Private/Admin
+router.put('/:id', adminAuth, async (req, res) => {
+    try {
+        const { name, email, company, role } = req.body;
+
+        if (!name || !email) {
+            return res.status(400).json({
+                error: 'Nome e email são obrigatórios.'
+            });
+        }
+
+        // Verificar se o email já existe em outro usuário
+        const existingUser = await User.findOne({ 
+            email: email.toLowerCase(),
+            _id: { $ne: req.params.id }
+        });
+
+        if (existingUser) {
+            return res.status(400).json({
+                error: 'Email já está em uso por outro usuário.'
+            });
+        }
+
+        const updateData = {
+            name: name.trim(),
+            email: email.toLowerCase().trim(),
+            company: company?.trim(),
+            role: role || 'user'
+        };
+
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            updateData,
+            { new: true, runValidators: true }
+        ).select('-password');
+
+        if (!user) {
+            return res.status(404).json({
+                error: 'Usuário não encontrado.'
+            });
+        }
+
+        res.json({
+            message: 'Usuário atualizado com sucesso!',
+            user
+        });
+
+    } catch (error) {
+        console.error('Erro ao atualizar usuário:', error);
+        
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map(err => err.message);
+            return res.status(400).json({
+                error: 'Dados inválidos.',
+                details: messages
+            });
+        }
+
+        res.status(500).json({
+            error: 'Erro interno do servidor.'
+        });
+    }
+});
+
 // @route   GET /api/users/stats/dashboard
 // @desc    Estatísticas para dashboard admin
 // @access  Private/Admin

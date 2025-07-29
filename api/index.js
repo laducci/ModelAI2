@@ -13,6 +13,30 @@ const connectDB = async () => {
     useUnifiedTopology: true,
   });
   console.log('📦 MongoDB conectado');
+  
+  // Criar usuário admin padrão se não existir
+  try {
+    const adminEmail = 'administrador@modelai.com';
+    const existingAdmin = await User.findOne({ email: adminEmail });
+    
+    if (!existingAdmin) {
+      const adminUser = new User({
+        name: 'Administrador',
+        email: adminEmail,
+        password: 'admin123', // Será hasheada automaticamente
+        role: 'admin',
+        isActive: true,
+        company: 'ModelAI'
+      });
+      
+      await adminUser.save();
+      console.log('👑 Usuário administrador criado:', adminEmail);
+    } else {
+      console.log('👑 Usuário administrador já existe:', adminEmail);
+    }
+  } catch (error) {
+    console.error('❌ Erro ao criar admin:', error);
+  }
 };
 
 // EXPORTAÇÃO PARA VERCEL - Função principal que trata todas as rotas da API
@@ -71,7 +95,13 @@ module.exports = async (req, res) => {
         return res.status(401).json({ message: 'Email ou senha incorretos.' });
       }
 
-      console.log('🔍 Verificando senha para usuário:', user.name);
+      // Verificar se a conta está ativa
+      if (user.isActive === false) {
+        console.log('❌ Usuário inativo:', email);
+        return res.status(401).json({ message: 'Conta desativada. Entre em contato com o suporte.' });
+      }
+
+      console.log('🔍 Verificando senha para usuário:', user.name, 'isActive:', user.isActive);
       // Verificar senha
       const isValidPassword = await bcrypt.compare(password, user.password);
       console.log('🔑 Senha válida:', isValidPassword ? 'SIM' : 'NÃO');
@@ -102,7 +132,10 @@ module.exports = async (req, res) => {
           _id: user._id,
           name: user.name,
           email: user.email,
-          role: user.role
+          role: user.role,
+          isActive: user.isActive,
+          company: user.company,
+          lastLogin: user.lastLogin
         }
       });
     } catch (error) {
@@ -231,20 +264,21 @@ module.exports = async (req, res) => {
       }
       
       // Criar hash da senha
-      const hashedPassword = await bcrypt.hash(password, 10);
+      // Não precisamos hashear manualmente - o modelo User faz isso automaticamente
       
       // Criar novo usuário
       const newUser = new User({
         name,
         email: email.toLowerCase(),
-        password: hashedPassword,
+        password, // Senha será hasheada automaticamente pelo middleware do modelo
         role,
-        company: company || 'Não informado'
+        company: company || 'Não informado',
+        isActive: true // FUNDAMENTAL: garantir que o usuário está ativo
       });
       
       await newUser.save();
       
-      console.log('✅ Usuário criado com sucesso:', newUser.email, 'Role:', newUser.role);
+      console.log('✅ Usuário criado com sucesso:', newUser.email, 'Role:', newUser.role, 'isActive:', newUser.isActive);
       
       return res.status(201).json({ 
         message: 'Usuário criado com sucesso!',
@@ -253,7 +287,8 @@ module.exports = async (req, res) => {
           name: newUser.name,
           email: newUser.email,
           role: newUser.role,
-          company: newUser.company
+          company: newUser.company,
+          isActive: newUser.isActive
         }
       });
     } catch (error) {
@@ -344,6 +379,68 @@ module.exports = async (req, res) => {
       });
     } catch (error) {
       console.error('❌ Erro ao atualizar status:', error);
+      return res.status(500).json({ message: 'Erro no servidor.', error: error.message });
+    }
+  }
+
+  // EDITAR USUÁRIO (apenas admins)
+  if (url.startsWith('/api/users/') && !url.includes('/status') && method === 'PUT') {
+    try {
+      // Verificar se o usuário logado é admin
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token) {
+        return res.status(401).json({ message: 'Token não fornecido.' });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
+      const requestUser = await User.findById(decoded.userId);
+      
+      if (!requestUser || requestUser.role !== 'admin') {
+        return res.status(403).json({ message: 'Acesso negado. Apenas administradores.' });
+      }
+
+      const userId = url.split('/')[3]; // /api/users/{id}
+      const { name, email, company, role } = body;
+
+      if (!name || !email) {
+        return res.status(400).json({ message: 'Nome e email são obrigatórios.' });
+      }
+
+      // Verificar se o email já existe em outro usuário
+      const existingUser = await User.findOne({ 
+        email: email.toLowerCase(),
+        _id: { $ne: userId }
+      });
+
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email já está em uso por outro usuário.' });
+      }
+
+      // Atualizar usuário
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        {
+          name: name.trim(),
+          email: email.toLowerCase().trim(),
+          company: company?.trim(),
+          role: role || 'user'
+        },
+        { new: true, runValidators: true }
+      ).select('-password');
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'Usuário não encontrado.' });
+      }
+
+      console.log('✅ Usuário editado com sucesso:', updatedUser.email);
+
+      return res.status(200).json({
+        message: 'Usuário atualizado com sucesso!',
+        user: updatedUser
+      });
+
+    } catch (error) {
+      console.error('❌ Erro ao editar usuário:', error);
       return res.status(500).json({ message: 'Erro no servidor.', error: error.message });
     }
   }

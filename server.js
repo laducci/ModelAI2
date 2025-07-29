@@ -22,8 +22,33 @@ app.use(express.static(path.join(__dirname, 'public')));
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-}).then(() => {
+}).then(async () => {
     console.log('📦 MongoDB Connected');
+    
+    // Criar usuário admin padrão se não existir
+    try {
+        const adminEmail = 'administrador@modelai.com';
+        const existingAdmin = await User.findOne({ email: adminEmail });
+        
+        if (!existingAdmin) {
+            const adminUser = new User({
+                name: 'Administrador',
+                email: adminEmail,
+                password: 'admin123', // Será hasheada automaticamente
+                role: 'admin',
+                isActive: true,
+                company: 'ModelAI'
+            });
+            
+            await adminUser.save();
+            console.log('👑 Usuário administrador criado:', adminEmail);
+            console.log('🔑 Senha padrão: admin123');
+        } else {
+            console.log('👑 Usuário administrador já existe:', adminEmail);
+        }
+    } catch (error) {
+        console.error('❌ Erro ao criar admin:', error);
+    }
 }).catch(err => {
     console.error('❌ MongoDB connection error:', err);
 });
