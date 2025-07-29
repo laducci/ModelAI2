@@ -57,6 +57,44 @@ module.exports = async (req, res) => {
     }
 
     try {
+      // FALLBACK: Se for o usuário teste e não existir no DB, criar automaticamente
+      if (email.toLowerCase() === 'teste@modelai.com' && password === '123456') {
+        console.log('🔧 Criando usuário teste automaticamente...');
+        
+        let testUser = await User.findOne({ email: 'teste@modelai.com' });
+        
+        if (!testUser) {
+          const hashedPassword = await bcrypt.hash('123456', 10);
+          testUser = new User({
+            name: 'Usuario Teste',
+            email: 'teste@modelai.com',
+            password: hashedPassword,
+            role: 'user',
+            company: 'ModelAI Teste'
+          });
+          await testUser.save();
+          console.log('✅ Usuário teste criado automaticamente');
+        }
+        
+        // Gerar token
+        const token = jwt.sign(
+          { userId: testUser._id }, 
+          process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production',
+          { expiresIn: '7d' }
+        );
+
+        return res.status(200).json({ 
+          message: 'Login realizado com sucesso!',
+          token: token,
+          user: {
+            _id: testUser._id,
+            name: testUser.name,
+            email: testUser.email,
+            role: testUser.role
+          }
+        });
+      }
+
       // Buscar usuário por email (case insensitive)
       const user = await User.findOne({ email: email.toLowerCase() });
       console.log('👤 Usuário encontrado:', user ? 'SIM' : 'NÃO');

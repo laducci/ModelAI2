@@ -1,9 +1,6 @@
 /* Common Sidebar Styles - Model AI */
 
-/* Transições suaves sem piscar excessivo */
-#mainContent, #sidebar {
-    transition: opacity 0.3s ease-in-out;
-}
+/* Sem piscar - CSS limpo */
 
 /* Sidebar principal */
 .modern-sidebar {

@@ -10,85 +10,55 @@ class AuthGuard {
     async init() {
         if (this.isInitialized) return;
         
-        console.log('🔐 Inicializando AuthGuard na página:', window.location.pathname);
+        console.log('🔐 AuthGuard na página:', window.location.pathname);
         
         try {
-            // Verificar se estamos na página de login
+            // Página de login - sem complicação
             if (window.location.pathname.includes('login.html')) {
-                console.log('📝 Página de login detectada');
-                // Se já está logado, redirecionar (mas com delay para evitar piscar)
                 if (this.api.isAuthenticated()) {
-                    console.log('✅ Usuário já autenticado, redirecionando...');
                     const user = this.api.getCurrentUser();
-                    
-                    // Delay maior para evitar piscar
-                    setTimeout(() => {
-                        this.redirectAfterLogin(user);
-                    }, 800);
+                    if (user?.role === 'admin') {
+                        window.location.href = 'usuarios.html';
+                    } else {
+                        window.location.href = 'inputs.html';
+                    }
                 }
                 this.isInitialized = true;
                 return;
             }
 
-            // Verificar autenticação local primeiro
+            // Verificar autenticação - simples
             if (!this.api.isAuthenticated()) {
-                console.log('❌ Usuário não autenticado, redirecionando para login');
-                this.redirectToLogin('Você precisa estar logado para acessar esta página.');
+                window.location.href = 'login.html';
                 return;
             }
 
-            console.log('✅ Usuário autenticado localmente');
-
-            // Obter usuário do localStorage
             this.currentUser = this.api.getCurrentUser();
-            console.log('👤 Dados do usuário:', this.currentUser);
-            
-            // Se não temos dados do usuário, tentar verificar online
             if (!this.currentUser || !this.currentUser._id) {
-                console.log('🌐 Verificando autenticação online...');
-                try {
-                    this.currentUser = await this.api.verifyAuth();
-                    console.log('✅ Verificação online bem-sucedida');
-                } catch (error) {
-                    console.warn('⚠️ Verificação online falhou, usando dados locais:', error);
-                    // Se a verificação online falha, continuar com dados locais
-                    this.currentUser = this.api.getCurrentUser();
-                    if (!this.currentUser || !this.currentUser._id) {
-                        console.log('❌ Dados locais inválidos, redirecionando para login');
-                        this.redirectToLogin('Sessão inválida. Faça login novamente.');
-                        return;
-                    }
-                }
+                window.location.href = 'login.html';
+                return;
             }
             
-            console.log('🎯 Configurando página para usuário:', this.currentUser.name);
-            
-            // Configurar página baseado no usuário
-            await this.setupPage();
+            // Configurar página
+            this.updateUserInfo();
+            this.setupNavigation();
+            this.checkPagePermissions();
             
             this.isInitialized = true;
-            console.log('✅ AuthGuard inicializado com sucesso');
             
         } catch (error) {
-            console.error('❌ Erro na autenticação:', error);
-            this.redirectToLogin('Erro de autenticação. Faça login novamente.');
+            console.error('❌ Erro:', error);
+            window.location.href = 'login.html';
         }
     }
 
     async setupPage() {
         if (!this.currentUser) return;
 
-        // Atualizar informações do usuário na sidebar
+        // Simples - só atualizar info e navegação
         this.updateUserInfo();
-        
-        // Configurar navegação baseada no role
         this.setupNavigation();
-        
-        // Verificar permissões da página atual
         this.checkPagePermissions();
-        
-        // Evitar piscar da tela
-        this.showPageContent();
     }
 
     updateUserInfo() {
