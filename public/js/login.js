@@ -114,10 +114,15 @@ if (loginForm) {
           window.showSuccess(`Bem-vindo, ${data.user.name}!`, 2000);
         }
 
+        console.log('✅ Login realizado com sucesso, dados do usuário:', data.user);
+
         setTimeout(() => {
+          // Redirecionar baseado no role do usuário
           if (data.user.role === 'admin') {
+            console.log('👑 Redirecionando admin para usuarios.html');
             window.location.href = 'usuarios.html';
           } else {
+            console.log('👤 Redirecionando usuário comum para inputs.html');
             window.location.href = 'inputs.html';
           }
         }, 2000);

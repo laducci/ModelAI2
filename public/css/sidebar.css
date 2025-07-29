@@ -1,8 +1,14 @@
 /* Common Sidebar Styles - Model AI */
 
-/* Loading state para evitar piscar */
+/* Loading state para evitar piscar - melhorado */
 body.loading {
     overflow: hidden;
+}
+
+body.loading #mainContent,
+body.loading #sidebar {
+    opacity: 0;
+    visibility: hidden;
 }
 
 body.loading::before {
@@ -39,22 +45,30 @@ body.loading::after {
     50% { opacity: 0.5; }
 }
 
-/* Transições suaves para conteúdo principal */
+/* Transições suaves para conteúdo principal - melhoradas */
 #mainContent, #sidebar {
-    transition: opacity 0.6s ease-in-out, transform 0.3s ease-out;
+    transition: opacity 0.4s ease-in-out, transform 0.3s ease-out;
+    opacity: 0;
+    visibility: hidden;
+}
+
+body:not(.loading) #mainContent,
+body:not(.loading) #sidebar {
+    opacity: 1;
+    visibility: visible;
 }
 
 /* Sidebar principal */
 .modern-sidebar {
     background: linear-gradient(145deg, #0f766e 0%, #134e4a 100%);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Animação de toggle da sidebar */
+/* Animação de toggle da sidebar - mais lenta e suave */
 .modern-sidebar.collapsed {
     width: 80px;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-item {
@@ -102,7 +116,7 @@ body.loading::after {
 }
 
 .sidebar-text {
-    transition: all 0.3s ease;
+    transition: all 0.5s ease;
 }
 
 .modern-sidebar.collapsed .sidebar-text {
@@ -118,10 +132,11 @@ body.loading::after {
 .modern-sidebar.collapsed .logo-container {
     opacity: 0;
     pointer-events: none;
+    transition: opacity 0.5s ease;
 }
 
 .main-content {
-    transition: all 0.3s ease;
+    transition: all 0.6s ease;
 }
 
 .main-content.expanded {

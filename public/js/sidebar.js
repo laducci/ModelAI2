@@ -31,19 +31,10 @@ function toggleSidebar() {
     sidebarCollapsed = !sidebarCollapsed;
     
     if (sidebarCollapsed) {
-        // Colapsar sidebar
-        sidebar.style.transform = 'translateX(-200px)';
-        sidebar.style.width = '72px';
-        
-        // Esconder textos
-        sidebarTexts.forEach(text => {
-            text.style.opacity = '0';
-            text.style.transform = 'translateX(-20px)';
-        });
-        
-        // Ajustar conteúdo principal
+        // Colapsar sidebar usando classes CSS
+        sidebar.classList.add('collapsed');
         if (mainContent) {
-            mainContent.style.marginLeft = '72px';
+            mainContent.classList.add('expanded');
         }
         
         // Rotacionar ícone
@@ -53,20 +44,9 @@ function toggleSidebar() {
         
     } else {
         // Expandir sidebar
-        sidebar.style.transform = 'translateX(0)';
-        sidebar.style.width = '288px'; // w-72
-        
-        // Mostrar textos após um pequeno delay
-        setTimeout(() => {
-            sidebarTexts.forEach(text => {
-                text.style.opacity = '1';
-                text.style.transform = 'translateX(0)';
-            });
-        }, 200);
-        
-        // Ajustar conteúdo principal
+        sidebar.classList.remove('collapsed');
         if (mainContent) {
-            mainContent.style.marginLeft = '288px';
+            mainContent.classList.remove('expanded');
         }
         
         // Rotacionar ícone de volta
@@ -79,17 +59,19 @@ function toggleSidebar() {
 }
 
 function setupSidebarTextElements() {
-    const sidebarTexts = document.querySelectorAll('.sidebar-text, nav span:not(.sr-only)');
-    
-    sidebarTexts.forEach(text => {
-        text.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-    });
-    
     // Configurar transição do ícone de toggle
     const toggleIcon = document.querySelector('#toggleSidebar i');
     if (toggleIcon) {
-        toggleIcon.style.transition = 'transform 0.3s ease';
+        toggleIcon.style.transition = 'transform 0.5s ease';
     }
+    
+    // Aplicar transitions CSS diretamente aos elementos da sidebar
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) {
+        sidebar.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+    }
+    
+    console.log('🔧 Sidebar elements configurados para animações suaves');
 }
 
 // Responsive handling
