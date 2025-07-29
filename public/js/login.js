@@ -1,3 +1,6 @@
+// LOGIN.JS - SISTEMA REAL DE PRODUÇÃO
+console.log('🔐 LOGIN - Sistema Real Iniciando...');
+
 // Global state
 let isLoading = false;
 
@@ -11,34 +14,39 @@ const btnLoading = document.getElementById('btn-loading');
 
 // Utils
 function showError(message) {
-  // Usar sistema moderno de alertas se disponível
-  if (window.showError) {
-    window.showError(message);
-  } else {
-    // Fallback para método antigo
+  console.error('❌ Erro:', message);
+  
+  if (errorText && errorMessage) {
     errorText.textContent = message;
     errorMessage.classList.remove('hidden');
     errorMessage.classList.add('animate-pulse');
     setTimeout(() => {
       errorMessage.classList.remove('animate-pulse');
     }, 1000);
+  } else {
+    alert('❌ ' + message);
   }
 }
 
 function hideError() {
-  errorMessage.classList.add('hidden');
+  if (errorMessage) {
+    errorMessage.classList.add('hidden');
+  }
 }
 
 function setLoading(loading) {
   isLoading = loading;
-  loginBtn.disabled = loading;
+  
+  if (loginBtn) {
+    loginBtn.disabled = loading;
+  }
 
   if (loading) {
-    btnText.classList.add('hidden');
-    btnLoading.classList.remove('hidden');
+    if (btnText) btnText.classList.add('hidden');
+    if (btnLoading) btnLoading.classList.remove('hidden');
   } else {
-    btnText.classList.remove('hidden');
-    btnLoading.classList.add('hidden');
+    if (btnText) btnText.classList.remove('hidden');
+    if (btnLoading) btnLoading.classList.add('hidden');
   }
 }
 
@@ -46,14 +54,16 @@ function togglePasswordVisibility() {
   const passwordInput = document.getElementById('password');
   const passwordIcon = document.getElementById('password-icon');
 
-  if (passwordInput.type === 'password') {
-    passwordInput.type = 'text';
-    passwordIcon.classList.remove('fa-eye');
-    passwordIcon.classList.add('fa-eye-slash');
-  } else {
-    passwordInput.type = 'password';
-    passwordIcon.classList.remove('fa-eye-slash');
-    passwordIcon.classList.add('fa-eye');
+  if (passwordInput && passwordIcon) {
+    if (passwordInput.type === 'password') {
+      passwordInput.type = 'text';
+      passwordIcon.classList.remove('fa-eye');
+      passwordIcon.classList.add('fa-eye-slash');
+    } else {
+      passwordInput.type = 'password';
+      passwordIcon.classList.remove('fa-eye-slash');
+      passwordIcon.classList.add('fa-eye');
+    }
   }
 }
 
@@ -80,107 +90,103 @@ if (loginForm) {
       return;
     }
 
+    console.log('🔐 Tentativa de login para:', email);
+
     try {
-      const response = await fetch('/api/auth/login', {
+      // API Call direto (sem depender de ApiClient não carregado ainda)
+      const baseURL = window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000/api' 
+        : 'https://model-ai2.vercel.app/api';
+
+      const response = await fetch(`${baseURL}/auth/login`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password })
       });
 
-      const text = await response.text();
-      console.log('🧾 Resposta bruta:', text);
+      const data = await response.json();
+      console.log('📥 Resposta do servidor:', data);
 
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (err) {
-        showError("Resposta inválida do servidor.");
-        throw new Error("Falha ao interpretar resposta: não é JSON");
+      if (!response.ok) {
+        throw new Error(data.message || data.error || `Erro ${response.status}`);
       }
 
-      if (response.ok) {
+      if (data.message && data.token && data.user) {
+        console.log('✅ Login bem-sucedido para:', data.user.name, 'Role:', data.user.role);
+
+        // Salvar dados de autenticação
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
+        
+        // Backward compatibility
         localStorage.setItem('modelai_token', data.token);
         localStorage.setItem('modelai_user', JSON.stringify(data.user));
-        localStorage.setItem('modelai_logged_in', 'true');
 
-        btnText.innerHTML = '<i class="fas fa-check mr-2"></i>Sucesso!';
-        
-        // Mostrar alerta de sucesso
-        if (window.showSuccess) {
-          window.showSuccess(`Bem-vindo, ${data.user.name}!`, 2000);
+        // Feedback visual
+        if (btnText) {
+          btnText.innerHTML = '<i class="fas fa-check mr-2"></i>Sucesso!';
         }
 
-        console.log('✅ Login realizado com sucesso, dados do usuário:', data.user);
-
+        // Redirecionar baseado no role
         setTimeout(() => {
-          // Redirecionar baseado no role do usuário - SIMPLES
           if (data.user.role === 'admin') {
             console.log('👑 Redirecionando admin para usuarios.html');
-            window.location.replace('usuarios.html');
+            window.location.href = 'usuarios.html';
           } else {
-            console.log('👤 Redirecionando usuário comum para inputs.html');
-            window.location.replace('inputs.html');
+            console.log('👤 Redirecionando usuário para inputs.html');
+            window.location.href = 'inputs.html';
           }
-        }, 1500);
+        }, 1000);
+
       } else {
-        throw new Error(data.message || data.error || 'Erro ao fazer login');
+        throw new Error('Resposta inválida do servidor');
       }
+
     } catch (error) {
-      console.error('Login error:', error);
-      showError(error.message || 'Erro de conexão. Tente novamente.');
+      console.error('❌ Erro no login:', error);
+      showError(error.message || 'Erro ao fazer login. Verifique suas credenciais.');
     } finally {
       setLoading(false);
     }
   });
 }
 
-// Verificação de autenticação removida para evitar conflito com auth-guard.js
-// O auth-guard.js já lida com redirecionamentos automáticos
+// Verificar se já está logado
 document.addEventListener('DOMContentLoaded', function () {
-  console.log('🚀 Login page loaded');
+  console.log('📋 Login page carregada');
   
-  // Mostrar mensagem se redirecionado de página protegida
-  const message = localStorage.getItem('login_message');
-  if (message) {
-    localStorage.removeItem('login_message');
-    if (window.showWarning) {
-      window.showWarning(message, 6000);
+  // Se já estiver logado, redirecionar
+  const token = localStorage.getItem('token') || localStorage.getItem('modelai_token');
+  const userData = localStorage.getItem('user') || localStorage.getItem('modelai_user');
+  
+  if (token && userData) {
+    try {
+      const user = JSON.parse(userData);
+      console.log('✅ Usuário já logado:', user.name);
+      
+      if (user.role === 'admin') {
+        window.location.replace('usuarios.html');
+      } else {
+        window.location.replace('inputs.html');
+      }
+    } catch (error) {
+      console.log('❌ Dados corrompidos - limpando localStorage');
+      localStorage.clear();
     }
   }
 
-  // Input animations
-  const inputs = document.querySelectorAll('input[type="email"], input[type="password"]');
-  inputs.forEach((input) => {
-    input.addEventListener('focus', function () {
-      this.parentElement.classList.add('transform', 'scale-105');
-    });
-
-    input.addEventListener('blur', function () {
-      this.parentElement.classList.remove('transform', 'scale-105');
-    });
-
-    input.addEventListener('input', function () {
-      if (this.value.length > 0) {
-        this.classList.add('border-teal-400');
-      } else {
-        this.classList.remove('border-teal-400');
-      }
-    });
-  });
-
-  // Load animation
-  const card = document.querySelector('.glassmorphism');
-  if (card) {
-    card.style.opacity = '0';
-    card.style.transform = 'translateY(30px)';
-    setTimeout(() => {
-      card.style.transition = 'all 0.8s ease-out';
-      card.style.opacity = '1';
-      card.style.transform = 'translateY(0)';
-    }, 100);
+  // Mostrar mensagem se houver
+  const loginMessage = localStorage.getItem('login_message');
+  if (loginMessage) {
+    showError(loginMessage);
+    localStorage.removeItem('login_message');
   }
 });
+
+// Exportar funções para uso global
+window.togglePasswordVisibility = togglePasswordVisibility;
+window.showForgotPassword = showForgotPassword;
+
+console.log('🔐 LOGIN.JS - Sistema Real Configurado!');

@@ -108,195 +108,193 @@ class ApiClient {
             return false;
         }
     }
+                isAuth
+            });
+            
+            return isAuth;
+        } catch (error) {
+            console.error('Erro na verificação de autenticação:', error);
+            return false;
+        }
+    }
 
     // Verificar se é admin
     isAdmin() {
         try {
-            const userData = localStorage.getItem('user') || localStorage.getItem('modelai_user');
-            if (!userData) return false;
-            
-            const user = JSON.parse(userData);
+            const user = JSON.parse(localStorage.getItem('modelai_user') || '{}');
             return user.role === 'admin';
-        } catch (error) {
-            console.error('❌ Erro ao verificar admin:', error);
+        } catch {
             return false;
         }
     }
 
-    // Obter usuário atual
+    // Obter dados do usuário logado
     getCurrentUser() {
         try {
-            const userData = localStorage.getItem('user') || localStorage.getItem('modelai_user');
-            return userData ? JSON.parse(userData) : null;
-        } catch (error) {
-            console.error('❌ Erro ao obter usuário atual:', error);
+            return JSON.parse(localStorage.getItem('modelai_user') || '{}');
+        } catch {
             return null;
         }
     }
 
-    // Verificação de token no servidor
+    // Verificar autenticação via API
     async verifyAuth() {
         try {
             const response = await this.get('/auth/verify');
-            return response.valid;
+            if (response.valid && response.user) {
+                localStorage.setItem('modelai_user', JSON.stringify(response.user));
+                return response.user;
+            }
+            throw new Error('Token inválido');
         } catch (error) {
-            console.error('❌ Erro na verificação do servidor:', error);
-            return false;
+            // Não fazer logout automático aqui - deixar para quem chama decidir
+            throw error;
         }
     }
 
-    // === MÉTODOS DE AUTENTICAÇÃO ===
+    // Métodos da API
 
-    // Login
+    // Autenticação
     async login(email, password) {
         const response = await this.post('/auth/login', { email, password });
+        if (response.token) {
+            this.setToken(response.token);
+            localStorage.setItem('modelai_user', JSON.stringify(response.user));
+            localStorage.setItem('modelai_logged_in', 'true');
+        }
         return response;
     }
 
-    // Registro (para admins)
     async register(userData) {
         const response = await this.post('/auth/register', userData);
+        if (response.token) {
+            this.setToken(response.token);
+            localStorage.setItem('modelai_user', JSON.stringify(response.user));
+            localStorage.setItem('modelai_logged_in', 'true');
+        }
         return response;
     }
 
-    // === MÉTODOS DE USUÁRIO ===
-
-    // Obter perfil
     async getProfile() {
-        return this.get('/user/profile');
+        return this.get('/auth/me');
     }
 
-    // Atualizar perfil
     async updateProfile(userData) {
-        return this.put('/user/profile', userData);
+        return this.put('/auth/profile', userData);
     }
 
-    // Alterar senha
     async changePassword(currentPassword, newPassword) {
-        return this.put('/user/password', { currentPassword, newPassword });
+        return this.put('/auth/change-password', { currentPassword, newPassword });
     }
 
-    // === MÉTODOS DE CENÁRIOS ===
-
-    // Listar cenários
+    // Cenários
     async getScenarios(params = {}) {
         const queryString = new URLSearchParams(params).toString();
         return this.get(`/scenarios${queryString ? '?' + queryString : ''}`);
     }
 
-    // Criar cenário
-    async createScenario(scenarioData) {
-        return this.post('/scenarios', scenarioData);
-    }
-
-    // Obter cenário específico
     async getScenario(id) {
         return this.get(`/scenarios/${id}`);
     }
 
-    // Atualizar cenário
+    async createScenario(scenarioData) {
+        return this.post('/scenarios', scenarioData);
+    }
+
     async updateScenario(id, scenarioData) {
         return this.put(`/scenarios/${id}`, scenarioData);
     }
 
-    // Excluir cenário
     async deleteScenario(id) {
         return this.delete(`/scenarios/${id}`);
     }
 
-    // === MÉTODOS DE USUÁRIOS (ADMIN ONLY) ===
-
-    // Listar usuários
-    async getUsers(params = {}) {
-        const queryString = new URLSearchParams(params).toString();
-        return this.get(`/users${queryString ? '?' + queryString : ''}`);
+    async duplicateScenario(id, name) {
+        return this.post(`/scenarios/${id}/duplicate`, { name });
     }
 
-    // Atualizar status do usuário
-    async updateUserStatus(userId, isActive) {
-        return this.put(`/users/${userId}/status`, { isActive });
+    async getScenarioHistory(id) {
+        return this.get(`/scenarios/${id}/history`);
     }
 
-    // Excluir usuário
-    async deleteUser(userId) {
-        return this.delete(`/users/${userId}`);
+    async getScenarioStats() {
+        return this.get('/scenarios/stats/summary');
     }
 
-    // === MÉTODOS DE RESULTADOS ===
-
-    // Obter resultados
-    async getResults(params = {}) {
-        const queryString = new URLSearchParams(params).toString();
-        return this.get(`/results${queryString ? '?' + queryString : ''}`);
+    // Usuários
+    async getUserProfile() {
+        return this.get('/users/profile');
     }
 
-    // Criar resultado
-    async createResult(resultData) {
-        return this.post('/results', resultData);
-    }
+    async exportUserData() {
+        const response = await fetch(`${this.baseURL}/users/export`, {
+            headers: this.getHeaders()
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erro ao exportar dados');
+        }
 
-    // === MÉTODOS DE DEBUG ===
-
-    // Debug: Listar todos os usuários
-    async debugGetAllUsers() {
-        return this.get('/debug/users');
-    }
-
-    // Health check
-    async healthCheck() {
-        return this.get('/health');
+        return response.blob();
     }
 }
 
 // Instância global da API
 const api = new ApiClient();
 
-// === FUNÇÕES DE UTILIDADE ===
-
-// Mostrar notificação
+// Helper para mostrar notificações
 function showNotification(message, type = 'info') {
-    console.log(`${type.toUpperCase()}: ${message}`);
-    
-    // Simple alert for now - can be replaced with a toast library
-    if (type === 'error') {
-        alert('❌ ' + message);
-    } else if (type === 'success') {
-        alert('✅ ' + message);
-    } else {
-        alert('ℹ️ ' + message);
+    // Remover notificação existente
+    const existing = document.querySelector('.notification');
+    if (existing) {
+        existing.remove();
     }
+
+    // Criar nova notificação
+    const notification = document.createElement('div');
+    notification.className = `notification fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 max-w-sm ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        type === 'warning' ? 'bg-yellow-500 text-black' :
+        'bg-blue-500 text-white'
+    }`;
+    
+    notification.innerHTML = `
+        <div class="flex items-center justify-between">
+            <span>${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-lg font-bold">×</button>
+        </div>
+    `;
+
+    document.body.appendChild(notification);
+
+    // Auto remover após 5 segundos
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
 }
 
-// Mostrar erro
-function showError(message) {
-    showNotification(message, 'error');
+// Helper para verificar autenticação em páginas protegidas
+function requireAuth() {
+    if (!api.isAuthenticated()) {
+        window.location.href = '/login.html';
+        return false;
+    }
+    return true;
 }
 
-// Mostrar sucesso
-function showSuccess(message) {
-    showNotification(message, 'success');
+// Helper para redirecionar se já logado
+function redirectIfAuthenticated() {
+    if (api.isAuthenticated()) {
+        window.location.href = '/index.html';
+        return true;
+    }
+    return false;
 }
 
-// Mostrar informação
-function showInfo(message) {
-    showNotification(message, 'info');
+// Export para uso em outros arquivos
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { ApiClient, api, showNotification, requireAuth, redirectIfAuthenticated };
 }
-
-// Confirmar ação
-function confirmAction(message, title = 'Confirmar') {
-    return new Promise(resolve => {
-        const confirmed = confirm(`${title}\n\n${message}`);
-        resolve(confirmed);
-    });
-}
-
-// === EXPORTAÇÕES ===
-window.api = api;
-window.ApiClient = ApiClient;
-window.showNotification = showNotification;
-window.showError = showError;
-window.showSuccess = showSuccess;
-window.showInfo = showInfo;
-window.confirmAction = confirmAction;
-
-console.log('🔗 API CLIENT - Sistema Real Configurado!');
