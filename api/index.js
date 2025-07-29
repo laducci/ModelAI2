@@ -111,6 +111,15 @@ const handler = async (req, res) => {
   // Parse da URL para identificar a rota
   const { url, method } = req;
   
+  // Limpar query parameters da URL
+  const cleanUrl = url.split('?')[0];
+  
+  // DEBUG: Imprimir informações da requisição
+  console.log('🔍 [API DEBUG] URL original:', url);
+  console.log('🔍 [API DEBUG] URL limpa:', cleanUrl);
+  console.log('🔍 [API DEBUG] Method:', method);
+  console.log('🔍 [API DEBUG] Headers:', req.headers);
+  
   // Parse do body para requisições POST
   let body = {};
   if (method === 'POST' && req.body) {
@@ -354,7 +363,7 @@ const handler = async (req, res) => {
   }
 
   // LISTAR USUÁRIOS (apenas para admins)
-  if (url === '/api/users' && method === 'GET') {
+  if (cleanUrl === '/api/users' && method === 'GET') {
     try {
       // Verificar se o usuário é admin
       const token = req.headers.authorization?.replace('Bearer ', '');
@@ -388,6 +397,8 @@ const handler = async (req, res) => {
       }));
       
       return res.status(200).json({ 
+        success: true,
+        message: 'Usuários carregados com sucesso',
         users: usersFormatted,
         total: usersFormatted.length
       });
@@ -791,12 +802,26 @@ const handler = async (req, res) => {
   }
 
   // HEALTH CHECK
-  if (url === '/api/health' && method === 'GET') {
+  if (cleanUrl === '/api/health' && method === 'GET') {
     const result = res.json({ status: 'ok', time: new Date().toISOString() });
     return req.httpMethod ? result : result;
   }
 
+  // ROTA DE TESTE
+  if (cleanUrl === '/api/test' && method === 'GET') {
+    console.log('🧪 [API] Rota de teste acessada no handler!');
+    const result = res.json({ 
+      message: 'Teste do handler API funcionando!', 
+      url: url, 
+      cleanUrl: cleanUrl,
+      method: method,
+      timestamp: new Date().toISOString()
+    });
+    return req.httpMethod ? result : result;
+  }
+
   // Rota não encontrada
+  console.log('❌ [API] Rota não encontrada:', cleanUrl, method);
   const notFoundResult = res.status(404).json({ message: 'Rota não encontrada' });
   return req.httpMethod ? notFoundResult : notFoundResult;
 };

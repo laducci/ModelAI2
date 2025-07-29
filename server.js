@@ -181,10 +181,19 @@ app.post('/api/create-admin', async (req, res) => {
 
 // Middleware para rotas da API (direciona para o handler universal)
 app.use('/api', async (req, res, next) => {
+    console.log('🔍 [SERVER DEBUG] Middleware API - req.path:', req.path);
+    console.log('🔍 [SERVER DEBUG] Middleware API - req.url:', req.url);
+    console.log('🔍 [SERVER DEBUG] Middleware API - req.method:', req.method);
+    
     // Pular as rotas já definidas acima
     if (req.path === '/auth/login' || req.path === '/auth/verify' || req.path === '/create-admin' || req.path === '/health') {
+        console.log('🔄 [SERVER DEBUG] Pulando para rota definida:', req.path);
         return next();
     }
+    
+    // Ajustar a URL para incluir o prefixo /api
+    req.url = '/api' + req.path;
+    console.log('🔧 [SERVER DEBUG] URL ajustada:', req.url);
     
     // Usar o handler universal para outras rotas da API
     try {
@@ -202,6 +211,17 @@ app.get('/api/health', (req, res) => {
         status: 'ok',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development'
+    });
+});
+
+// Rota de teste para debug
+app.get('/api/test', (req, res) => {
+    console.log('🧪 [TEST] Rota de teste acessada!');
+    res.json({ 
+        message: 'Rota de teste funcionando!', 
+        url: req.url,
+        path: req.path,
+        method: req.method
     });
 });
 
