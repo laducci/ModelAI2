@@ -1,0 +1,82 @@
+/* Common Sidebar Styles - Model AI */
+
+.modern-sidebar {
+    background: linear-gradient(145deg, #0f766e 0%, #134e4a 100%);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    transition: all 0.3s ease;
+}
+
+.modern-sidebar.collapsed {
+    width: 80px;
+}
+
+.sidebar-item {
+    position: relative;
+    margin: 0.25rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.sidebar-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.sidebar-item:hover::before {
+    left: 100%;
+}
+
+.sidebar-item:hover {
+    background: rgba(20, 184, 166, 0.15);
+}
+
+.modern-sidebar:not(.collapsed) .sidebar-item:hover {
+    transform: translateX(4px);
+}
+
+.sidebar-item.active {
+    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+    box-shadow: 0 8px 25px rgba(20, 184, 166, 0.3);
+}
+
+.sidebar-icon {
+    transition: all 0.3s ease;
+}
+
+.sidebar-item:hover .sidebar-icon {
+    transform: scale(1.1);
+}
+
+.sidebar-text {
+    transition: all 0.3s ease;
+}
+
+.modern-sidebar.collapsed .sidebar-text {
+    opacity: 0;
+    transform: translateX(-20px);
+    pointer-events: none;
+}
+
+.modern-sidebar.collapsed .toggle-container {
+    justify-content: center;
+}
+
+.modern-sidebar.collapsed .logo-container {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.main-content {
+    transition: all 0.3s ease;
+}
+
+.main-content.expanded {
+    margin-left: 80px;
+}
