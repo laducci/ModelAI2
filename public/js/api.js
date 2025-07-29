@@ -88,11 +88,24 @@ class ApiClient {
 
     // Verificar se usuário está logado
     isAuthenticated() {
-        const token = localStorage.getItem('modelai_token');
-        const user = localStorage.getItem('modelai_user');
-        const loggedIn = localStorage.getItem('modelai_logged_in');
-        
-        return !!(token && user && loggedIn === 'true');
+        try {
+            const token = localStorage.getItem('modelai_token');
+            const user = localStorage.getItem('modelai_user');
+            const loggedIn = localStorage.getItem('modelai_logged_in');
+            
+            const isAuth = !!(token && user && loggedIn === 'true');
+            console.log('🔍 Verificação de autenticação:', {
+                token: !!token,
+                user: !!user,
+                loggedIn: loggedIn === 'true',
+                isAuth
+            });
+            
+            return isAuth;
+        } catch (error) {
+            console.error('Erro na verificação de autenticação:', error);
+            return false;
+        }
     }
 
     // Verificar se é admin
@@ -124,7 +137,7 @@ class ApiClient {
             }
             throw new Error('Token inválido');
         } catch (error) {
-            this.logout();
+            // Não fazer logout automático aqui - deixar para quem chama decidir
             throw error;
         }
     }

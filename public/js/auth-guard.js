@@ -10,11 +10,15 @@ class AuthGuard {
     async init() {
         if (this.isInitialized) return;
         
+        console.log('🔐 Inicializando AuthGuard na página:', window.location.pathname);
+        
         try {
             // Verificar se estamos na página de login
             if (window.location.pathname.includes('login.html')) {
+                console.log('📝 Página de login detectada');
                 // Se já está logado, redirecionar
                 if (this.api.isAuthenticated()) {
+                    console.log('✅ Usuário já autenticado, redirecionando...');
                     const user = this.api.getCurrentUser();
                     this.redirectAfterLogin(user);
                 }
@@ -22,23 +26,48 @@ class AuthGuard {
                 return;
             }
 
-            // Verificar autenticação
+            // Verificar autenticação local primeiro
             if (!this.api.isAuthenticated()) {
+                console.log('❌ Usuário não autenticado, redirecionando para login');
                 this.redirectToLogin('Você precisa estar logado para acessar esta página.');
                 return;
             }
 
-            // Verificar token com o servidor
-            this.currentUser = await this.api.verifyAuth();
+            console.log('✅ Usuário autenticado localmente');
+
+            // Obter usuário do localStorage
+            this.currentUser = this.api.getCurrentUser();
+            console.log('👤 Dados do usuário:', this.currentUser);
+            
+            // Se não temos dados do usuário, tentar verificar online
+            if (!this.currentUser || !this.currentUser._id) {
+                console.log('🌐 Verificando autenticação online...');
+                try {
+                    this.currentUser = await this.api.verifyAuth();
+                    console.log('✅ Verificação online bem-sucedida');
+                } catch (error) {
+                    console.warn('⚠️ Verificação online falhou, usando dados locais:', error);
+                    // Se a verificação online falha, continuar com dados locais
+                    this.currentUser = this.api.getCurrentUser();
+                    if (!this.currentUser || !this.currentUser._id) {
+                        console.log('❌ Dados locais inválidos, redirecionando para login');
+                        this.redirectToLogin('Sessão inválida. Faça login novamente.');
+                        return;
+                    }
+                }
+            }
+            
+            console.log('🎯 Configurando página para usuário:', this.currentUser.name);
             
             // Configurar página baseado no usuário
             await this.setupPage();
             
             this.isInitialized = true;
+            console.log('✅ AuthGuard inicializado com sucesso');
             
         } catch (error) {
-            console.error('Erro na autenticação:', error);
-            this.redirectToLogin('Sua sessão expirou. Faça login novamente.');
+            console.error('❌ Erro na autenticação:', error);
+            this.redirectToLogin('Erro de autenticação. Faça login novamente.');
         }
     }
 
@@ -163,18 +192,30 @@ class AuthGuard {
     }
 
     redirectToLogin(message = '') {
+        // Evitar loop se já estamos na página de login
+        if (window.location.pathname.includes('login.html')) {
+            return;
+        }
+        
         if (message) {
             localStorage.setItem('login_message', message);
         }
-        window.location.href = '/login.html';
+        
+        // Pequeno delay para evitar loops
+        setTimeout(() => {
+            window.location.href = '/login.html';
+        }, 100);
     }
 
     redirectAfterLogin(user) {
-        if (user.role === 'admin') {
-            window.location.href = '/usuarios.html';
-        } else {
-            window.location.href = '/inputs.html';
-        }
+        // Pequeno delay para evitar loops
+        setTimeout(() => {
+            if (user.role === 'admin') {
+                window.location.href = '/usuarios.html';
+            } else {
+                window.location.href = '/inputs.html';
+            }
+        }, 100);
     }
 
     getCurrentUser() {

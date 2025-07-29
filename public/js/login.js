@@ -120,7 +120,7 @@ if (loginForm) {
           } else {
             window.location.href = 'inputs.html';
           }
-        }, 1500);
+        }, 2000);
       } else {
         throw new Error(data.message || data.error || 'Erro ao fazer login');
       }
