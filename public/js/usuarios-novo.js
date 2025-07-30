@@ -1,4 +1,5 @@
 // USUARIOS.JS - VERSÃO SIMPLIFICADA E FUNCIONAL
+console.log('🚀🚀🚀 USUARIOS-NOVO.JS CARREGADO! 🚀🚀🚀');
 console.log('Carregando usuarios.js...');
 
 // Variáveis globais
@@ -159,9 +160,18 @@ window.fecharModalEditarUsuario = function() {
 
 // Função para salvar edição
 window.salvarEdicaoUsuario = async function(event) {
-    event.preventDefault();
+    console.log('🔥🔥🔥 FUNÇÃO SALVAR EDITAÇÃO CHAMADA! 🔥🔥🔥');
+    if (event) event.preventDefault();
+    console.log('salvarEdicaoUsuario chamada!');
     
     const userId = document.getElementById('editarUsuarioId').value;
+    console.log('User ID:', userId);
+    
+    if (!userId) {
+        showError('ID do usuário não encontrado.');
+        return;
+    }
+    
     const dadosAtualizacao = {
         name: document.getElementById('editarNome').value,
         email: document.getElementById('editarEmail').value,
@@ -170,12 +180,22 @@ window.salvarEdicaoUsuario = async function(event) {
         active: document.getElementById('editarStatus').value === 'true'
     };
     
+    console.log('Dados de atualização:', dadosAtualizacao);
+    
+    // Validação básica
+    if (!dadosAtualizacao.name || !dadosAtualizacao.email) {
+        showError('Nome e email são obrigatórios.');
+        return;
+    }
+    
     const novaSenha = document.getElementById('editarSenha').value;
-    if (novaSenha.trim()) {
-        dadosAtualizacao.password = novaSenha;
+    if (novaSenha && novaSenha.trim()) {
+        dadosAtualizacao.password = novaSenha.trim();
+        console.log('Senha será atualizada');
     }
     
     try {
+        console.log('Enviando requisição PUT para:', `/api/users/${userId}`);
         const response = await fetch(`/api/users/${userId}`, {
             method: 'PUT',
             headers: {
@@ -185,16 +205,21 @@ window.salvarEdicaoUsuario = async function(event) {
             body: JSON.stringify(dadosAtualizacao)
         });
         
+        console.log('Status da resposta:', response.status);
+        
         if (response.ok) {
+            const resultado = await response.json();
+            console.log('Resposta da API:', resultado);
             showSuccess(`Usuário "${dadosAtualizacao.name}" atualizado com sucesso!`);
             window.fecharModalEditarUsuario();
             await window.carregarUsuarios();
         } else {
             const erro = await response.json();
+            console.error('Erro da API:', erro);
             showError(`Erro ao atualizar: ${erro.message}`);
         }
     } catch (error) {
-        console.error('Erro:', error);
+        console.error('Erro de rede:', error);
         showError('Erro de conexão ao atualizar usuário.');
     }
 };
@@ -321,6 +346,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             setTimeout(() => window.location.href = '/login.html', 2000);
             return;
         }
+        
+        console.log('Token válido, carregando usuários...');
         
         // Carregar usuários
         await window.carregarUsuarios();
