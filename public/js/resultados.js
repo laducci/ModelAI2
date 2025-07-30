@@ -787,7 +787,6 @@ function displayCalculatedValues(values) {
 function updateFinancialSummary() {
     const data = currentScenarioData.data;
     
-    document.getElementById('mesVenda').textContent = data.propostaCliente.mesVenda || '1';
     
     // Atualizar informações do cenário
     document.getElementById('infoCliente').textContent = data.dadosGerais.cliente || '-';
