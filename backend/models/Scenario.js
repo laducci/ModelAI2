@@ -30,7 +30,7 @@ const scenarioSchema = new mongoose.Schema({
             tmaMes: Number
         },
         
-        // Tabela de Vendas - 15 campos  
+        // Tabela de Vendas - 16 campos  
         tabelaVendas: {
             // Entrada (4 campos)
             entradaValor: Number,
@@ -44,19 +44,21 @@ const scenarioSchema = new mongoose.Schema({
             parcelasQtd: Number,
             parcelasValorParcela: Number,
             
-            // Reforço (4 campos)
+            // Reforço (5 campos)
             reforcoValor: Number,
             reforcoPercent: Number,
             reforcoQtd: Number,
+            reforcoFrequencia: Number, // 3, 6 ou 12 meses
             reforcoValorParcela: Number,
             
-            // Outros (3 campos)
+            // Outros (4 campos)
             bemMovelImovel: Number,
+            bemMovelImovelMes: Number,
             bemMovelImovelPercent: Number,
             desagio: Number
         },
         
-        // Proposta Cliente - 16 campos
+        // Proposta Cliente - 17 campos
         propostaCliente: {
             mesVenda: Number,
             
@@ -72,10 +74,11 @@ const scenarioSchema = new mongoose.Schema({
             parcelasQtd: Number,
             parcelasValorParcela: Number,
             
-            // Reforço (4 campos)
+            // Reforço (5 campos)
             reforcoValor: Number,
             reforcoPercent: Number,
             reforcoQtd: Number,
+            reforcoFrequencia: Number, // 3, 6 ou 12 meses
             reforcoValorParcela: Number,
             
             // Outros (3 campos)
@@ -87,11 +90,26 @@ const scenarioSchema = new mongoose.Schema({
     
     // Resultados calculados
     results: {
+        // Valores totais
+        valorTotalTabela: Number,
+        valorTotalProposta: Number,
+        
+        // Descontos
+        descontoNominalPercent: Number, // (Valor Proposta/Valor Tabela)-1
+        descontoNominalReais: Number,   // Valor Tabela - Valor Proposta
+        
+        // VPLs
         vplTabela: Number,
         vplProposta: Number,
-        diferenca: Number,
-        percentualDiferenca: Number,
-        calculatedAt: Date
+        
+        // Deltas
+        deltaVpl: Number,           // VPL Proposta - VPL Tabela
+        percentualDeltaVpl: Number, // Delta VPL / VPL Tabela (com proteção SEERRO)
+        
+        // Metadados do cálculo
+        calculatedAt: Date,
+        tmaMesUsada: Number,
+        periodosCalculados: Number
     },
     
     // Metadata

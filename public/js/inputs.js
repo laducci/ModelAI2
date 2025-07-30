@@ -1085,30 +1085,46 @@ async function confirmSaveScenarioFromInputs() {
 
 async function saveScenarioWithName(name) {
     try {
-        const inputData = sessionStorage.getItem('currentInputData');
-        if (!inputData) {
-            showError('Nenhum dado encontrado para salvar');
-            return;
+        console.log('💾 === SALVANDO CENÁRIO COM CÁLCULOS ===');
+        
+        // 1. Coletar dados dos inputs
+        const data = collectAllInputData();
+        console.log('📊 Dados coletados:', data);
+        
+        // 2. Calcular todos os indicadores
+        let results = null;
+        try {
+            results = calculateAllIndicators(data);
+            console.log('✅ Indicadores calculados:', results);
+        } catch (calcError) {
+            console.warn('⚠️ Erro no cálculo dos indicadores:', calcError.message);
+            showError('Aviso: Cenário salvo, mas alguns cálculos podem estar incompletos: ' + calcError.message);
         }
         
-        const data = JSON.parse(inputData);
+        // 3. Preparar payload para o backend
+        const payload = {
+            name: name,
+            description: `Cenário criado em ${new Date().toLocaleDateString('pt-BR')}`,
+            data: data,
+            results: results
+        };
         
+        console.log('📤 Enviando para API:', payload);
+        
+        // 4. Enviar para o backend
         const response = await fetch('/api/scenarios', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify({
-                name: name,
-                description: `Cenário criado em ${new Date().toLocaleDateString('pt-BR')}`,
-                data: data
-            })
+            body: JSON.stringify(payload)
         });
         
         if (response.ok) {
             const result = await response.json();
-            showSuccess('Cenário salvo com sucesso!');
+            console.log('✅ Cenário salvo:', result);
+            showSuccess('Cenário salvo com sucesso! Cálculos realizados.');
             
             // Redirecionar para cenários após 2 segundos
             setTimeout(() => {
@@ -1116,11 +1132,12 @@ async function saveScenarioWithName(name) {
             }, 2000);
         } else {
             const error = await response.json();
+            console.error('❌ Erro da API:', error);
             showError(error.message || 'Erro ao salvar cenário');
         }
         
     } catch (error) {
-        console.error('Erro ao salvar cenário:', error);
+        console.error('❌ Erro ao salvar cenário:', error);
         showError('Erro ao salvar cenário. Tente novamente.');
     }
 }
@@ -1294,7 +1311,7 @@ function collectAllInputData() {
             tmaMes: getFieldValue('tmaMes', parseNumberUniversal)
         },
         
-        // TABELA DE VENDAS (15 campos)
+        // TABELA DE VENDAS (16 campos)
         tabelaVendas: {
             // Entrada (4 campos)
             entradaValor: getFieldValue('vendaEntradaValor', parseNumberUniversal),
@@ -1308,19 +1325,21 @@ function collectAllInputData() {
             parcelasQtd: getFieldValue('vendaParcelasQtd', parseNumberUniversal),
             parcelasValorParcela: getFieldValue('vendaParcelasValorParcela', parseNumberUniversal),
             
-            // Reforço (4 campos)
+            // Reforço (5 campos)
             reforcoValor: getFieldValue('vendaReforcoValor', parseNumberUniversal),
             reforcoPercent: getFieldValue('vendaReforcoPercent', parseNumberUniversal),
             reforcoQtd: getFieldValue('vendaReforcoQtd', parseNumberUniversal),
+            reforcoFrequencia: getFieldValue('vendaReforcoFrequencia', parseNumberUniversal),
             reforcoValorParcela: getFieldValue('vendaReforcoValorParcela', parseNumberUniversal),
             
-            // Outros (3 campos)
+            // Outros (4 campos)
             bemMovelImovel: getFieldValue('vendaBemMovelImovel', parseNumberUniversal),
+            bemMovelImovelMes: getFieldValue('vendaBemMovelImovelMes', parseNumberUniversal),
             bemMovelImovelPercent: getFieldValue('vendaBemMovelImovelPercent', parseNumberUniversal),
             desagio: getFieldValue('vendaDesagio', parseNumberUniversal)
         },
         
-        // PROPOSTA CLIENTE (16 campos)
+        // PROPOSTA CLIENTE (17 campos)
         propostaCliente: {
             mesVenda: getFieldValue('mesVenda', parseNumberUniversal),
             
@@ -1336,10 +1355,11 @@ function collectAllInputData() {
             parcelasQtd: getFieldValue('propostaParcelasQtd', parseNumberUniversal),
             parcelasValorParcela: getFieldValue('propostaParcelasValorParcela', parseNumberUniversal),
             
-            // Reforço (4 campos)
+            // Reforço (5 campos)
             reforcoValor: getFieldValue('propostaReforcoValor', parseNumberUniversal),
             reforcoPercent: getFieldValue('propostaReforcoPercent', parseNumberUniversal),
             reforcoQtd: getFieldValue('propostaReforcoQtd', parseNumberUniversal),
+            reforcoFrequencia: getFieldValue('propostaReforcoFrequencia', parseNumberUniversal),
             reforcoValorParcela: getFieldValue('propostaReforcoValorParcela', parseNumberUniversal),
             
             // Outros (3 campos)
@@ -1447,8 +1467,8 @@ function loadScenarioData(data) {
             }
         });
         
-        // Reforço (4 campos)
-        ['reforcoValor', 'reforcoPercent', 'reforcoQtd', 'reforcoValorParcela'].forEach(field => {
+        // Reforço (5 campos)
+        ['reforcoValor', 'reforcoPercent', 'reforcoQtd', 'reforcoFrequencia', 'reforcoValorParcela'].forEach(field => {
             const elementId = 'venda' + field.charAt(0).toUpperCase() + field.slice(1);
             const element = document.getElementById(elementId);
             if (element && tv[field] !== undefined) {
@@ -1463,9 +1483,12 @@ function loadScenarioData(data) {
             }
         });
         
-        // Outros (3 campos)
+        // Outros (4 campos)
         if (document.getElementById('vendaBemMovelImovel') && tv.bemMovelImovel !== undefined) {
             document.getElementById('vendaBemMovelImovel').value = formatBRNumber(tv.bemMovelImovel);
+        }
+        if (document.getElementById('vendaBemMovelImovelMes') && tv.bemMovelImovelMes !== undefined) {
+            document.getElementById('vendaBemMovelImovelMes').value = tv.bemMovelImovelMes || '';
         }
         if (document.getElementById('vendaBemMovelImovelPercent') && tv.bemMovelImovelPercent !== undefined) {
             document.getElementById('vendaBemMovelImovelPercent').value = tv.bemMovelImovelPercent ? tv.bemMovelImovelPercent + '%' : '';
@@ -1519,8 +1542,8 @@ function loadScenarioData(data) {
             }
         });
         
-        // Reforço (4 campos)
-        ['reforcoValor', 'reforcoPercent', 'reforcoQtd', 'reforcoValorParcela'].forEach(field => {
+        // Reforço (5 campos)
+        ['reforcoValor', 'reforcoPercent', 'reforcoQtd', 'reforcoFrequencia', 'reforcoValorParcela'].forEach(field => {
             const elementId = 'proposta' + field.charAt(0).toUpperCase() + field.slice(1);
             const element = document.getElementById(elementId);
             if (element && pc[field] !== undefined) {
@@ -1576,13 +1599,25 @@ async function updateScenario() {
         console.log('📝 ID do cenário:', scenario.id);
         console.log('📝 Nome do cenário:', scenario.name);
         
+        // 1. Coletar dados dos inputs
         const data = collectAllInputData();
-        console.log('� Dados coletados para atualização:', data);
+        console.log('📊 Dados coletados para atualização:', data);
+        
+        // 2. Calcular todos os indicadores
+        let results = null;
+        try {
+            results = calculateAllIndicators(data);
+            console.log('✅ Indicadores calculados para atualização:', results);
+        } catch (calcError) {
+            console.warn('⚠️ Erro no cálculo dos indicadores:', calcError.message);
+            showError('Aviso: Cenário atualizado, mas alguns cálculos podem estar incompletos: ' + calcError.message);
+        }
         
         const requestBody = {
             name: scenario.name,
             description: scenario.description || `Cenário atualizado em ${new Date().toLocaleDateString('pt-BR')}`,
-            data: data
+            data: data,
+            results: results
         };
         
         console.log('� Enviando PUT para:', `/api/scenarios/${scenario.id}`);
@@ -1644,7 +1679,332 @@ async function updateScenario() {
     }
 }
 
+// ================================
+// FUNÇÕES DE CÁLCULO VPL E INDICADORES
+// ================================
+
+// Função para gerar o fluxo de caixa mensal
+function generateCashFlow(data, tipo) {
+    console.log(`🔢 Gerando fluxo de caixa para: ${tipo}`);
+    
+    const fluxo = [];
+    const MAX_MESES = 250;
+    
+    // Obter dados do tipo (tabela ou proposta)
+    const dadosFluxo = tipo === 'tabela' ? data.tabelaVendas : data.propostaCliente;
+    
+    // Valores de entrada
+    const entradaValor = dadosFluxo.entradaValor || 0;
+    const entradaParcelas = dadosFluxo.entradaParcelas || 1;
+    const entradaValorParcela = entradaValor / entradaParcelas;
+    
+    // Valores de parcelas
+    const parcelasValor = dadosFluxo.parcelasValor || 0;
+    const parcelasQtd = dadosFluxo.parcelasQtd || 0;
+    const parcelasValorParcela = parcelasQtd > 0 ? parcelasValor / parcelasQtd : 0;
+    
+    // Valores de reforço
+    const reforcoValor = dadosFluxo.reforcoValor || 0;
+    const reforcoQtd = dadosFluxo.reforcoQtd || 0;
+    const reforcoFrequencia = dadosFluxo.reforcoFrequencia || 6;
+    const reforcoValorParcela = reforcoQtd > 0 ? reforcoValor / reforcoQtd : 0;
+    
+    // Valores "nas chaves" ou "bem móvel"
+    const bemMovelValor = dadosFluxo.bemMovelImovel || 0;
+    const bemMovelMes = tipo === 'tabela' ? dadosFluxo.bemMovelImovelMes : data.propostaCliente.mesVenda;
+    
+    console.log(`💰 Valores para ${tipo}:`, {
+        entradaValorParcela, parcelasValorParcela, reforcoValorParcela, bemMovelValor, bemMovelMes
+    });
+    
+    // Gerar fluxo mês a mês
+    for (let mes = 1; mes <= MAX_MESES; mes++) {
+        let valorMes = 0;
+        
+        // 1. ENTRADA (primeiros meses conforme quantidade de parcelas de entrada)
+        if (mes <= entradaParcelas) {
+            valorMes += entradaValorParcela;
+        }
+        
+        // 2. PARCELAS (após entrada, durante quantidade de parcelas)
+        const inicioParcelamento = entradaParcelas + 1;
+        if (mes >= inicioParcelamento && mes < inicioParcelamento + parcelasQtd) {
+            valorMes += parcelasValorParcela;
+        }
+        
+        // 3. REFORÇO (a cada X meses conforme frequência)
+        if (reforcoValorParcela > 0 && mes % reforcoFrequencia === 0) {
+            // Verificar se ainda há parcelas de reforço disponíveis
+            const parcelasReforcoJaPagas = Math.floor(mes / reforcoFrequencia);
+            if (parcelasReforcoJaPagas <= reforcoQtd) {
+                valorMes += reforcoValorParcela;
+            }
+        }
+        
+        // 4. BEM MÓVEL/NAS CHAVES (no mês específico)
+        if (bemMovelMes && mes === bemMovelMes) {
+            valorMes += bemMovelValor;
+        }
+        
+        // Adicionar ao fluxo (apenas valores > 0 ou até onde há fluxo)
+        if (valorMes > 0) {
+            fluxo.push(valorMes);
+        } else if (fluxo.length > 0 && mes > Math.max(inicioParcelamento + parcelasQtd, bemMovelMes || 0, reforcoQtd * reforcoFrequencia)) {
+            // Parar quando não há mais fluxo esperado
+            break;
+        } else {
+            fluxo.push(0);
+        }
+    }
+    
+    console.log(`📊 Fluxo gerado para ${tipo}: ${fluxo.length} meses, soma total: ${fluxo.reduce((a, b) => a + b, 0)}`);
+    return fluxo;
+}
+
+// Função para calcular VPL
+function calculateVPL(fluxoDeCaixa, tmaMes) {
+    console.log('🧮 Calculando VPL com TMA mensal:', tmaMes);
+    
+    if (!fluxoDeCaixa || fluxoDeCaixa.length === 0) {
+        console.log('⚠️ Fluxo de caixa vazio');
+        return 0;
+    }
+    
+    let vpl = 0;
+    const taxaDesconto = tmaMes / 100; // Converter de % para decimal
+    
+    fluxoDeCaixa.forEach((valor, index) => {
+        if (valor > 0) {
+            const valorPresente = valor / Math.pow(1 + taxaDesconto, index + 1);
+            vpl += valorPresente;
+            
+            // Log para debug (apenas primeiros 12 meses)
+            if (index < 12) {
+                console.log(`Mês ${index + 1}: R$ ${valor.toFixed(2)} -> VP: R$ ${valorPresente.toFixed(2)}`);
+            }
+        }
+    });
+    
+    console.log(`✅ VPL calculado: R$ ${vpl.toFixed(2)}`);
+    return vpl;
+}
+
+// Função principal para calcular todos os indicadores
+function calculateAllIndicators(data) {
+    console.log('🚀 === INICIANDO CÁLCULO DE TODOS OS INDICADORES ===');
+    
+    try {
+        // 1. Verificar TMA
+        const tmaMes = data.dadosGerais.tmaMes;
+        if (!tmaMes || tmaMes <= 0) {
+            throw new Error('TMA mensal não definida ou inválida');
+        }
+        
+        // 2. Calcular valores totais
+        const valorTotalTabela = (data.tabelaVendas.entradaValor || 0) + 
+                                (data.tabelaVendas.parcelasValor || 0) + 
+                                (data.tabelaVendas.reforcoValor || 0) + 
+                                (data.tabelaVendas.bemMovelImovel || 0);
+        
+        const valorTotalProposta = (data.propostaCliente.entradaValor || 0) + 
+                                  (data.propostaCliente.parcelasValor || 0) + 
+                                  (data.propostaCliente.reforcoValor || 0) + 
+                                  (data.propostaCliente.bemMovelImovel || 0);
+        
+        // 3. Calcular descontos nominais
+        const descontoNominalPercent = valorTotalTabela > 0 ? 
+            ((valorTotalProposta / valorTotalTabela) - 1) * 100 : 0;
+        
+        const descontoNominalReais = valorTotalTabela - valorTotalProposta;
+        
+        // 4. Gerar fluxos de caixa
+        const fluxoTabela = generateCashFlow(data, 'tabela');
+        const fluxoProposta = generateCashFlow(data, 'proposta');
+        
+        // 5. Calcular VPLs
+        const vplTabela = calculateVPL(fluxoTabela, tmaMes);
+        const vplProposta = calculateVPL(fluxoProposta, tmaMes);
+        
+        // 6. Calcular deltas
+        const deltaVpl = vplProposta - vplTabela;
+        
+        // 7. Calcular % Delta VPL (com proteção SEERRO)
+        let percentualDeltaVpl = 0;
+        if (vplTabela !== 0) {
+            percentualDeltaVpl = (deltaVpl / vplTabela) * 100;
+        }
+        
+        const resultados = {
+            valorTotalTabela,
+            valorTotalProposta,
+            descontoNominalPercent,
+            descontoNominalReais,
+            vplTabela,
+            vplProposta,
+            deltaVpl,
+            percentualDeltaVpl,
+            tmaMesUsada: tmaMes,
+            periodosCalculados: Math.max(fluxoTabela.length, fluxoProposta.length),
+            calculatedAt: new Date()
+        };
+        
+        console.log('📊 === RESULTADOS CALCULADOS ===');
+        console.log('💰 Valor Total Tabela:', valorTotalTabela.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}));
+        console.log('💰 Valor Total Proposta:', valorTotalProposta.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}));
+        console.log('📉 Desconto Nominal %:', descontoNominalPercent.toFixed(2) + '%');
+        console.log('📉 Desconto Nominal R$:', descontoNominalReais.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}));
+        console.log('📈 VPL Tabela:', vplTabela.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}));
+        console.log('📈 VPL Proposta:', vplProposta.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}));
+        console.log('🔄 Delta VPL:', deltaVpl.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}));
+        console.log('📊 % Delta VPL:', percentualDeltaVpl.toFixed(2) + '%');
+        
+        return resultados;
+        
+    } catch (error) {
+        console.error('❌ Erro no cálculo dos indicadores:', error);
+        throw error;
+    }
+}
+
+// Validação de campos obrigatórios
+function validateRequiredFields() {
+    const requiredFields = [
+        // Vendas
+        'valorGVV', 'percentualVenda', 'mesInicioVenda', 'mesTerminoVenda', 'tmaAno',
+        
+        // Proposta Cliente
+        'valorProposta', 'valorEntrada', 'mesEntrada', 'quantidadeParcelas', 'valorParcelas',
+        'mesInicioParcelas', 'quantidadeReforco', 'valorReforco', 'frecuenciaReforco', 'mesInicioReforco',
+        
+        // Custo de Obra
+        'valorCustoObra', 'mesInicioCusto', 'duracaoMesesCusto',
+        
+        // Terreno
+        'valorTerreno', 'mesAquisicaoTerreno', 'duracaoMesesTerreno',
+        
+        // Marketing
+        'valorMarketing', 'mesInicioMarketing', 'duracaoMesesMarketing',
+        
+        // Impostos
+        'valorImpostos', 'mesInicioImpostos', 'duracaoMesesImpostos'
+    ];
+    
+    const missingFields = [];
+    
+    for (const fieldId of requiredFields) {
+        const field = document.getElementById(fieldId);
+        if (!field) continue;
+        
+        const value = field.value?.trim();
+        if (!value || value === '0' || value === '0,00') {
+            const label = getFieldLabel(fieldId);
+            missingFields.push(label);
+        }
+    }
+    
+    return missingFields;
+}
+
+function getFieldLabel(fieldId) {
+    const labels = {
+        'valorGVV': 'Valor do GVV',
+        'percentualVenda': 'Percentual de Venda',
+        'mesInicioVenda': 'Mês de Início de Venda',
+        'mesTerminoVenda': 'Mês de Término de Venda',
+        'tmaAno': 'TMA Ano',
+        'valorProposta': 'Valor da Proposta',
+        'valorEntrada': 'Valor da Entrada',
+        'mesEntrada': 'Mês da Entrada',
+        'quantidadeParcelas': 'Quantidade de Parcelas',
+        'valorParcelas': 'Valor das Parcelas',
+        'mesInicioParcelas': 'Mês de Início das Parcelas',
+        'quantidadeReforco': 'Quantidade de Reforço',
+        'valorReforco': 'Valor do Reforço',
+        'frecuenciaReforco': 'Frequência do Reforço',
+        'mesInicioReforco': 'Mês de Início do Reforço',
+        'valorCustoObra': 'Valor do Custo de Obra',
+        'mesInicioCusto': 'Mês de Início do Custo',
+        'duracaoMesesCusto': 'Duração em Meses do Custo',
+        'valorTerreno': 'Valor do Terreno',
+        'mesAquisicaoTerreno': 'Mês de Aquisição do Terreno',
+        'duracaoMesesTerreno': 'Duração em Meses do Terreno',
+        'valorMarketing': 'Valor do Marketing',
+        'mesInicioMarketing': 'Mês de Início do Marketing',
+        'duracaoMesesMarketing': 'Duração em Meses do Marketing',
+        'valorImpostos': 'Valor dos Impostos',
+        'mesInicioImpostos': 'Mês de Início dos Impostos',
+        'duracaoMesesImpostos': 'Duração em Meses dos Impostos'
+    };
+    
+    return labels[fieldId] || fieldId;
+}
+
+// Função para próxima etapa
+function nextStep() {
+    console.log('🚀 Iniciando próxima etapa...');
+    
+    // Validar campos obrigatórios
+    const missingFields = validateRequiredFields();
+    
+    if (missingFields.length > 0) {
+        const message = `Por favor, preencha os seguintes campos obrigatórios:\n\n${missingFields.join('\n')}`;
+        showError(message);
+        return;
+    }
+    
+    // Mostrar modal para nome do cenário
+    showScenarioNameModal();
+}
+
+function showScenarioNameModal() {
+    const modal = document.getElementById('scenarioNameModal');
+    const input = document.getElementById('scenarioNameInput');
+    
+    if (modal && input) {
+        modal.classList.remove('hidden');
+        input.focus();
+        input.value = ''; // Limpar campo
+    }
+}
+
+function closeScenarioNameModal() {
+    const modal = document.getElementById('scenarioNameModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+async function saveScenarioAndProceed() {
+    const nameInput = document.getElementById('scenarioNameInput');
+    const name = nameInput?.value?.trim();
+    
+    if (!name) {
+        showError('Digite um nome para o cenário');
+        return;
+    }
+    
+    closeScenarioNameModal();
+    
+    try {
+        showSuccess('Salvando cenário...');
+        await saveScenarioWithName(name);
+        
+        // Redirecionar para resultados após salvar
+        setTimeout(() => {
+            window.location.href = 'resultados.html';
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Erro ao salvar cenário:', error);
+        showError('Erro ao salvar o cenário. Tente novamente.');
+    }
+}
+
 // Global functions
 window.collectAllInputData = collectAllInputData;
 window.loadScenarioData = loadScenarioData;
 window.updateScenario = updateScenario;
+window.nextStep = nextStep;
+window.showScenarioNameModal = showScenarioNameModal;
+window.closeScenarioNameModal = closeScenarioNameModal;
+window.saveScenarioAndProceed = saveScenarioAndProceed;
