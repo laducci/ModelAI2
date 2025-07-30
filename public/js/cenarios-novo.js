@@ -8,11 +8,9 @@ class ScenarioManager {
 
     async init() {
         try {
-            console.log('🎬 Inicializando ScenarioManager...');
             
             // Verificar autenticação
             if (!this.api.isAuthenticated()) {
-                console.log('❌ Usuário não autenticado, redirecionando...');
                 window.location.href = '/login.html';
                 return;
             }
@@ -30,9 +28,8 @@ class ScenarioManager {
 
             await this.loadScenarios();
             this.setupEventListeners();
-            
-            console.log('✅ ScenarioManager inicializado com sucesso');
-            
+
+
         } catch (error) {
             console.error('❌ Erro ao inicializar cenários:', error);
             showError('Erro ao carregar cenários. Redirecionando...');
@@ -44,7 +41,6 @@ class ScenarioManager {
 
     async loadScenarios() {
         try {
-            console.log('📂 === CARREGANDO CENÁRIOS ===');
             
             const response = await fetch('/api/scenarios', {
                 headers: {
@@ -52,13 +48,11 @@ class ScenarioManager {
                 }
             });
 
-            console.log('📈 Status da resposta:', response.status);
-
             if (response.ok) {
                 const data = await response.json();
                 this.scenarios = data.scenarios || [];
-                console.log('✅ Cenários carregados da API:', this.scenarios.length);
-                
+                console.log('Cenários carregados da API:', this.scenarios.length);
+
             } else {
                 const errorText = await response.text();
                 console.error('❌ Erro da API:', response.status, errorText);
@@ -75,9 +69,6 @@ class ScenarioManager {
     }
 
     renderScenarios() {
-        console.log('🎨 === RENDERIZANDO CENÁRIOS ===');
-        console.log('📊 Cenários para renderizar:', this.scenarios.length);
-        
         const grid = document.getElementById('scenariosGrid');
         const emptyState = document.getElementById('emptyState');
         
@@ -87,13 +78,13 @@ class ScenarioManager {
         }
         
         if (this.scenarios.length === 0) {
-            console.log('📭 Nenhum cenário encontrado - exibindo estado vazio');
+            console.log('Nenhum cenário encontrado - exibindo estado vazio');
             if (grid) grid.style.display = 'none';
             if (emptyState) emptyState.classList.remove('hidden');
             return;
         }
         
-        console.log('🎨 Renderizando', this.scenarios.length, 'cenários');
+        console.log('Renderizando', this.scenarios.length, 'cenários');
         
         grid.style.display = 'grid';
         if (emptyState) emptyState.classList.add('hidden');
@@ -166,7 +157,6 @@ class ScenarioManager {
     }
 
     setupEventListeners() {
-        console.log('🔗 Configurando event listeners...');
         // Os event listeners serão configurados via onclick no HTML
     }
 
@@ -185,8 +175,6 @@ class ScenarioManager {
             );
 
             if (!confirmed) return;
-
-            console.log('🗑️ Deletando cenário:', scenarioId);
 
             const response = await fetch(`/api/scenarios/${scenarioId}`, {
                 method: 'DELETE',
@@ -211,8 +199,6 @@ class ScenarioManager {
 
     async loadScenario(scenarioId) {
         try {
-            console.log('📂 Carregando cenário do banco:', scenarioId);
-
             if (!scenarioId) {
                 throw new Error('ID do cenário é obrigatório');
             }
@@ -242,7 +228,6 @@ class ScenarioManager {
                 throw new Error('Dados do cenário não encontrados na resposta');
             }
 
-            console.log('📂 Cenário carregado do banco:', scenario.name);
 
             // Limpar dados antigos
             sessionStorage.removeItem('editingScenario');
@@ -271,7 +256,6 @@ class ScenarioManager {
 
     async viewResults(scenarioId) {
         try {
-            console.log('📊 Carregando cenário para resultados:', scenarioId);
 
             // Buscar cenário diretamente da API
             const response = await fetch(`/api/scenarios/${scenarioId}`, {
@@ -287,7 +271,6 @@ class ScenarioManager {
             const result = await response.json();
             const scenario = result.scenario;
 
-            console.log('📊 Visualizando resultados do cenário:', scenario.name);
 
             // Salvar dados do cenário na sessão para resultados
             sessionStorage.setItem('currentInputData', JSON.stringify(scenario.data));
