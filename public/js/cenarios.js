@@ -1,4 +1,4 @@
-// Gerenciamento de Cenários - ModelAI
+// Gerenciamento de Cenários com Autenticação - ModelAI
 class ScenarioManager {
     constructor() {
         this.api = new ApiClient();
@@ -45,6 +45,8 @@ class ScenarioManager {
     async loadScenarios() {
         try {
             console.log('📂 === CARREGANDO CENÁRIOS ===');
+            console.log('👤 Usuário atual:', this.currentUser._id, this.currentUser.name);
+            console.log('🔑 Token:', localStorage.getItem('token') ? 'PRESENTE' : 'AUSENTE');
             
             const response = await fetch('/api/scenarios', {
                 headers: {
@@ -58,6 +60,20 @@ class ScenarioManager {
                 const data = await response.json();
                 this.scenarios = data.scenarios || [];
                 console.log('✅ Cenários carregados da API:', this.scenarios.length);
+                console.log('📝 Lista de cenários:', this.scenarios);
+                
+                // Salvar no localStorage para compatibilidade com filtros
+                const localScenarios = this.scenarios.map(s => ({
+                    id: s.id,
+                    name: s.name,
+                    description: s.description,
+                    userId: this.currentUser._id,
+                    userName: this.currentUser.name,
+                    data: s.data,
+                    createdAt: s.createdAt,
+                    updatedAt: s.updatedAt
+                }));
+                localStorage.setItem('scenarios', JSON.stringify(localScenarios));
                 
             } else {
                 const errorText = await response.text();
@@ -77,9 +93,13 @@ class ScenarioManager {
     renderScenarios() {
         console.log('🎨 === RENDERIZANDO CENÁRIOS ===');
         console.log('📊 Cenários para renderizar:', this.scenarios.length);
+        console.log('📝 Lista de cenários:', this.scenarios);
         
         const grid = document.getElementById('scenariosGrid');
         const emptyState = document.getElementById('emptyState');
+        
+        console.log('🔍 Grid encontrado:', !!grid);
+        console.log('🔍 EmptyState encontrado:', !!emptyState);
         
         if (!grid) {
             console.warn('⚠️ Grid de cenários não encontrado');
@@ -99,12 +119,8 @@ class ScenarioManager {
         if (emptyState) emptyState.classList.add('hidden');
         
         grid.innerHTML = this.scenarios.map(scenario => {
-            const data = scenario.data || {};
-            const dadosGerais = data.dadosGerais || {};
-            const tabelaVendas = data.tabelaVendas || {};
-            
             return `
-            <div class="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow border border-gray-100" data-scenario-id="${scenario.id}">
+            <div class="glassmorphism rounded-xl p-6 card-hover" data-scenario-id="${scenario.id}">
                 <div class="flex items-start justify-between mb-4">
                     <div class="flex items-center space-x-3">
                         <div class="w-12 h-12 bg-gradient-to-r from-teal-500 to-teal-600 rounded-xl flex items-center justify-center">
@@ -113,6 +129,7 @@ class ScenarioManager {
                         <div>
                             <h3 class="text-lg font-semibold text-gray-800">${scenario.name}</h3>
                             <p class="text-sm text-gray-500">Criado em ${new Date(scenario.createdAt).toLocaleDateString('pt-BR')}</p>
+                            <p class="text-xs text-gray-400">Por: ${scenario.userName || 'Usuário'}</p>
                         </div>
                     </div>
                     <div class="flex space-x-2">
@@ -137,23 +154,23 @@ class ScenarioManager {
                 
                 <div class="space-y-2 mb-4">
                     <div class="flex justify-between text-sm">
-                        <span class="text-gray-600">Cliente:</span>
-                        <span class="font-medium text-gray-800">${dadosGerais.cliente || 'N/A'}</span>
+                        <span class="text-gray-600">Valor Inicial:</span>
+                        <span class="font-medium text-gray-800">R$ ${scenario.data?.valorInicial?.toLocaleString('pt-BR') || '0'}</span>
                     </div>
                     <div class="flex justify-between text-sm">
-                        <span class="text-gray-600">Unidade:</span>
-                        <span class="font-medium text-gray-800">${dadosGerais.unidade || 'N/A'}</span>
+                        <span class="text-gray-600">Taxa:</span>
+                        <span class="font-medium text-gray-800">${scenario.data?.taxa || '0'}%</span>
                     </div>
                     <div class="flex justify-between text-sm">
-                        <span class="text-gray-600">Empreendimento:</span>
-                        <span class="font-medium text-gray-800">${dadosGerais.empreendimento || 'N/A'}</span>
+                        <span class="text-gray-600">Período:</span>
+                        <span class="font-medium text-gray-800">${scenario.data?.periodo || '0'} anos</span>
                     </div>
                 </div>
                 
                 <div class="flex space-x-2">
                     <button onclick="scenarioManager.loadScenario('${scenario.id}')" 
                             class="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors">
-                        <i class="fas fa-edit mr-2"></i>Editar
+                        <i class="fas fa-play mr-2"></i>Executar
                     </button>
                     <button onclick="scenarioManager.viewResults('${scenario.id}')" 
                             class="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
@@ -167,7 +184,113 @@ class ScenarioManager {
 
     setupEventListeners() {
         console.log('🔗 Configurando event listeners...');
-        // Os event listeners serão configurados via onclick no HTML
+        
+        // Event listeners para formulários e botões
+        const saveBtn = document.querySelector('[onclick="confirmSaveScenario()"]');
+        if (saveBtn) {
+            saveBtn.onclick = (e) => {
+                e.preventDefault();
+                this.saveScenario();
+            };
+        }
+
+        // Listener para o modal de salvar cenário
+        const modal = document.getElementById('saveScenarioModal');
+        if (modal) {
+            // Fechar modal ao clicar fora
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.closeModal();
+                }
+            });
+        }
+
+        // Listener para botão de fechar modal
+        const closeBtn = modal?.querySelector('[onclick*="closeModal"]');
+        if (closeBtn) {
+            closeBtn.onclick = () => this.closeModal();
+        }
+    }
+
+    async saveScenario() {
+        try {
+            console.log('💾 === SALVANDO CENÁRIO ===');
+            
+            const scenarioName = document.getElementById('scenarioName')?.value;
+            const scenarioDescription = document.getElementById('scenarioDescription')?.value;
+            
+            console.log('📝 Nome:', scenarioName);
+            console.log('📝 Descrição:', scenarioDescription);
+            
+            if (!scenarioName?.trim()) {
+                showWarning('Por favor, digite um nome para o cenário.');
+                return;
+            }
+
+            // Obter dados dos inputs da sessão atual
+            const inputData = JSON.parse(localStorage.getItem('currentInputs') || '{}');
+            console.log('📊 Dados de input:', inputData);
+            
+            if (!inputData || Object.keys(inputData).length === 0) {
+                showWarning('Nenhum dado de entrada encontrado. Vá para a página de Inputs primeiro.');
+                return;
+            }
+            
+            const scenarioData = {
+                name: scenarioName.trim(),
+                description: scenarioDescription?.trim() || '',
+                data: inputData
+            };
+
+            console.log('📦 Enviando para API:', scenarioData);
+            console.log('🔑 Token:', localStorage.getItem('token') ? 'PRESENTE' : 'AUSENTE');
+
+            // Salvar via API
+            console.log('🚀 Enviando requisição para /api/scenarios...');
+            console.log('📦 Headers:', {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')?.substring(0,20)}...`
+            });
+            
+            const response = await fetch('/api/scenarios', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(scenarioData)
+            });
+
+            console.log('📈 Status da resposta:', response.status);
+            console.log('📋 Headers da resposta:', Object.fromEntries(response.headers.entries()));
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('✅ SUCESSO! Cenário salvo:', result);
+
+                // Fechar modal
+                this.closeModal();
+
+                showSuccess(`Cenário "${scenarioData.name}" salvo com sucesso!`);
+                
+                // Recarregar lista
+                await this.loadScenarios();
+            } else {
+                const errorText = await response.text();
+                console.error('❌ Erro da API (text):', errorText);
+                
+                try {
+                    const error = JSON.parse(errorText);
+                    showError(`Erro ao salvar: ${error.message}`);
+                } catch {
+                    showError(`Erro ao salvar: ${response.status} - ${errorText}`);
+                }
+            }
+            
+        } catch (error) {
+            console.error('❌ ERRO FATAL ao salvar cenário:', error);
+            showError('Erro ao salvar cenário. Verifique a conexão.');
+        }
     }
 
     async deleteScenario(scenarioId) {
@@ -211,45 +334,18 @@ class ScenarioManager {
 
     async loadScenario(scenarioId) {
         try {
-            console.log('📂 Carregando cenário do banco:', scenarioId);
-
-            if (!scenarioId) {
-                throw new Error('ID do cenário é obrigatório');
-            }
-
-            const token = localStorage.getItem('token') || localStorage.getItem('modelai_token');
-            if (!token) {
-                throw new Error('Token de autenticação não encontrado');
-            }
-
-            // Buscar cenário diretamente da API
-            const response = await fetch(`/api/scenarios/${scenarioId}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || `Erro ${response.status}: Cenário não encontrado`);
-            }
-
-            const result = await response.json();
-            const scenario = result.scenario;
-
+            const scenario = this.scenarios.find(s => s.id === scenarioId);
             if (!scenario) {
-                throw new Error('Dados do cenário não encontrados na resposta');
+                showError('Cenário não encontrado.');
+                return;
             }
 
-            console.log('📂 Cenário carregado do banco:', scenario.name);
+            console.log('📂 Carregando cenário para edição:', scenario.name);
+            console.log('📊 Dados do cenário:', scenario.data);
 
-            // Limpar dados antigos
-            sessionStorage.removeItem('editingScenario');
-            
-            // Salvar dados do cenário para a página de inputs
+            // Salvar dados do cenário para a página de inputs (usar sessionStorage para consistência)
             sessionStorage.setItem('editingScenario', JSON.stringify({
-                id: scenario._id || scenario.id,
+                id: scenarioId,
                 name: scenario.name,
                 data: scenario.data
             }));
@@ -263,36 +359,24 @@ class ScenarioManager {
             
         } catch (error) {
             console.error('❌ Erro ao carregar cenário:', error);
-            showError(`Erro ao carregar cenário: ${error.message}`);
+            showError('Erro ao carregar cenário.');
         }
     }
 
-    async viewResults(scenarioId) {
+    viewResults(scenarioId) {
         try {
-            console.log('📊 Carregando cenário para resultados:', scenarioId);
-
-            // Buscar cenário diretamente da API
-            const response = await fetch(`/api/scenarios/${scenarioId}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Cenário não encontrado');
+            const scenario = this.scenarios.find(s => s.id === scenarioId);
+            if (!scenario) {
+                showError('Cenário não encontrado.');
+                return;
             }
 
-            const result = await response.json();
-            const scenario = result.scenario;
-
             console.log('📊 Visualizando resultados do cenário:', scenario.name);
+            console.log('📊 Dados do cenário:', scenario.data);
 
-            // Salvar dados do cenário na sessão para resultados
-            sessionStorage.setItem('currentScenario', JSON.stringify({
-                id: scenario.id,
-                name: scenario.name,
-                data: scenario.data
-            }));
+            // Salvar dados do cenário na sessão para a página de resultados
+            sessionStorage.setItem('currentInputData', JSON.stringify(scenario.data));
+            sessionStorage.setItem('currentScenarioName', scenario.name);
             
             showInfo(`Visualizando resultados de "${scenario.name}"...`);
             
@@ -308,20 +392,35 @@ class ScenarioManager {
     }
 
     editScenario(scenarioId) {
-        try {
-            console.log('✏️ Editando cenário:', scenarioId);
+        // Carregar o cenário para edição
+        console.log('✏️ Editando cenário:', scenarioId);
+        this.loadScenario(scenarioId);
+    }
+
+    closeModal() {
+        const modal = document.getElementById('saveScenarioModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+        
+        // Limpar formulário
+        const nameField = document.getElementById('scenarioName');
+        const descField = document.getElementById('scenarioDescription');
+        
+        if (nameField) nameField.value = '';
+        if (descField) descField.value = '';
+    }
+
+    openSaveModal() {
+        const modal = document.getElementById('saveScenarioModal');
+        if (modal) {
+            modal.classList.remove('hidden');
             
-            if (!scenarioId) {
-                showError('ID do cenário não encontrado');
-                return;
+            // Focar no campo de nome
+            const nameField = document.getElementById('scenarioName');
+            if (nameField) {
+                setTimeout(() => nameField.focus(), 100);
             }
-            
-            // Carregar o cenário para edição
-            this.loadScenario(scenarioId);
-            
-        } catch (error) {
-            console.error('❌ Erro ao iniciar edição:', error);
-            showError('Erro ao carregar cenário para edição');
         }
     }
 }
@@ -334,6 +433,37 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 DOM carregado, inicializando ScenarioManager...');
     scenarioManager.init();
 });
+
+// Funções globais para compatibilidade com HTML existente
+function confirmSaveScenario() {
+    scenarioManager.saveScenario();
+}
+
+function loadScenarios() {
+    if (scenarioManager.scenarios) {
+        scenarioManager.renderScenarios();
+    }
+}
+
+function deleteScenario(id) {
+    scenarioManager.deleteScenario(id);
+}
+
+function loadScenario(id) {
+    scenarioManager.loadScenario(id);
+}
+
+function viewResults(id) {
+    scenarioManager.viewResults(id);
+}
+
+function closeModal() {
+    closeScenarioModal();
+}
+
+function openSaveModal() {
+    openScenarioModal();
+}
 
 // ==================== FUNÇÕES GLOBAIS ====================
 
@@ -372,13 +502,14 @@ async function confirmSaveScenario() {
     }
     
     try {
-        // Coletar dados dos inputs da página atual
-        const data = collectCurrentInputData();
-        
-        if (!data || Object.keys(data).length === 0) {
+        // Coletar dados dos inputs salvos no sessionStorage
+        const inputData = sessionStorage.getItem('currentInputData');
+        if (!inputData) {
             showError('Nenhum dado encontrado para salvar. Preencha os inputs primeiro.');
             return;
         }
+        
+        const data = JSON.parse(inputData);
         
         const response = await fetch('/api/scenarios', {
             method: 'POST',
@@ -412,15 +543,3 @@ async function confirmSaveScenario() {
         showError('Erro ao salvar cenário. Tente novamente.');
     }
 }
-
-function collectCurrentInputData() {
-    // Esta função será implementada na página de inputs
-    // Por enquanto, retornará um objeto vazio
-    if (typeof window.collectAllInputData === 'function') {
-        return window.collectAllInputData();
-    }
-    return {};
-}
-
-// Tornar a instância global disponível
-window.scenarioManager = scenarioManager;

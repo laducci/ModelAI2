@@ -710,16 +710,25 @@ document.addEventListener('DOMContentLoaded', function() {
 // Função para carregar cenários no filtro
 async function loadScenariosInFilter() {
     try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
+        console.log('📋 Carregando cenários para o filtro...');
+        
+        const token = localStorage.getItem('token') || localStorage.getItem('modelai_token');
+        if (!token) {
+            console.log('❌ Token não encontrado');
+            return;
+        }
         
         const response = await fetch('/api/scenarios', {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
         });
         
-        if (!response.ok) throw new Error('Erro ao carregar cenários');
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `Erro ${response.status} ao carregar cenários`);
+        }
         
         const scenarios = await response.json();
         const filter = document.getElementById('cenarioFilter');
@@ -728,18 +737,31 @@ async function loadScenariosInFilter() {
         if (filter) {
             filter.innerHTML = '<option value="">Selecione um cenário</option>';
             
-            scenarios.forEach(scenario => {
-                const option = document.createElement('option');
-                option.value = scenario._id;
-                option.textContent = scenario.name;
-                if (scenario._id === currentScenarioId) {
-                    option.selected = true;
-                }
-                filter.appendChild(option);
-            });
+            if (scenarios && scenarios.length > 0) {
+                scenarios.forEach(scenario => {
+                    const option = document.createElement('option');
+                    option.value = scenario._id || scenario.id;
+                    option.textContent = scenario.name;
+                    if ((scenario._id || scenario.id) === currentScenarioId) {
+                        option.selected = true;
+                    }
+                    filter.appendChild(option);
+                });
+                
+                console.log(`✅ ${scenarios.length} cenários carregados no filtro`);
+            } else {
+                console.log('ℹ️ Nenhum cenário encontrado');
+                filter.innerHTML = '<option value="">Nenhum cenário encontrado</option>';
+            }
+        } else {
+            console.error('❌ Elemento cenarioFilter não encontrado');
         }
     } catch (error) {
-        console.error('Erro ao carregar cenários:', error);
+        console.error('❌ Erro ao carregar cenários:', error);
+        const filter = document.getElementById('cenarioFilter');
+        if (filter) {
+            filter.innerHTML = '<option value="">Erro ao carregar cenários</option>';
+        }
     }
 }
 
@@ -768,15 +790,33 @@ async function loadScenarioData(scenarioId) {
     try {
         console.log('📊 Carregando dados do cenário:', scenarioId);
         
+        if (!scenarioId) {
+            showError('ID do cenário é obrigatório');
+            return;
+        }
+
+        const token = localStorage.getItem('token') || localStorage.getItem('modelai_token');
+        if (!token) {
+            showError('Token de autenticação não encontrado');
+            return;
+        }
+        
         const response = await fetch(`/api/scenarios/${scenarioId}`, {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
         });
         
         if (response.ok) {
             const data = await response.json();
             const scenario = data.scenario;
+            
+            if (!scenario) {
+                throw new Error('Dados do cenário não encontrados');
+            }
+            
+            console.log('✅ Cenário carregado:', scenario.name);
             
             // Salvar dados no sessionStorage
             sessionStorage.setItem('currentInputData', JSON.stringify(scenario.data));
@@ -789,13 +829,14 @@ async function loadScenarioData(scenarioId) {
             showSuccess(`Cenário "${scenario.name}" carregado com sucesso!`);
             
         } else {
-            const error = await response.json();
-            showError(error.message || 'Erro ao carregar cenário');
+            const errorData = await response.json().catch(() => ({}));
+            const errorMessage = errorData.message || `Erro ${response.status}: Não foi possível carregar o cenário`;
+            showError(errorMessage);
         }
         
     } catch (error) {
         console.error('❌ Erro ao carregar cenário:', error);
-        showError('Erro ao carregar dados do cenário');
+        showError(`Erro ao carregar dados do cenário: ${error.message}`);
     }
 }
 

@@ -184,6 +184,7 @@ app.use('/api', async (req, res, next) => {
     console.log('🔍 [SERVER DEBUG] Middleware API - req.path:', req.path);
     console.log('🔍 [SERVER DEBUG] Middleware API - req.url:', req.url);
     console.log('🔍 [SERVER DEBUG] Middleware API - req.method:', req.method);
+    console.log('🔍 [SERVER DEBUG] Middleware API - req.headers:', req.headers);
     
     // Pular as rotas já definidas acima
     if (req.path === '/auth/login' || req.path === '/auth/verify' || req.path === '/create-admin' || req.path === '/health') {
@@ -191,14 +192,24 @@ app.use('/api', async (req, res, next) => {
         return next();
     }
     
-    // Ajustar a URL para incluir o prefixo /api
-    req.url = '/api' + req.path;
-    console.log('🔧 [SERVER DEBUG] URL ajustada:', req.url);
+    // Montar a URL completa para o handler da API
+    const fullUrl = '/api' + req.path;
+    console.log('🔧 [SERVER DEBUG] URL completa para handler:', fullUrl);
     
     // Usar o handler universal para outras rotas da API
     try {
         const apiHandler = require('./api/index.js');
-        await apiHandler(req, res);
+        
+        // Criar uma cópia do request preservando os headers
+        const apiRequest = {
+            ...req,
+            url: '/api' + req.path,
+            headers: req.headers, // Garantir que os headers sejam preservados
+            method: req.method,
+            body: req.body
+        };
+        
+        await apiHandler(apiRequest, res);
     } catch (error) {
         console.error('❌ Erro no handler da API:', error);
         res.status(500).json({ message: 'Erro interno do servidor', error: error.message });
