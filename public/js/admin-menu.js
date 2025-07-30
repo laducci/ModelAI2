@@ -36,7 +36,7 @@ function forceAdminMenuVisibility() {
         
         usuariosLink.innerHTML = `
             <i class="fas fa-users sidebar-icon mr-3 text-lg"></i>
-            <span class="font-medium sidebar-text">👑 Usuários (Admin)</span>
+            <span class="font-medium sidebar-text">Usuários (Admin)</span>
         `;
         
         // Inserir após o link de resultados
