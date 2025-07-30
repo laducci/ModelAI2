@@ -730,7 +730,8 @@ async function loadScenariosInFilter() {
             throw new Error(errorData.message || `Erro ${response.status} ao carregar cenários`);
         }
         
-        const scenarios = await response.json();
+        const data = await response.json();
+        const scenarios = data.scenarios || data; // API pode retornar {scenarios: [...]} ou [...] diretamente
         const filter = document.getElementById('cenarioFilter');
         const currentScenarioId = sessionStorage.getItem('currentScenarioId');
         

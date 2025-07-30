@@ -18,40 +18,70 @@ const scenarioSchema = new mongoose.Schema({
         required: true
     },
     data: {
-        // Dados Gerais
+        // Dados Gerais - 8 campos
         dadosGerais: {
-            nomeEmpreendimento: String,
-            dataAnalise: String,
-            responsavel: String,
+            cliente: String,
+            imobiliaria: String,
+            incorporadora: String,
+            empreendimento: String,
+            unidade: String,
+            areaPrivativa: Number,
             tmaAno: Number,
-            tmaMes: Number,
-            observacoes: String
+            tmaMes: Number
         },
         
-        // Tabela de Vendas
+        // Tabela de Vendas - 15 campos  
         tabelaVendas: {
-            valorTabela: Number,
-            percentualEntrada: Number,
-            valorEntrada: Number,
-            quantidadeParcelas: Number,
-            valorParcelas: Number,
-            percentualReforco: Number,
-            valorReforco: Number,
-            quantidadeReforcos: Number,
-            frequenciaReforcos: Number
+            // Entrada (4 campos)
+            entradaValor: Number,
+            entradaPercent: Number,
+            entradaParcelas: Number,
+            entradaValorParcela: Number,
+            
+            // Parcelas (4 campos)
+            parcelasValor: Number,
+            parcelasPercent: Number,
+            parcelasQtd: Number,
+            parcelasValorParcela: Number,
+            
+            // Reforço (4 campos)
+            reforcoValor: Number,
+            reforcoPercent: Number,
+            reforcoQtd: Number,
+            reforcoValorParcela: Number,
+            
+            // Outros (3 campos)
+            bemMovelImovel: Number,
+            bemMovelImovelPercent: Number,
+            desagio: Number
         },
         
-        // Proposta Cliente
+        // Proposta Cliente - 16 campos
         propostaCliente: {
-            valorProposta: Number,
-            percentualEntrada: Number,
-            valorEntrada: Number,
-            quantidadeParcelas: Number,
-            valorParcelas: Number,
-            percentualReforco: Number,
-            valorReforco: Number,
-            quantidadeReforcos: Number,
-            frequenciaReforcos: Number
+            mesVenda: Number,
+            
+            // Entrada (4 campos)
+            entradaValor: Number,
+            entradaPercent: Number,
+            entradaParcelas: Number,
+            entradaValorParcela: Number,
+            
+            // Parcelas (4 campos)  
+            parcelasValor: Number,
+            parcelasPercent: Number,
+            parcelasQtd: Number,
+            parcelasValorParcela: Number,
+            
+            // Reforço (4 campos)
+            reforcoValor: Number,
+            reforcoPercent: Number,
+            reforcoQtd: Number,
+            reforcoValorParcela: Number,
+            
+            // Outros (3 campos)
+            bemMovelImovel: Number,
+            bemMovelImovelPercent: Number,
+            desagio: Number
         }
     },
     

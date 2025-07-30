@@ -1230,7 +1230,7 @@ function resetToCreateMode() {
 function collectAllInputData() {
     console.log('🔍 === COLETANDO DADOS DE TODOS OS INPUTS ===');
     
-    // Função auxiliar para debugar cada campo - VERSÃO CORRIGIDA
+    // Função auxiliar para debugar cada campo
     function getFieldValue(id, parser = (v) => v || '') {
         const element = document.getElementById(id);
         const exists = !!element;
@@ -1247,7 +1247,7 @@ function collectAllInputData() {
         
         if (value === undefined || value === null || value === '') {
             console.log(`  ⚠️ Valor vazio - retornando valor padrão`);
-            return parser('') || 0; // Para números, retorna 0; para strings, retorna ''
+            return parser('') || 0;
         }
         
         try {
@@ -1260,7 +1260,7 @@ function collectAllInputData() {
         }
     }
 
-    // NOVO PARSER UNIVERSAL PARA NÚMEROS - baseado no padrão que funciona (tmaAno/tmaMes)
+    // Parser universal para números
     function parseNumberUniversal(value) {
         if (!value && value !== 0) return 0;
         
@@ -1282,55 +1282,83 @@ function collectAllInputData() {
     }
 
     const data = {
+        // DADOS GERAIS (8 campos)
         dadosGerais: {
             cliente: getFieldValue('cliente', (v) => v || ''),
-            unidade: getFieldValue('unidade', (v) => v || ''),
-            empreendimento: getFieldValue('empreendimento', (v) => v || ''),
             imobiliaria: getFieldValue('imobiliaria', (v) => v || ''),
             incorporadora: getFieldValue('incorporadora', (v) => v || ''),
-            areaPrivativa: getFieldValue('areaPrivativa', parseNumberUniversal),  // CORRIGIDO: usar parseNumberUniversal
-            tmaAno: getFieldValue('tmaAno', parseNumberUniversal),              // USANDO O MESMO PADRÃO
-            tmaMes: getFieldValue('tmaMes', parseNumberUniversal)               // USANDO O MESMO PADRÃO
+            empreendimento: getFieldValue('empreendimento', (v) => v || ''),
+            unidade: getFieldValue('unidade', (v) => v || ''),
+            areaPrivativa: getFieldValue('areaPrivativa', parseNumberUniversal),
+            tmaAno: getFieldValue('tmaAno', parseNumberUniversal),
+            tmaMes: getFieldValue('tmaMes', parseNumberUniversal)
         },
+        
+        // TABELA DE VENDAS (15 campos)
         tabelaVendas: {
-            // Entrada
-            entradaValor: getFieldValue('vendaEntradaValor', parseNumberUniversal),     // CORRIGIDO
-            entradaParcelas: getFieldValue('vendaEntradaParcelas', parseNumberUniversal), // CORRIGIDO
+            // Entrada (4 campos)
+            entradaValor: getFieldValue('vendaEntradaValor', parseNumberUniversal),
+            entradaPercent: getFieldValue('vendaEntradaPercent', parseNumberUniversal),
+            entradaParcelas: getFieldValue('vendaEntradaParcelas', parseNumberUniversal),
+            entradaValorParcela: getFieldValue('vendaEntradaValorParcela', parseNumberUniversal),
             
-            // Parcelas  
-            parcelasValor: getFieldValue('vendaParcelasValor', parseNumberUniversal),   // CORRIGIDO
-            parcelasQtd: getFieldValue('vendaParcelasQtd', parseNumberUniversal),       // CORRIGIDO
+            // Parcelas (4 campos)
+            parcelasValor: getFieldValue('vendaParcelasValor', parseNumberUniversal),
+            parcelasPercent: getFieldValue('vendaParcelasPercent', parseNumberUniversal),
+            parcelasQtd: getFieldValue('vendaParcelasQtd', parseNumberUniversal),
+            parcelasValorParcela: getFieldValue('vendaParcelasValorParcela', parseNumberUniversal),
             
-            // Reforço
-            reforcoValor: getFieldValue('vendaReforcoValor', parseNumberUniversal),     // CORRIGIDO
-            reforcoQtd: getFieldValue('vendaReforcoQtd', parseNumberUniversal),         // CORRIGIDO
+            // Reforço (4 campos)
+            reforcoValor: getFieldValue('vendaReforcoValor', parseNumberUniversal),
+            reforcoPercent: getFieldValue('vendaReforcoPercent', parseNumberUniversal),
+            reforcoQtd: getFieldValue('vendaReforcoQtd', parseNumberUniversal),
+            reforcoValorParcela: getFieldValue('vendaReforcoValorParcela', parseNumberUniversal),
             
-            // Outros (Tabela Vendas)
-            bemMovelImovel: getFieldValue('vendaBemMovelImovel', parseNumberUniversal), // CORRIGIDO
-            desagio: getFieldValue('vendaDesagio', parseNumberUniversal)                // CORRIGIDO
+            // Outros (3 campos)
+            bemMovelImovel: getFieldValue('vendaBemMovelImovel', parseNumberUniversal),
+            bemMovelImovelPercent: getFieldValue('vendaBemMovelImovelPercent', parseNumberUniversal),
+            desagio: getFieldValue('vendaDesagio', parseNumberUniversal)
         },
+        
+        // PROPOSTA CLIENTE (16 campos)
         propostaCliente: {
-            mesVenda: getFieldValue('mesVenda', parseNumberUniversal),                  // CORRIGIDO
+            mesVenda: getFieldValue('mesVenda', parseNumberUniversal),
             
-            // Entrada
-            propostaEntradaValor: getFieldValue('propostaEntradaValor', parseNumberUniversal),       // CORRIGIDO
-            propostaEntradaParcelas: getFieldValue('propostaEntradaParcelas', parseNumberUniversal), // CORRIGIDO
+            // Entrada (4 campos)
+            entradaValor: getFieldValue('propostaEntradaValor', parseNumberUniversal),
+            entradaPercent: getFieldValue('propostaEntradaPercent', parseNumberUniversal),
+            entradaParcelas: getFieldValue('propostaEntradaParcelas', parseNumberUniversal),
+            entradaValorParcela: getFieldValue('propostaEntradaValorParcela', parseNumberUniversal),
             
-            // Parcelas
-            propostaParcelasValor: getFieldValue('propostaParcelasValor', parseNumberUniversal),     // CORRIGIDO
-            propostaParcelasQtd: getFieldValue('propostaParcelasQtd', parseNumberUniversal),         // CORRIGIDO
+            // Parcelas (4 campos)
+            parcelasValor: getFieldValue('propostaParcelasValor', parseNumberUniversal),
+            parcelasPercent: getFieldValue('propostaParcelasPercent', parseNumberUniversal),
+            parcelasQtd: getFieldValue('propostaParcelasQtd', parseNumberUniversal),
+            parcelasValorParcela: getFieldValue('propostaParcelasValorParcela', parseNumberUniversal),
             
-            // Reforço
-            propostaReforcoValor: getFieldValue('propostaReforcoValor', parseNumberUniversal),       // CORRIGIDO
-            propostaReforcoQtd: getFieldValue('propostaReforcoQtd', parseNumberUniversal),           // CORRIGIDO
+            // Reforço (4 campos)
+            reforcoValor: getFieldValue('propostaReforcoValor', parseNumberUniversal),
+            reforcoPercent: getFieldValue('propostaReforcoPercent', parseNumberUniversal),
+            reforcoQtd: getFieldValue('propostaReforcoQtd', parseNumberUniversal),
+            reforcoValorParcela: getFieldValue('propostaReforcoValorParcela', parseNumberUniversal),
             
-            // Outros (Proposta Cliente)
-            bemMovelImovel: getFieldValue('bemMovelImovel', parseNumberUniversal),       // CORRIGIDO
-            desagio: getFieldValue('desagio', parseNumberUniversal)                      // CORRIGIDO
+            // Outros (3 campos)
+            bemMovelImovel: getFieldValue('bemMovelImovel', parseNumberUniversal),
+            bemMovelImovelPercent: getFieldValue('bemMovelImovelPercent', parseNumberUniversal),
+            desagio: getFieldValue('desagio', parseNumberUniversal)
         }
     };
     
-    console.log('📊 Dados coletados completos:', data);
+    console.log('📊 === RESUMO DOS DADOS COLETADOS ===');
+    console.log('👥 Dados Gerais:', Object.keys(data.dadosGerais).length, 'campos');
+    console.log('📊 Tabela Vendas:', Object.keys(data.tabelaVendas).length, 'campos');
+    console.log('🤝 Proposta Cliente:', Object.keys(data.propostaCliente).length, 'campos');
+    console.log('� Total de campos:', 
+        Object.keys(data.dadosGerais).length + 
+        Object.keys(data.tabelaVendas).length + 
+        Object.keys(data.propostaCliente).length);
+    console.log('📊 Dados completos coletados:', data);
+    
     return data;
 }
 
@@ -1346,20 +1374,33 @@ function loadScenarioData(data) {
     
     console.log('📂 Carregando dados do cenário nos inputs...');
     
-    // Dados Gerais
+    // Função auxiliar para formatar números em formato brasileiro
+    function formatBRNumber(value) {
+        if (!value && value !== 0) return '';
+        return new Intl.NumberFormat('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(value);
+    }
+
+    // DADOS GERAIS (8 campos)
     if (data.dadosGerais) {
         console.log('📋 Carregando dados gerais:', data.dadosGerais);
         const dg = data.dadosGerais;
         
         const campos = [
-            'cliente', 'unidade', 'empreendimento', 'imobiliaria', 
-            'incorporadora', 'areaPrivativa', 'tmaAno', 'tmaMes'
+            'cliente', 'imobiliaria', 'incorporadora', 'empreendimento', 
+            'unidade', 'areaPrivativa', 'tmaAno', 'tmaMes'
         ];
         
         campos.forEach(campo => {
             const elemento = document.getElementById(campo);
             if (elemento && dg[campo] !== undefined) {
-                elemento.value = dg[campo];
+                if (campo === 'areaPrivativa' || campo === 'tmaAno' || campo === 'tmaMes') {
+                    elemento.value = dg[campo] || '';
+                } else {
+                    elemento.value = dg[campo] || '';
+                }
                 console.log(`✅ ${campo}: ${dg[campo]}`);
             } else if (!elemento) {
                 console.log(`⚠️ Elemento não encontrado: ${campo}`);
@@ -1369,120 +1410,146 @@ function loadScenarioData(data) {
         console.log('⚠️ dadosGerais não encontrado nos dados');
     }
     
-    // Tabela de Vendas
+    // TABELA DE VENDAS (15 campos)
     if (data.tabelaVendas) {
         console.log('💰 Carregando tabela de vendas:', data.tabelaVendas);
         const tv = data.tabelaVendas;
         
-        // Entrada
-        if (document.getElementById('vendaEntradaValor')) {
-            document.getElementById('vendaEntradaValor').value = formatBRNumber(tv.entradaValor || 0);
-            console.log(`✅ vendaEntradaValor: ${tv.entradaValor}`);
-        }
-        if (document.getElementById('vendaEntradaParcelas')) {
-            document.getElementById('vendaEntradaParcelas').value = tv.entradaParcelas || '';
-            console.log(`✅ vendaEntradaParcelas: ${tv.entradaParcelas}`);
-        }
+        // Entrada (4 campos)
+        ['entradaValor', 'entradaPercent', 'entradaParcelas', 'entradaValorParcela'].forEach(field => {
+            const elementId = 'venda' + field.charAt(0).toUpperCase() + field.slice(1);
+            const element = document.getElementById(elementId);
+            if (element && tv[field] !== undefined) {
+                if (field.includes('Valor') && !field.includes('Parcela')) {
+                    element.value = formatBRNumber(tv[field]);
+                } else if (field.includes('Percent')) {
+                    element.value = tv[field] ? tv[field] + '%' : '';
+                } else {
+                    element.value = tv[field] || '';
+                }
+                console.log(`✅ ${elementId}: ${tv[field]}`);
+            }
+        });
         
-        // Parcelas
-        if (document.getElementById('vendaParcelasValor')) {
-            document.getElementById('vendaParcelasValor').value = formatBRNumber(tv.parcelasValor || 0);
-            console.log(`✅ vendaParcelasValor: ${tv.parcelasValor}`);
-        }
-        if (document.getElementById('vendaParcelasQtd')) {
-            document.getElementById('vendaParcelasQtd').value = tv.parcelasQtd || '';
-            console.log(`✅ vendaParcelasQtd: ${tv.parcelasQtd}`);
-        }
+        // Parcelas (4 campos)
+        ['parcelasValor', 'parcelasPercent', 'parcelasQtd', 'parcelasValorParcela'].forEach(field => {
+            const elementId = 'venda' + field.charAt(0).toUpperCase() + field.slice(1);
+            const element = document.getElementById(elementId);
+            if (element && tv[field] !== undefined) {
+                if (field.includes('Valor') && !field.includes('Parcela')) {
+                    element.value = formatBRNumber(tv[field]);
+                } else if (field.includes('Percent')) {
+                    element.value = tv[field] ? tv[field] + '%' : '';
+                } else {
+                    element.value = tv[field] || '';
+                }
+                console.log(`✅ ${elementId}: ${tv[field]}`);
+            }
+        });
         
-        // Reforço
-        if (document.getElementById('vendaReforcoValor')) {
-            document.getElementById('vendaReforcoValor').value = formatBRNumber(tv.reforcoValor || 0);
-            console.log(`✅ vendaReforcoValor: ${tv.reforcoValor}`);
-        }
-        if (document.getElementById('vendaReforcoQtd')) {
-            document.getElementById('vendaReforcoQtd').value = tv.reforcoQtd || '';
-            console.log(`✅ vendaReforcoQtd: ${tv.reforcoQtd}`);
-        }
+        // Reforço (4 campos)
+        ['reforcoValor', 'reforcoPercent', 'reforcoQtd', 'reforcoValorParcela'].forEach(field => {
+            const elementId = 'venda' + field.charAt(0).toUpperCase() + field.slice(1);
+            const element = document.getElementById(elementId);
+            if (element && tv[field] !== undefined) {
+                if (field.includes('Valor') && !field.includes('Parcela')) {
+                    element.value = formatBRNumber(tv[field]);
+                } else if (field.includes('Percent')) {
+                    element.value = tv[field] ? tv[field] + '%' : '';
+                } else {
+                    element.value = tv[field] || '';
+                }
+                console.log(`✅ ${elementId}: ${tv[field]}`);
+            }
+        });
         
-        // Outros
-        if (document.getElementById('vendaBemMovelImovel')) {
-            document.getElementById('vendaBemMovelImovel').value = formatBRNumber(tv.bemMovelImovel || 0);
-            console.log(`✅ vendaBemMovelImovel: ${tv.bemMovelImovel}`);
+        // Outros (3 campos)
+        if (document.getElementById('vendaBemMovelImovel') && tv.bemMovelImovel !== undefined) {
+            document.getElementById('vendaBemMovelImovel').value = formatBRNumber(tv.bemMovelImovel);
         }
-        if (document.getElementById('vendaDesagio')) {
+        if (document.getElementById('vendaBemMovelImovelPercent') && tv.bemMovelImovelPercent !== undefined) {
+            document.getElementById('vendaBemMovelImovelPercent').value = tv.bemMovelImovelPercent ? tv.bemMovelImovelPercent + '%' : '';
+        }
+        if (document.getElementById('vendaDesagio') && tv.desagio !== undefined) {
             document.getElementById('vendaDesagio').value = tv.desagio || '';
-            console.log(`✅ vendaDesagio: ${tv.desagio}`);
         }
     } else {
         console.log('⚠️ tabelaVendas não encontrado nos dados');
     }
     
-    // Proposta Cliente
+    // PROPOSTA CLIENTE (16 campos)
     if (data.propostaCliente) {
         console.log('📝 Carregando proposta cliente:', data.propostaCliente);
         const pc = data.propostaCliente;
         
-        // Mês da Venda
-        if (document.getElementById('mesVenda')) {
+        // Mês da venda
+        if (document.getElementById('mesVenda') && pc.mesVenda !== undefined) {
             document.getElementById('mesVenda').value = pc.mesVenda || '';
-            console.log(`✅ mesVenda: ${pc.mesVenda}`);
         }
         
-        // Entrada
-        if (document.getElementById('propostaEntradaValor')) {
-            document.getElementById('propostaEntradaValor').value = formatBRNumber(pc.propostaEntradaValor || 0);
-            console.log(`✅ propostaEntradaValor: ${pc.propostaEntradaValor}`);
-        }
-        if (document.getElementById('propostaEntradaParcelas')) {
-            document.getElementById('propostaEntradaParcelas').value = pc.propostaEntradaParcelas || '';
-            console.log(`✅ propostaEntradaParcelas: ${pc.propostaEntradaParcelas}`);
-        }
+        // Entrada (4 campos)
+        ['entradaValor', 'entradaPercent', 'entradaParcelas', 'entradaValorParcela'].forEach(field => {
+            const elementId = 'proposta' + field.charAt(0).toUpperCase() + field.slice(1);
+            const element = document.getElementById(elementId);
+            if (element && pc[field] !== undefined) {
+                if (field.includes('Valor') && !field.includes('Parcela')) {
+                    element.value = formatBRNumber(pc[field]);
+                } else if (field.includes('Percent')) {
+                    element.value = pc[field] ? pc[field] + '%' : '';
+                } else {
+                    element.value = pc[field] || '';
+                }
+                console.log(`✅ ${elementId}: ${pc[field]}`);
+            }
+        });
         
-        // Parcelas
-        if (document.getElementById('propostaParcelasValor')) {
-            document.getElementById('propostaParcelasValor').value = formatBRNumber(pc.propostaParcelasValor || 0);
-            console.log(`✅ propostaParcelasValor: ${pc.propostaParcelasValor}`);
-        }
-        if (document.getElementById('propostaParcelasQtd')) {
-            document.getElementById('propostaParcelasQtd').value = pc.propostaParcelasQtd || '';
-            console.log(`✅ propostaParcelasQtd: ${pc.propostaParcelasQtd}`);
-        }
+        // Parcelas (4 campos)
+        ['parcelasValor', 'parcelasPercent', 'parcelasQtd', 'parcelasValorParcela'].forEach(field => {
+            const elementId = 'proposta' + field.charAt(0).toUpperCase() + field.slice(1);
+            const element = document.getElementById(elementId);
+            if (element && pc[field] !== undefined) {
+                if (field.includes('Valor') && !field.includes('Parcela')) {
+                    element.value = formatBRNumber(pc[field]);
+                } else if (field.includes('Percent')) {
+                    element.value = pc[field] ? pc[field] + '%' : '';
+                } else {
+                    element.value = pc[field] || '';
+                }
+                console.log(`✅ ${elementId}: ${pc[field]}`);
+            }
+        });
         
-        // Reforço
-        if (document.getElementById('propostaReforcoValor')) {
-            document.getElementById('propostaReforcoValor').value = formatBRNumber(pc.propostaReforcoValor || 0);
-            console.log(`✅ propostaReforcoValor: ${pc.propostaReforcoValor}`);
-        }
-        if (document.getElementById('propostaReforcoQtd')) {
-            document.getElementById('propostaReforcoQtd').value = pc.propostaReforcoQtd || '';
-            console.log(`✅ propostaReforcoQtd: ${pc.propostaReforcoQtd}`);
-        }
+        // Reforço (4 campos)
+        ['reforcoValor', 'reforcoPercent', 'reforcoQtd', 'reforcoValorParcela'].forEach(field => {
+            const elementId = 'proposta' + field.charAt(0).toUpperCase() + field.slice(1);
+            const element = document.getElementById(elementId);
+            if (element && pc[field] !== undefined) {
+                if (field.includes('Valor') && !field.includes('Parcela')) {
+                    element.value = formatBRNumber(pc[field]);
+                } else if (field.includes('Percent')) {
+                    element.value = pc[field] ? pc[field] + '%' : '';
+                } else {
+                    element.value = pc[field] || '';
+                }
+                console.log(`✅ ${elementId}: ${pc[field]}`);
+            }
+        });
         
-        // Outros
-        if (document.getElementById('bemMovelImovel')) {
-            document.getElementById('bemMovelImovel').value = formatBRNumber(pc.bemMovelImovel || 0);
-            console.log(`✅ bemMovelImovel: ${pc.bemMovelImovel}`);
+        // Outros (3 campos)
+        if (document.getElementById('bemMovelImovel') && pc.bemMovelImovel !== undefined) {
+            document.getElementById('bemMovelImovel').value = formatBRNumber(pc.bemMovelImovel);
         }
-        if (document.getElementById('desagio')) {
+        if (document.getElementById('bemMovelImovelPercent') && pc.bemMovelImovelPercent !== undefined) {
+            document.getElementById('bemMovelImovelPercent').value = pc.bemMovelImovelPercent ? pc.bemMovelImovelPercent + '%' : '';
+        }
+        if (document.getElementById('desagio') && pc.desagio !== undefined) {
             document.getElementById('desagio').value = pc.desagio || '';
-            console.log(`✅ desagio: ${pc.desagio}`);
         }
     } else {
         console.log('⚠️ propostaCliente não encontrado nos dados');
     }
     
-    // Forçar recálculo dos campos calculados
-    setTimeout(() => {
-        calculateTMAMes();
-        calculateVendaValorPorParcela();
-        calculateValorImovel();
-        calculatePropostaPercentages();
-        calculatePropostaEntradaValorPorParcela();
-        calculatePropostaParcelasValorPorParcela();
-        calculatePropostaReforcoValorPorParcela();
-    }, 100);
-    
-    console.log('✅ Dados carregados nos inputs');
+    console.log('✅ === CARREGAMENTO DOS DADOS CONCLUÍDO ===');
 }
 
 // Function to update scenario (when editing)
