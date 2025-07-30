@@ -549,6 +549,24 @@ async function loadScenarioData(scenarioId) {
 
 // Verificar se há dados de cenário ao carregar a página
 function checkForScenarioData() {
+    // Verificar se há um ID de cenário na URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const scenarioId = urlParams.get('scenario');
+    
+    if (scenarioId) {
+        console.log('🔗 ID do cenário encontrado na URL:', scenarioId);
+        // Aguardar um pouco para garantir que o filtro foi carregado
+        setTimeout(() => {
+            const scenarioFilter = document.getElementById('scenarioFilter');
+            if (scenarioFilter) {
+                scenarioFilter.value = scenarioId;
+                loadScenarioData(scenarioId);
+            }
+        }, 500);
+        return;
+    }
+    
+    // Verificar dados no sessionStorage (fallback)
     const scenarioData = sessionStorage.getItem('currentInputData');
     const scenarioName = sessionStorage.getItem('currentScenarioName');
     

@@ -28,6 +28,9 @@ document.querySelectorAll('.subtab-btn').forEach(button => {
         
         const tabId = this.getAttribute('data-tab');
         document.getElementById(tabId).classList.add('active');
+        
+        // Atualizar o botão de ação baseado na aba ativa
+        updateActionButton(tabId);
     });
 });
 
@@ -1126,14 +1129,13 @@ async function saveScenarioWithName(name) {
             console.log('✅ Cenário salvo:', result);
             showSuccess('Cenário salvo com sucesso! Cálculos realizados.');
             
-            // Redirecionar para cenários após 2 segundos
-            setTimeout(() => {
-                window.location.href = '/cenarios.html';
-            }, 2000);
+            // Retornar o resultado para uso posterior
+            return result.scenario || result;
         } else {
             const error = await response.json();
             console.error('❌ Erro da API:', error);
             showError(error.message || 'Erro ao salvar cenário');
+            throw new Error(error.message || 'Erro ao salvar cenário');
         }
         
     } catch (error) {
@@ -1232,6 +1234,14 @@ function setupCreateMode() {
     
     // Limpar qualquer dado residual
     sessionStorage.removeItem('editingScenario');
+    
+    // Inicializar o botão para a aba ativa
+    const activeTab = document.querySelector('.subtab-btn.active');
+    if (activeTab) {
+        const tabId = activeTab.getAttribute('data-tab');
+        updateActionButton(tabId);
+    }
+    
     console.log('✅ Modo de criação configurado');
 }
 
@@ -1866,6 +1876,71 @@ function calculateAllIndicators(data) {
     }
 }
 
+// Função para atualizar o botão de ação baseado na aba ativa
+function updateActionButton(activeTab) {
+    const actionContainer = document.querySelector('.glassmorphism.rounded-2xl.p-6.shadow-lg');
+    if (!actionContainer) return;
+    
+    const titleElement = actionContainer.querySelector('h3');
+    const descriptionElement = actionContainer.querySelector('p');
+    const buttonElement = actionContainer.querySelector('button');
+    
+    if (!titleElement || !descriptionElement || !buttonElement) return;
+    
+    if (activeTab === 'propostaCliente') {
+        // Última aba - botão para salvar
+        titleElement.textContent = 'Finalizar Cenário';
+        descriptionElement.textContent = 'Todos os dados foram preenchidos. Salve o cenário para análise.';
+        
+        const iconElement = buttonElement.querySelector('i');
+        const spanElement = buttonElement.querySelector('span');
+        
+        if (iconElement && spanElement) {
+            iconElement.className = 'fas fa-save';
+            spanElement.textContent = 'Salvar Cenário';
+        }
+        
+        buttonElement.onclick = nextStep; // Mesma função, mas agora é "salvar"
+    } else {
+        // Outras abas - botão para próxima etapa
+        titleElement.textContent = 'Pronto para avançar?';
+        descriptionElement.textContent = 'Vamos para a próxima etapa da análise';
+        
+        const iconElement = buttonElement.querySelector('i');
+        const spanElement = buttonElement.querySelector('span');
+        
+        if (iconElement && spanElement) {
+            iconElement.className = 'fas fa-arrow-right';
+            spanElement.textContent = 'Próxima Etapa';
+        }
+        
+        buttonElement.onclick = goToNextTab;
+    }
+}
+
+// Função para ir para a próxima aba
+function goToNextTab() {
+    const currentActiveTab = document.querySelector('.subtab-btn.active');
+    if (!currentActiveTab) return;
+    
+    const currentTabId = currentActiveTab.getAttribute('data-tab');
+    const allTabs = ['generalData', 'salesData', 'propostaCliente'];
+    const currentIndex = allTabs.indexOf(currentTabId);
+    
+    if (currentIndex < allTabs.length - 1) {
+        // Ir para a próxima aba
+        const nextTabId = allTabs[currentIndex + 1];
+        const nextTabButton = document.querySelector(`[data-tab="${nextTabId}"]`);
+        
+        if (nextTabButton) {
+            nextTabButton.click();
+        }
+    } else {
+        // Já está na última aba, chamar nextStep
+        nextStep();
+    }
+}
+
 // Validação de campos obrigatórios
 function validateRequiredFields() {
     const requiredFields = [
@@ -1987,12 +2062,18 @@ async function saveScenarioAndProceed() {
     
     try {
         showSuccess('Salvando cenário...');
-        await saveScenarioWithName(name);
+        const savedScenario = await saveScenarioWithName(name);
         
-        // Redirecionar para resultados após salvar
-        setTimeout(() => {
-            window.location.href = 'resultados.html';
-        }, 1000);
+        // Redirecionar para resultados com o ID do cenário salvo
+        if (savedScenario && savedScenario._id) {
+            setTimeout(() => {
+                window.location.href = `resultados.html?scenario=${savedScenario._id}`;
+            }, 1000);
+        } else {
+            setTimeout(() => {
+                window.location.href = 'resultados.html';
+            }, 1000);
+        }
         
     } catch (error) {
         console.error('Erro ao salvar cenário:', error);
@@ -2008,3 +2089,5 @@ window.nextStep = nextStep;
 window.showScenarioNameModal = showScenarioNameModal;
 window.closeScenarioNameModal = closeScenarioNameModal;
 window.saveScenarioAndProceed = saveScenarioAndProceed;
+window.updateActionButton = updateActionButton;
+window.goToNextTab = goToNextTab;
