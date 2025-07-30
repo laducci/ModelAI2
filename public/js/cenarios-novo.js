@@ -288,17 +288,15 @@ class ScenarioManager {
             console.log('📊 Visualizando resultados do cenário:', scenario.name);
 
             // Salvar dados do cenário na sessão para resultados
-            sessionStorage.setItem('currentScenario', JSON.stringify({
-                id: scenario.id,
-                name: scenario.name,
-                data: scenario.data
-            }));
+            sessionStorage.setItem('currentInputData', JSON.stringify(scenario.data));
+            sessionStorage.setItem('currentScenarioName', scenario.name);
+            sessionStorage.setItem('currentScenarioId', scenario._id || scenario.id);
             
             showInfo(`Visualizando resultados de "${scenario.name}"...`);
             
-            // Redirecionar para resultados
+            // Redirecionar para resultados com parâmetro do ID
             setTimeout(() => {
-                window.location.href = 'resultados.html';
+                window.location.href = `resultados.html?scenario=${scenario._id || scenario.id}`;
             }, 1500);
             
         } catch (error) {

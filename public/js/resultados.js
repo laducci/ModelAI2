@@ -430,8 +430,11 @@ async function loadScenariosInFilter() {
         const token = localStorage.getItem('token') || localStorage.getItem('modelai_token');
         if (!token) {
             console.error('❌ Token não encontrado');
+            showError('Token de autenticação não encontrado');
             return;
         }
+        
+        console.log('🔑 Token encontrado, fazendo requisição...');
         
         const response = await fetch('/api/scenarios', {
             method: 'GET',
@@ -441,11 +444,13 @@ async function loadScenariosInFilter() {
             }
         });
         
+        console.log('📡 Resposta da API:', response.status, response.statusText);
+        
         if (response.ok) {
             const data = await response.json();
             const scenarios = data.scenarios || [];
             
-            console.log(`✅ ${scenarios.length} cenários carregados`);
+            console.log(`✅ ${scenarios.length} cenários carregados:`, scenarios.map(s => s.name));
             
             // Atualizar dropdown de cenários
             const scenarioFilter = document.getElementById('scenarioFilter');
@@ -458,17 +463,21 @@ async function loadScenariosInFilter() {
                     option.textContent = scenario.name;
                     scenarioFilter.appendChild(option);
                 });
+                
+                console.log('✅ Dropdown atualizado com', scenarios.length, 'cenários');
+            } else {
+                console.error('❌ Elemento scenarioFilter não encontrado!');
             }
             
         } else {
             const error = await response.json().catch(() => ({}));
-            console.error('❌ Erro ao carregar cenários:', error.message);
-            showError(error.message || 'Erro ao carregar cenários');
+            console.error('❌ Erro ao carregar cenários:', response.status, error.message);
+            showError(error.message || `Erro ${response.status}: Não foi possível carregar cenários`);
         }
         
     } catch (error) {
         console.error('❌ Erro ao carregar cenários:', error);
-        showError('Erro ao carregar lista de cenários');
+        showError('Erro ao carregar lista de cenários: ' + error.message);
     }
 }
 
@@ -487,7 +496,8 @@ function setupScenarioFilter() {
 
 async function loadScenarioData(scenarioId) {
     try {
-        console.log('📊 Carregando dados do cenário:', scenarioId);
+        console.log('📊 === CARREGANDO DADOS DO CENÁRIO ===');
+        console.log('📊 ID do cenário:', scenarioId);
         
         if (!scenarioId) {
             showError('ID do cenário é obrigatório');
@@ -500,6 +510,8 @@ async function loadScenarioData(scenarioId) {
             return;
         }
         
+        console.log('🔑 Token encontrado, buscando cenário...');
+        
         const response = await fetch(`/api/scenarios/${scenarioId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -507,15 +519,19 @@ async function loadScenarioData(scenarioId) {
             }
         });
         
+        console.log('📡 Resposta da API:', response.status, response.statusText);
+        
         if (response.ok) {
             const data = await response.json();
             const scenario = data.scenario;
             
             if (!scenario) {
-                throw new Error('Dados do cenário não encontrados');
+                throw new Error('Dados do cenário não encontrados na resposta');
             }
             
             console.log('✅ Cenário carregado:', scenario.name);
+            console.log('📊 Dados do cenário:', scenario.data);
+            console.log('📈 Resultados pré-calculados:', scenario.results);
             
             // Salvar dados no sessionStorage
             sessionStorage.setItem('currentInputData', JSON.stringify(scenario.data));
@@ -524,11 +540,11 @@ async function loadScenarioData(scenarioId) {
             
             // Exibir resultados pré-calculados se existirem
             if (scenario.results) {
-                console.log('📊 Exibindo resultados pré-calculados:', scenario.results);
+                console.log('📊 Exibindo resultados pré-calculados');
                 displayCalculatedResults(scenario.results);
                 displayCalculatedResultsByText(scenario.results);
             } else {
-                console.log('⚠️ Cenário sem resultados pré-calculados, atualizando...');
+                console.log('⚠️ Cenário sem resultados pré-calculados, calculando...');
                 // Atualizar resultados (cálculo em tempo real)
                 updateResultados();
             }
@@ -538,6 +554,7 @@ async function loadScenarioData(scenarioId) {
         } else {
             const errorData = await response.json().catch(() => ({}));
             const errorMessage = errorData.message || `Erro ${response.status}: Não foi possível carregar o cenário`;
+            console.error('❌ Erro da API:', errorMessage);
             showError(errorMessage);
         }
         
@@ -559,10 +576,13 @@ function checkForScenarioData() {
         setTimeout(() => {
             const scenarioFilter = document.getElementById('scenarioFilter');
             if (scenarioFilter) {
+                console.log('🎯 Selecionando cenário no filtro:', scenarioId);
                 scenarioFilter.value = scenarioId;
                 loadScenarioData(scenarioId);
+            } else {
+                console.warn('⚠️ Filtro de cenário não encontrado!');
             }
-        }, 500);
+        }, 1000); // Aumentei o tempo para garantir carregamento
         return;
     }
     
@@ -571,16 +591,54 @@ function checkForScenarioData() {
     const scenarioName = sessionStorage.getItem('currentScenarioName');
     
     if (scenarioData && scenarioName) {
-        console.log('📊 Dados de cenário encontrados:', scenarioName);
-        // Os dados já estão no sessionStorage, updateResultados() irá usá-los
+        console.log('📊 Dados de cenário encontrados no sessionStorage:', scenarioName);
+        // Atualizar resultados com dados do sessionStorage
+        updateResultados();
+        return;
     }
+    
+    // Verificar formato antigo de dados
+    const oldScenarioData = sessionStorage.getItem('currentScenario');
+    if (oldScenarioData) {
+        try {
+            const parsedData = JSON.parse(oldScenarioData);
+            console.log('📊 Dados de cenário em formato antigo encontrados:', parsedData.name);
+            
+            // Converter para novo formato
+            sessionStorage.setItem('currentInputData', JSON.stringify(parsedData.data));
+            sessionStorage.setItem('currentScenarioName', parsedData.name);
+            sessionStorage.setItem('currentScenarioId', parsedData.id);
+            
+            // Remover formato antigo
+            sessionStorage.removeItem('currentScenario');
+            
+            // Atualizar resultados
+            updateResultados();
+        } catch (error) {
+            console.error('❌ Erro ao processar dados antigos:', error);
+        }
+    }
+    
+    console.log('ℹ️ Nenhum cenário encontrado para carregar');
 }
 
 // Inicializar quando DOM carregar
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('📋 DOM carregado - inicializando resultados...');
+    
+    // Verificar elementos essenciais
+    const scenarioFilter = document.getElementById('scenarioFilter');
+    console.log('🔍 Filtro de cenários encontrado:', !!scenarioFilter);
+    
     loadScenariosInFilter();
     setupScenarioFilter();
     checkForScenarioData();
+    
+    // Log do estado inicial
+    console.log('📊 Estado inicial do sessionStorage:');
+    console.log('  - currentInputData:', !!sessionStorage.getItem('currentInputData'));
+    console.log('  - currentScenarioName:', sessionStorage.getItem('currentScenarioName'));
+    console.log('  - currentScenarioId:', sessionStorage.getItem('currentScenarioId'));
 });
 
 // ================================
@@ -589,12 +647,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function showSuccess(message) {
     console.log('✅', message);
-    // Implementar notificação visual se necessário
+    // Usar alerts.js se disponível
+    if (window.alerts && window.alerts.success) {
+        window.alerts.success(message);
+    } else {
+        alert('✅ ' + message);
+    }
 }
 
 function showError(message) {
     console.error('❌', message);
-    // Implementar notificação visual se necessário
+    // Usar alerts.js se disponível
+    if (window.alerts && window.alerts.error) {
+        window.alerts.error(message);
+    } else {
+        alert('❌ ' + message);
+    }
 }
 
 // ================================
