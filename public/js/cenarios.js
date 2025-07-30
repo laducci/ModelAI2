@@ -334,25 +334,38 @@ class ScenarioManager {
 
     async loadScenario(scenarioId) {
         try {
+            console.log('🔍 Buscando cenário ID:', scenarioId);
+            console.log('📋 Lista de cenários disponíveis:', this.scenarios.map(s => s.id));
+            
             const scenario = this.scenarios.find(s => s.id === scenarioId);
             if (!scenario) {
+                console.error('❌ Cenário não encontrado ID:', scenarioId);
                 showError('Cenário não encontrado.');
                 return;
             }
 
-            console.log('📂 Carregando cenário para edição:', scenario.name);
-            console.log('📊 Dados do cenário:', scenario.data);
+            console.log('📂 Cenário ENCONTRADO para edição:', scenario.name);
+            console.log('📊 Dados completos do cenário:', scenario);
+            console.log('🗂️ Dados específicos:', scenario.data);
 
             // Salvar dados do cenário para a página de inputs (usar sessionStorage para consistência)
-            sessionStorage.setItem('editingScenario', JSON.stringify({
+            const editingData = {
                 id: scenarioId,
                 name: scenario.name,
                 data: scenario.data
-            }));
+            };
+            
+            console.log('💾 Salvando no sessionStorage:', editingData);
+            sessionStorage.setItem('editingScenario', JSON.stringify(editingData));
+            
+            // Verificar se foi salvo corretamente
+            const saved = sessionStorage.getItem('editingScenario');
+            console.log('✅ Verificação sessionStorage:', saved ? 'SALVO' : 'FALHOU');
             
             showInfo(`Carregando cenário "${scenario.name}" para edição...`);
             
             // Redirecionar para inputs
+            console.log('🚀 Redirecionando para inputs.html em 1.5 segundos...');
             setTimeout(() => {
                 window.location.href = 'inputs.html';
             }, 1500);

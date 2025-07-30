@@ -12,8 +12,6 @@ function forceAdminMenuVisibility() {
         const user = JSON.parse(userData);
         if (user.role !== 'admin') return;
         
-        console.log('👑 Admin detectado, inserindo menu de usuários...');
-        
         // Encontrar o container de navegação
         const nav = document.querySelector('nav .space-y-2, nav');
         if (!nav) return;
@@ -24,7 +22,6 @@ function forceAdminMenuVisibility() {
             // Garantir que está visível
             existingLink.style.display = 'flex';
             existingLink.closest('li, .sidebar-item, .nav-item')?.classList.remove('hidden');
-            console.log('👑 Link de usuários já existente - garantindo visibilidade');
             return;
         }
         
@@ -52,7 +49,6 @@ function forceAdminMenuVisibility() {
             nav.appendChild(usuariosLink);
         }
         
-        console.log('👑 Menu de usuários inserido com sucesso!');
         
     } catch (error) {
         console.error('❌ Erro ao inserir menu admin:', error);

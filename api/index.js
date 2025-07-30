@@ -810,6 +810,9 @@ const handler = async (req, res) => {
   if (url.startsWith('/api/scenarios/') && method === 'PUT') {
     try {
       const scenarioId = url.split('/')[3];
+      console.log('🔄 [API] Atualizando cenário ID:', scenarioId);
+      console.log('🔄 [API] URL completa:', url);
+      
       const token = req.headers.authorization?.replace('Bearer ', '');
       
       if (!token) {
@@ -817,13 +820,17 @@ const handler = async (req, res) => {
       }
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
+      console.log('🔄 [API] User ID:', decoded.userId);
+      
       const { name, description, data } = body;
+      console.log('🔄 [API] Dados recebidos:', { name, description, data: !!data });
 
       if (!name || !data) {
         return sendResponse(400, { message: 'Nome e dados do cenário são obrigatórios.' });
       }
       
       const scenario = await Scenario.findOne({ _id: scenarioId, userId: decoded.userId });
+      console.log('🔄 [API] Cenário encontrado:', !!scenario);
       
       if (!scenario) {
         return sendResponse(404, { message: 'Cenário não encontrado.' });
@@ -836,6 +843,7 @@ const handler = async (req, res) => {
       scenario.updatedAt = new Date();
 
       await scenario.save();
+      console.log('✅ [API] Cenário atualizado com sucesso');
 
       return sendResponse(200, { 
         message: 'Cenário atualizado com sucesso!',

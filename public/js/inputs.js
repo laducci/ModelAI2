@@ -251,13 +251,85 @@ function formatBRNumber(value) {
 }
 
 function parseBRNumber(value) {
+    console.log(`🔄 parseBRNumber chamado com valor: "${value}" (tipo: ${typeof value})`);
     if (typeof value === 'string') {
         // Remove todos os pontos (separadores de milhares) e substitui vírgula por ponto
         const cleanValue = value.replace(/\./g, '').replace(',', '.');
-        return parseFloat(cleanValue) || 0;
+        const result = parseFloat(cleanValue) || 0;
+        console.log(`🔄 parseBRNumber resultado: "${value}" → "${cleanValue}" → ${result}`);
+        return result;
     }
-    return parseFloat(value) || 0;
+    const result = parseFloat(value) || 0;
+    console.log(`🔄 parseBRNumber resultado direto: ${value} → ${result}`);
+    return result;
 }
+
+// FUNÇÃO DE TESTE PARA DEBUG
+window.testParseBRNumber = function() {
+    console.log('🧪 === TESTE parseBRNumber ===');
+    const testValues = ['100000', '100.000', '100.000,00', 'R$ 100.000,00', '500000'];
+    testValues.forEach(val => {
+        console.log(`🧪 Testando: "${val}"`);
+        const result = parseBRNumber(val);
+        console.log(`🧪 Resultado: ${result}`);
+        console.log('---');
+    });
+};
+
+// FUNÇÃO SIMPLES PARA TESTAR COLETA DE INPUTS
+window.debugInputValues = function() {
+    console.log('🔍 === DEBUG DOS VALORES DOS INPUTS ===');
+    
+    // Teste simples dos campos problemáticos
+    const problematicFields = [
+        'vendaEntradaValor',
+        'vendaParcelasValor', 
+        'areaPrivativa',
+        'tmaAno',
+        'tmaMes'
+    ];
+    
+    problematicFields.forEach(fieldId => {
+        const element = document.getElementById(fieldId);
+        if (element) {
+            console.log(`📍 ${fieldId}:`);
+            console.log(`  📝 Valor bruto: "${element.value}"`);
+            console.log(`  🔧 parseBRNumber: ${parseBRNumber(element.value)}`);
+            console.log(`  🔧 parseFloat: ${parseFloat(element.value)}`);
+            console.log('---');
+        } else {
+            console.log(`❌ Elemento ${fieldId} não encontrado!`);
+        }
+    });
+};
+
+// TESTE RÁPIDO DA COLETA
+window.testCollectData = function() {
+    console.log('🔍 === TESTE RÁPIDO DA COLETA ===');
+    const data = collectAllInputData();
+    console.log('📊 Resultado final:', data);
+};
+
+// TESTE SUPER SIMPLES DOS VALORES DIRETOS
+window.testDirectValues = function() {
+    console.log('🔍 === TESTE VALORES DIRETOS ===');
+    
+    // Teste campos que funcionam
+    const tmaAno = document.getElementById('tmaAno');
+    const tmaMes = document.getElementById('tmaMes');
+    
+    // Teste campos que falham  
+    const areaPrivativa = document.getElementById('areaPrivativa');
+    const vendaEntradaValor = document.getElementById('vendaEntradaValor');
+    
+    console.log('✅ CAMPOS QUE FUNCIONAM:');
+    console.log(`tmaAno: elemento existe=${!!tmaAno}, valor="${tmaAno?.value}", parseFloat=${parseFloat(tmaAno?.value)}`);
+    console.log(`tmaMes: elemento existe=${!!tmaMes}, valor="${tmaMes?.value}", parseFloat=${parseFloat(tmaMes?.value)}`);
+    
+    console.log('❌ CAMPOS QUE FALHAM:');
+    console.log(`areaPrivativa: elemento existe=${!!areaPrivativa}, valor="${areaPrivativa?.value}", parseFloat=${parseFloat(areaPrivativa?.value)}`);
+    console.log(`vendaEntradaValor: elemento existe=${!!vendaEntradaValor}, valor="${vendaEntradaValor?.value}", parseBRNumber=${parseBRNumber(vendaEntradaValor?.value)}`);
+};
 
 function formatInputValue(input) {
     const currentValue = input.value;
@@ -630,7 +702,9 @@ document.addEventListener('DOMContentLoaded', function() {
         calculateTMAMes();
         calculateVendaValorPorParcela();
         calculateValorImovel();
-        calculatePropostaValorPorParcela();
+        calculatePropostaEntradaValorPorParcela();
+        calculatePropostaParcelasValorPorParcela();
+        calculatePropostaReforcoValorPorParcela();
         calculateValorProposta();
         updateResumos();
     }, 100);
@@ -940,9 +1014,13 @@ document.addEventListener('DOMContentLoaded', function() {
 // ==================== FUNÇÕES DE CENÁRIO ====================
 
 function saveScenario() {
-    console.log('💾 Salvando cenário...');
+    console.log('💾 Salvando NOVO cenário...');
     
     try {
+        // Limpar modo de edição se existir (garante que é um novo cenário)
+        sessionStorage.removeItem('editingScenario');
+        console.log('🗑️ Removido editingScenario - criando novo cenário');
+        
         // Coletar todos os dados dos inputs
         const scenarioData = collectAllInputData();
         
@@ -1051,62 +1129,204 @@ async function saveScenarioWithName(name) {
 
 // Initialize page with scenario data ONLY if editing
 document.addEventListener('DOMContentLoaded', function() {
-    // ONLY load scenario data if explicitly editing (not just accessing inputs)
+    console.log('🚀 DOMContentLoaded disparado - verificando modo de edição...');
+    
+    // Verificar se veio através de navegação direta (novo cenário) ou de edição
+    const referrer = document.referrer;
+    const cameFromScenarios = referrer.includes('cenarios.html');
+    
+    console.log('🔗 Referrer:', referrer);
+    console.log('🔗 Veio de cenarios.html?', cameFromScenarios);
+    
+    // Verificar todas as chaves do sessionStorage
+    console.log('🔍 Conteúdo completo do sessionStorage:');
+    for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        const value = sessionStorage.getItem(key);
+        console.log(`  ${key}: ${value}`);
+    }
+    
+    // ONLY load scenario data if explicitly editing AND came from scenarios page
     const editingScenario = sessionStorage.getItem('editingScenario');
-    if (editingScenario) {
+    console.log('📋 editingScenario RAW:', editingScenario);
+    
+    if (editingScenario && cameFromScenarios) {
         try {
             const scenario = JSON.parse(editingScenario);
-            console.log('📝 Carregando cenário para edição:', scenario.name);
+            console.log('📝 SUCESSO - Cenário parseado:', scenario);
+            console.log('📝 Nome do cenário:', scenario.name);
+            console.log('📊 Dados do cenário:', scenario.data);
+            
+            // ✅ MODO EDIÇÃO - Cenário existe e veio de cenarios.html
+            console.log('🔄 MODO EDIÇÃO ATIVADO');
+            
             loadScenarioData(scenario.data);
             showInfo(`Editando cenário: ${scenario.name}`);
             
             // Atualizar texto do botão para "Atualizar Cenário"
-            const saveButton = document.querySelector('[onclick="saveScenario()"]');
+            const saveButton = document.querySelector('button[onclick="saveScenario()"]');
             if (saveButton) {
-                saveButton.innerHTML = '<i class="fas fa-save mr-2"></i><span>Atualizar Cenário</span>';
+                const span = saveButton.querySelector('span');
+                if (span) {
+                    span.textContent = 'Atualizar Cenário';
+                }
                 saveButton.setAttribute('onclick', 'updateScenario()');
+                console.log('✅ Botão alterado para updateScenario');
+            } else {
+                console.log('⚠️ Botão de salvar não encontrado');
             }
             
-            // Clear the editing flag after loading to prevent reload on refresh
-            sessionStorage.removeItem('editingScenario');
+            // NÃO remover o editingScenario aqui - manter até salvar/cancelar
+            console.log('✅ Modo de edição ativado com sucesso');
         } catch (error) {
-            console.error('Erro ao carregar cenário para edição:', error);
+            console.error('❌ ERRO ao carregar cenário para edição:', error);
+            console.error('❌ Dados que causaram erro:', editingScenario);
+            sessionStorage.removeItem('editingScenario');
+            setupCreateMode();
         }
+    } else {
+        console.log('📝 MODO CRIAÇÃO ATIVADO');
+        // Se não veio de cenarios.html, limpar dados de edição e configurar modo criação
+        if (!cameFromScenarios && editingScenario) {
+            console.log('🧹 Limpando editingScenario - acesso direto à página');
+            sessionStorage.removeItem('editingScenario');
+        }
+        setupCreateMode();
     }
 });
 
+function setupCreateMode() {
+    console.log('🆕 Configurando modo de criação...');
+    console.log('ℹ️ sessionStorage.editingScenario está vazio ou não existe');
+    
+    // Garantir que o botão esteja configurado para salvar novo cenário
+    const saveButton = document.querySelector('button[onclick="saveScenario()"], button[onclick="updateScenario()"]');
+    if (saveButton) {
+        // Atualizar o span interno e o onclick
+        const span = saveButton.querySelector('span');
+        if (span) {
+            span.textContent = 'Salvar Cenário';
+        }
+        saveButton.setAttribute('onclick', 'saveScenario()');
+        console.log('✅ Botão configurado para saveScenario (novo cenário)');
+    } else {
+        console.log('⚠️ Botão de salvar não encontrado');
+    }
+    
+    // Limpar qualquer dado residual
+    sessionStorage.removeItem('editingScenario');
+    console.log('✅ Modo de criação configurado');
+}
+
+// Função para resetar para modo de criação (pode ser chamada manualmente)
+function resetToCreateMode() {
+    console.log('🔄 Resetando para modo de criação...');
+    sessionStorage.removeItem('editingScenario');
+    setupCreateMode();
+    showInfo('Modo de criação ativado - agora você pode criar um novo cenário');
+}
+
 // Function to collect all input data
 function collectAllInputData() {
+    console.log('🔍 === COLETANDO DADOS DE TODOS OS INPUTS ===');
+    
+    // Função auxiliar para debugar cada campo - VERSÃO CORRIGIDA
+    function getFieldValue(id, parser = (v) => v || '') {
+        const element = document.getElementById(id);
+        const exists = !!element;
+        const value = element?.value;
+        
+        console.log(`🔍 Campo ${id}:`);
+        console.log(`  📍 Elemento existe: ${exists}`);
+        console.log(`  📝 Valor bruto: "${value}" (tipo: ${typeof value})`);
+        
+        if (!exists) {
+            console.log(`  ❌ ELEMENTO ${id} NÃO ENCONTRADO!`);
+            return '';
+        }
+        
+        if (value === undefined || value === null || value === '') {
+            console.log(`  ⚠️ Valor vazio - retornando valor padrão`);
+            return parser('') || 0; // Para números, retorna 0; para strings, retorna ''
+        }
+        
+        try {
+            const parsed = parser(value);
+            console.log(`  ✅ Valor parseado: ${parsed} (tipo: ${typeof parsed})`);
+            return parsed;
+        } catch (error) {
+            console.log(`  ❌ Erro no parser: ${error.message}`);
+            return '';
+        }
+    }
+
+    // NOVO PARSER UNIVERSAL PARA NÚMEROS - baseado no padrão que funciona (tmaAno/tmaMes)
+    function parseNumberUniversal(value) {
+        if (!value && value !== 0) return 0;
+        
+        let str = String(value);
+        
+        // Remove R$ e espaços
+        str = str.replace(/R\$\s*/g, '');
+        
+        // Remove pontos dos milhares mas preserva vírgula decimal
+        str = str.replace(/\.(?=\d{3})/g, '');
+        
+        // Substitui vírgula por ponto
+        str = str.replace(',', '.');
+        
+        // Remove qualquer caractere não numérico exceto ponto e sinal negativo
+        str = str.replace(/[^\d.-]/g, '');
+        
+        return parseFloat(str) || 0;
+    }
+
     const data = {
         dadosGerais: {
-            cliente: document.getElementById('cliente')?.value || '',
-            unidade: document.getElementById('unidade')?.value || '',
-            empreendimento: document.getElementById('empreendimento')?.value || '',
-            imobiliaria: document.getElementById('imobiliaria')?.value || '',
-            incorporadora: document.getElementById('incorporadora')?.value || '',
-            areaPrivativa: parseFloat(document.getElementById('areaPrivativa')?.value || 0),
-            tmaAno: parseFloat(document.getElementById('tmaAno')?.value || 0),
-            tmaMes: parseFloat(document.getElementById('tmaMes')?.value || 0)
+            cliente: getFieldValue('cliente', (v) => v || ''),
+            unidade: getFieldValue('unidade', (v) => v || ''),
+            empreendimento: getFieldValue('empreendimento', (v) => v || ''),
+            imobiliaria: getFieldValue('imobiliaria', (v) => v || ''),
+            incorporadora: getFieldValue('incorporadora', (v) => v || ''),
+            areaPrivativa: getFieldValue('areaPrivativa', parseNumberUniversal),  // CORRIGIDO: usar parseNumberUniversal
+            tmaAno: getFieldValue('tmaAno', parseNumberUniversal),              // USANDO O MESMO PADRÃO
+            tmaMes: getFieldValue('tmaMes', parseNumberUniversal)               // USANDO O MESMO PADRÃO
         },
         tabelaVendas: {
             // Entrada
-            entradaValor: parseBRNumber(document.getElementById('vendaEntradaValor')?.value || '0'),
-            entradaParcelas: parseInt(document.getElementById('vendaEntradaParcelas')?.value || 0),
+            entradaValor: getFieldValue('vendaEntradaValor', parseNumberUniversal),     // CORRIGIDO
+            entradaParcelas: getFieldValue('vendaEntradaParcelas', parseNumberUniversal), // CORRIGIDO
             
-            // Parcelas
-            parcelasValor: parseBRNumber(document.getElementById('vendaParcelasValor')?.value || '0'),
-            parcelasQtd: parseInt(document.getElementById('vendaParcelasQtd')?.value || 0),
+            // Parcelas  
+            parcelasValor: getFieldValue('vendaParcelasValor', parseNumberUniversal),   // CORRIGIDO
+            parcelasQtd: getFieldValue('vendaParcelasQtd', parseNumberUniversal),       // CORRIGIDO
             
             // Reforço
-            reforcoValor: parseBRNumber(document.getElementById('vendaReforcoValor')?.value || '0'),
-            reforcoQtd: parseInt(document.getElementById('vendaReforcoQtd')?.value || 0),
+            reforcoValor: getFieldValue('vendaReforcoValor', parseNumberUniversal),     // CORRIGIDO
+            reforcoQtd: getFieldValue('vendaReforcoQtd', parseNumberUniversal),         // CORRIGIDO
             
-            // Outros
-            bemMovelImovel: parseBRNumber(document.getElementById('vendaBemMovelImovel')?.value || '0'),
-            desagio: parseFloat(document.getElementById('vendaDesagio')?.value || 0)
+            // Outros (Tabela Vendas)
+            bemMovelImovel: getFieldValue('vendaBemMovelImovel', parseNumberUniversal), // CORRIGIDO
+            desagio: getFieldValue('vendaDesagio', parseNumberUniversal)                // CORRIGIDO
         },
         propostaCliente: {
-            // Adicionar campos quando existirem no HTML
+            mesVenda: getFieldValue('mesVenda', parseNumberUniversal),                  // CORRIGIDO
+            
+            // Entrada
+            propostaEntradaValor: getFieldValue('propostaEntradaValor', parseNumberUniversal),       // CORRIGIDO
+            propostaEntradaParcelas: getFieldValue('propostaEntradaParcelas', parseNumberUniversal), // CORRIGIDO
+            
+            // Parcelas
+            propostaParcelasValor: getFieldValue('propostaParcelasValor', parseNumberUniversal),     // CORRIGIDO
+            propostaParcelasQtd: getFieldValue('propostaParcelasQtd', parseNumberUniversal),         // CORRIGIDO
+            
+            // Reforço
+            propostaReforcoValor: getFieldValue('propostaReforcoValor', parseNumberUniversal),       // CORRIGIDO
+            propostaReforcoQtd: getFieldValue('propostaReforcoQtd', parseNumberUniversal),           // CORRIGIDO
+            
+            // Outros (Proposta Cliente)
+            bemMovelImovel: getFieldValue('bemMovelImovel', parseNumberUniversal),       // CORRIGIDO
+            desagio: getFieldValue('desagio', parseNumberUniversal)                      // CORRIGIDO
         }
     };
     
@@ -1116,53 +1336,139 @@ function collectAllInputData() {
 
 // Function to load scenario data into inputs
 function loadScenarioData(data) {
-    if (!data) return;
+    console.log('🔄 === INICIANDO CARREGAMENTO DOS DADOS ===');
+    console.log('📊 Dados recebidos:', data);
     
-    console.log('📂 Carregando dados do cenário nos inputs:', data);
+    if (!data) {
+        console.log('❌ Nenhum dado fornecido para carregar');
+        return;
+    }
+    
+    console.log('📂 Carregando dados do cenário nos inputs...');
     
     // Dados Gerais
     if (data.dadosGerais) {
+        console.log('📋 Carregando dados gerais:', data.dadosGerais);
         const dg = data.dadosGerais;
-        if (document.getElementById('cliente')) document.getElementById('cliente').value = dg.cliente || '';
-        if (document.getElementById('unidade')) document.getElementById('unidade').value = dg.unidade || '';
-        if (document.getElementById('empreendimento')) document.getElementById('empreendimento').value = dg.empreendimento || '';
-        if (document.getElementById('imobiliaria')) document.getElementById('imobiliaria').value = dg.imobiliaria || '';
-        if (document.getElementById('incorporadora')) document.getElementById('incorporadora').value = dg.incorporadora || '';
-        if (document.getElementById('areaPrivativa')) document.getElementById('areaPrivativa').value = dg.areaPrivativa || '';
-        if (document.getElementById('tmaAno')) document.getElementById('tmaAno').value = dg.tmaAno || '';
-        if (document.getElementById('tmaMes')) document.getElementById('tmaMes').value = dg.tmaMes || '';
+        
+        const campos = [
+            'cliente', 'unidade', 'empreendimento', 'imobiliaria', 
+            'incorporadora', 'areaPrivativa', 'tmaAno', 'tmaMes'
+        ];
+        
+        campos.forEach(campo => {
+            const elemento = document.getElementById(campo);
+            if (elemento && dg[campo] !== undefined) {
+                elemento.value = dg[campo];
+                console.log(`✅ ${campo}: ${dg[campo]}`);
+            } else if (!elemento) {
+                console.log(`⚠️ Elemento não encontrado: ${campo}`);
+            }
+        });
+    } else {
+        console.log('⚠️ dadosGerais não encontrado nos dados');
     }
     
     // Tabela de Vendas
     if (data.tabelaVendas) {
+        console.log('💰 Carregando tabela de vendas:', data.tabelaVendas);
         const tv = data.tabelaVendas;
+        
         // Entrada
-        if (document.getElementById('vendaEntradaValor')) document.getElementById('vendaEntradaValor').value = formatBRNumber(tv.entradaValor || 0);
-        if (document.getElementById('vendaEntradaParcelas')) document.getElementById('vendaEntradaParcelas').value = tv.entradaParcelas || '';
+        if (document.getElementById('vendaEntradaValor')) {
+            document.getElementById('vendaEntradaValor').value = formatBRNumber(tv.entradaValor || 0);
+            console.log(`✅ vendaEntradaValor: ${tv.entradaValor}`);
+        }
+        if (document.getElementById('vendaEntradaParcelas')) {
+            document.getElementById('vendaEntradaParcelas').value = tv.entradaParcelas || '';
+            console.log(`✅ vendaEntradaParcelas: ${tv.entradaParcelas}`);
+        }
         
         // Parcelas
-        if (document.getElementById('vendaParcelasValor')) document.getElementById('vendaParcelasValor').value = formatBRNumber(tv.parcelasValor || 0);
-        if (document.getElementById('vendaParcelasQtd')) document.getElementById('vendaParcelasQtd').value = tv.parcelasQtd || '';
+        if (document.getElementById('vendaParcelasValor')) {
+            document.getElementById('vendaParcelasValor').value = formatBRNumber(tv.parcelasValor || 0);
+            console.log(`✅ vendaParcelasValor: ${tv.parcelasValor}`);
+        }
+        if (document.getElementById('vendaParcelasQtd')) {
+            document.getElementById('vendaParcelasQtd').value = tv.parcelasQtd || '';
+            console.log(`✅ vendaParcelasQtd: ${tv.parcelasQtd}`);
+        }
         
         // Reforço
-        if (document.getElementById('vendaReforcoValor')) document.getElementById('vendaReforcoValor').value = formatBRNumber(tv.reforcoValor || 0);
-        if (document.getElementById('vendaReforcoQtd')) document.getElementById('vendaReforcoQtd').value = tv.reforcoQtd || '';
+        if (document.getElementById('vendaReforcoValor')) {
+            document.getElementById('vendaReforcoValor').value = formatBRNumber(tv.reforcoValor || 0);
+            console.log(`✅ vendaReforcoValor: ${tv.reforcoValor}`);
+        }
+        if (document.getElementById('vendaReforcoQtd')) {
+            document.getElementById('vendaReforcoQtd').value = tv.reforcoQtd || '';
+            console.log(`✅ vendaReforcoQtd: ${tv.reforcoQtd}`);
+        }
         
         // Outros
-        if (document.getElementById('vendaBemMovelImovel')) document.getElementById('vendaBemMovelImovel').value = formatBRNumber(tv.bemMovelImovel || 0);
-        if (document.getElementById('vendaDesagio')) document.getElementById('vendaDesagio').value = tv.desagio || '';
+        if (document.getElementById('vendaBemMovelImovel')) {
+            document.getElementById('vendaBemMovelImovel').value = formatBRNumber(tv.bemMovelImovel || 0);
+            console.log(`✅ vendaBemMovelImovel: ${tv.bemMovelImovel}`);
+        }
+        if (document.getElementById('vendaDesagio')) {
+            document.getElementById('vendaDesagio').value = tv.desagio || '';
+            console.log(`✅ vendaDesagio: ${tv.desagio}`);
+        }
+    } else {
+        console.log('⚠️ tabelaVendas não encontrado nos dados');
     }
     
     // Proposta Cliente
     if (data.propostaCliente) {
+        console.log('📝 Carregando proposta cliente:', data.propostaCliente);
         const pc = data.propostaCliente;
-        if (document.getElementById('mesVenda')) document.getElementById('mesVenda').value = pc.mesVenda || '';
-        if (document.getElementById('propostaEntradaValor')) document.getElementById('propostaEntradaValor').value = formatBRNumber(pc.propostaEntradaValor || 0);
-        if (document.getElementById('propostaEntradaParcelas')) document.getElementById('propostaEntradaParcelas').value = pc.propostaEntradaParcelas || '';
-        if (document.getElementById('propostaParcelasValor')) document.getElementById('propostaParcelasValor').value = formatBRNumber(pc.propostaParcelasValor || 0);
-        if (document.getElementById('propostaParcelasQtd')) document.getElementById('propostaParcelasQtd').value = pc.propostaParcelasQtd || '';
-        if (document.getElementById('propostaReforcoValor')) document.getElementById('propostaReforcoValor').value = formatBRNumber(pc.propostaReforcoValor || 0);
-        if (document.getElementById('propostaReforcoQtd')) document.getElementById('propostaReforcoQtd').value = pc.propostaReforcoQtd || '';
+        
+        // Mês da Venda
+        if (document.getElementById('mesVenda')) {
+            document.getElementById('mesVenda').value = pc.mesVenda || '';
+            console.log(`✅ mesVenda: ${pc.mesVenda}`);
+        }
+        
+        // Entrada
+        if (document.getElementById('propostaEntradaValor')) {
+            document.getElementById('propostaEntradaValor').value = formatBRNumber(pc.propostaEntradaValor || 0);
+            console.log(`✅ propostaEntradaValor: ${pc.propostaEntradaValor}`);
+        }
+        if (document.getElementById('propostaEntradaParcelas')) {
+            document.getElementById('propostaEntradaParcelas').value = pc.propostaEntradaParcelas || '';
+            console.log(`✅ propostaEntradaParcelas: ${pc.propostaEntradaParcelas}`);
+        }
+        
+        // Parcelas
+        if (document.getElementById('propostaParcelasValor')) {
+            document.getElementById('propostaParcelasValor').value = formatBRNumber(pc.propostaParcelasValor || 0);
+            console.log(`✅ propostaParcelasValor: ${pc.propostaParcelasValor}`);
+        }
+        if (document.getElementById('propostaParcelasQtd')) {
+            document.getElementById('propostaParcelasQtd').value = pc.propostaParcelasQtd || '';
+            console.log(`✅ propostaParcelasQtd: ${pc.propostaParcelasQtd}`);
+        }
+        
+        // Reforço
+        if (document.getElementById('propostaReforcoValor')) {
+            document.getElementById('propostaReforcoValor').value = formatBRNumber(pc.propostaReforcoValor || 0);
+            console.log(`✅ propostaReforcoValor: ${pc.propostaReforcoValor}`);
+        }
+        if (document.getElementById('propostaReforcoQtd')) {
+            document.getElementById('propostaReforcoQtd').value = pc.propostaReforcoQtd || '';
+            console.log(`✅ propostaReforcoQtd: ${pc.propostaReforcoQtd}`);
+        }
+        
+        // Outros
+        if (document.getElementById('bemMovelImovel')) {
+            document.getElementById('bemMovelImovel').value = formatBRNumber(pc.bemMovelImovel || 0);
+            console.log(`✅ bemMovelImovel: ${pc.bemMovelImovel}`);
+        }
+        if (document.getElementById('desagio')) {
+            document.getElementById('desagio').value = pc.desagio || '';
+            console.log(`✅ desagio: ${pc.desagio}`);
+        }
+    } else {
+        console.log('⚠️ propostaCliente não encontrado nos dados');
     }
     
     // Forçar recálculo dos campos calculados
@@ -1171,8 +1477,9 @@ function loadScenarioData(data) {
         calculateVendaValorPorParcela();
         calculateValorImovel();
         calculatePropostaPercentages();
-        calculateValorPorParcela();
-        calculateValorPorParcelaReforco();
+        calculatePropostaEntradaValorPorParcela();
+        calculatePropostaParcelasValorPorParcela();
+        calculatePropostaReforcoValorPorParcela();
     }, 100);
     
     console.log('✅ Dados carregados nos inputs');
@@ -1180,47 +1487,92 @@ function loadScenarioData(data) {
 
 // Function to update scenario (when editing)
 async function updateScenario() {
+    console.log('🔄 === ATUALIZANDO CENÁRIO ===');
+    
     const editingScenario = sessionStorage.getItem('editingScenario');
+    console.log('📂 Cenário em edição:', editingScenario ? 'ENCONTRADO' : 'NÃO ENCONTRADO');
+    console.log('📂 Dados completos do editingScenario:', editingScenario);
+    
     if (!editingScenario) {
+        console.error('❌ Nenhum cenário em edição no sessionStorage');
         showError('Nenhum cenário em edição encontrado.');
         return;
     }
     
-    const scenario = JSON.parse(editingScenario);
-    const data = collectAllInputData();
-    
-    console.log('📝 Atualizando cenário:', scenario.name);
-    console.log('📊 Dados coletados:', data);
+    // Verificar token de autenticação
+    const token = localStorage.getItem('token');
+    console.log('🔐 Token encontrado:', token ? 'SIM' : 'NÃO');
+    console.log('🔐 Token (primeiros 50 chars):', token ? token.substring(0, 50) + '...' : 'N/A');
     
     try {
+        const scenario = JSON.parse(editingScenario);
+        console.log('📝 ID do cenário:', scenario.id);
+        console.log('📝 Nome do cenário:', scenario.name);
+        
+        const data = collectAllInputData();
+        console.log('� Dados coletados para atualização:', data);
+        
+        const requestBody = {
+            name: scenario.name,
+            description: scenario.description || `Cenário atualizado em ${new Date().toLocaleDateString('pt-BR')}`,
+            data: data
+        };
+        
+        console.log('� Enviando PUT para:', `/api/scenarios/${scenario.id}`);
+        console.log('📦 Body da requisição:', requestBody);
+        
         const response = await fetch(`/api/scenarios/${scenario.id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({
-                name: scenario.name,
-                description: scenario.description || `Cenário atualizado em ${new Date().toLocaleDateString('pt-BR')}`,
-                data: data
-            })
+            body: JSON.stringify(requestBody)
         });
         
+        console.log('📈 Status da resposta:', response.status);
+        console.log('📈 Headers da resposta:', Object.fromEntries(response.headers));
+        
         if (response.ok) {
+            const result = await response.json();
+            console.log('✅ Cenário atualizado com sucesso:', result);
+            
             showSuccess('Cenário atualizado com sucesso!');
+            
+            // Limpar modo de edição
             sessionStorage.removeItem('editingScenario');
+            console.log('🗑️ Modo de edição limpo após atualização');
+            
+            // Resetar para modo de criação
+            setupCreateMode();
             
             // Redirecionar para cenários após 2 segundos
             setTimeout(() => {
                 window.location.href = '/cenarios.html';
             }, 2000);
         } else {
-            const error = await response.json();
-            showError(error.message || 'Erro ao atualizar cenário');
+            const errorText = await response.text();
+            console.error('❌ Erro da API:', response.status, errorText);
+            
+            if (response.status === 401) {
+                console.error('❌ Token inválido ou expirado - redirecionando para login');
+                showError('Sessão expirada. Redirecionando para login...');
+                setTimeout(() => {
+                    window.location.href = '/login.html';
+                }, 2000);
+                return;
+            }
+            
+            try {
+                const error = JSON.parse(errorText);
+                showError(error.message || 'Erro ao atualizar cenário');
+            } catch {
+                showError(`Erro ${response.status}: ${errorText}`);
+            }
         }
         
     } catch (error) {
-        console.error('Erro ao atualizar cenário:', error);
+        console.error('❌ Erro ao atualizar cenário:', error);
         showError('Erro ao atualizar cenário. Tente novamente.');
     }
 }
