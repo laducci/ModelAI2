@@ -1,5 +1,4 @@
-// ADMIN MENU UNIVERSAL - GARANTE QUE ABA USUARIOS APAREÇA EM TODAS AS PÁGINAS
-console.log('👑 ADMIN MENU UNIVERSAL - INICIANDO...');
+
 
 // Função para forçar exibição da aba de usuários para admins
 function forceAdminMenuVisibility() {
@@ -97,7 +96,6 @@ function updateAdminUserInfo() {
 
 // Inicialização quando DOM estiver pronto
 function initAdminMenu() {
-    console.log('🚀 Inicializando menu admin...');
     
     // Executar imediatamente
     forceAdminMenuVisibility();
@@ -130,4 +128,3 @@ window.adminMenu = {
     updateUserInfo: updateAdminUserInfo
 };
 
-console.log('👑 ADMIN MENU UNIVERSAL - CONFIGURADO!');

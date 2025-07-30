@@ -1,6 +1,4 @@
 // AUTH GUARD ULTRA SIMPLES - SISTEMA DEFINITIVO
-console.log('🔐 AUTH GUARD DEFINITIVO - INICIANDO...');
-
 let currentUser = null;
 let menuMonitor = null;
 
@@ -10,7 +8,6 @@ function getUserData() {
     const token = localStorage.getItem('token');
     
     if (!userData || !token) {
-        console.log('❌ Sem dados de autenticação');
         return null;
     }
     
@@ -57,8 +54,6 @@ function forceAdminMenu() {
             }
         });
     });
-    
-    console.log('👑 Menu admin forçado!');
 }
 
 // Atualizar interface do usuário
@@ -109,7 +104,6 @@ function checkPageAccess() {
 
 // Logout
 function logout() {
-    console.log('🚪 Logout...');
     if (menuMonitor) clearInterval(menuMonitor);
     localStorage.clear();
     sessionStorage.clear();
@@ -119,7 +113,6 @@ function logout() {
 
 // INICIALIZAÇÃO PRINCIPAL
 function initializeAuth() {
-    console.log('🚀 Inicializando auth...');
     
     const currentPage = window.location.pathname.split('/').pop();
     
@@ -157,7 +150,6 @@ function initializeAuth() {
         menuMonitor = setInterval(() => {
             forceAdminMenu();
         }, 1000); // A cada 1 segundo
-        console.log('👑 Monitor de menu admin ativado');
     }
     
     // Configurar logout
@@ -201,5 +193,3 @@ window.authGuard = {
 };
 
 window.logout = logout;
-
-console.log('🔐 AUTH GUARD DEFINITIVO - CONFIGURADO!');

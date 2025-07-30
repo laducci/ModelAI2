@@ -36,7 +36,6 @@ class ApiClient {
 
             // Se token expirou, redirecionar para login
             if (response.status === 401) {
-                console.log('❌ Token inválido - fazendo logout');
                 this.logout();
                 window.location.href = 'login.html';
                 throw new Error('Sessão expirada. Faça login novamente.');
@@ -84,7 +83,6 @@ class ApiClient {
     }
 
     logout() {
-        console.log('🚪 API Logout - limpando dados...');
         this.token = null;
         localStorage.clear();
         sessionStorage.clear();
@@ -300,4 +298,3 @@ window.showSuccess = showSuccess;
 window.showInfo = showInfo;
 window.confirmAction = confirmAction;
 
-console.log('🔗 API CLIENT - Sistema Real Configurado!');
