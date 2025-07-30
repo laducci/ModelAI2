@@ -146,7 +146,7 @@ class ScenarioManager {
                     </div>
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-600">Empreendimento:</span>
-                        <span class="font-medium text-gray-800">${dadosGerais.nomeEmpreendimento || 'N/A'}</span>
+                        <span class="font-medium text-gray-800">${dadosGerais.empreendimento || 'N/A'}</span>
                     </div>
                 </div>
                 

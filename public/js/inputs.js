@@ -1120,7 +1120,7 @@ async function confirmSaveScenarioFromInputs() {
 
 async function saveScenarioWithName(name) {
     try {
-        const inputData = localStorage.getItem('currentInputData');
+        const inputData = sessionStorage.getItem('currentInputData');
         if (!inputData) {
             showError('Nenhum dado encontrado para salvar');
             return;
@@ -1187,7 +1187,7 @@ function collectAllInputData() {
         dadosGerais: {
             cliente: document.getElementById('cliente')?.value || '',
             unidade: document.getElementById('unidade')?.value || '',
-            nomeEmpreendimento: document.getElementById('nomeEmpreendimento')?.value || '',
+            empreendimento: document.getElementById('empreendimento')?.value || '',
             dataAnalise: document.getElementById('dataAnalise')?.value || '',
             responsavel: document.getElementById('responsavel')?.value || '',
             tmaAno: parseFloat(document.getElementById('tmaAno')?.value || 0),
@@ -1233,7 +1233,7 @@ function loadScenarioData(data) {
         const dg = data.dadosGerais;
         if (document.getElementById('cliente')) document.getElementById('cliente').value = dg.cliente || '';
         if (document.getElementById('unidade')) document.getElementById('unidade').value = dg.unidade || '';
-        if (document.getElementById('nomeEmpreendimento')) document.getElementById('nomeEmpreendimento').value = dg.nomeEmpreendimento || '';
+        if (document.getElementById('empreendimento')) document.getElementById('empreendimento').value = dg.empreendimento || '';
         if (document.getElementById('dataAnalise')) document.getElementById('dataAnalise').value = dg.dataAnalise || '';
         if (document.getElementById('responsavel')) document.getElementById('responsavel').value = dg.responsavel || '';
         if (document.getElementById('tmaAno')) document.getElementById('tmaAno').value = dg.tmaAno || '';
