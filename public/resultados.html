@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Model AI - Dashboard Financeiro</title>
+    <title>Model AI - Resultados Financeiros</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="css/inputs.css">
     <link rel="stylesheet" href="css/resultados.css">
     <link rel="stylesheet" href="css/sidebar.css">
 </head>
-<body class="bg-gradient-to-br from-slate-50 via-teal-50 to-cyan-50 min-h-screen">
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
     <!-- Mobile Overlay -->
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
 
@@ -104,7 +103,7 @@
                     <div class="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
                         <div class="flex items-center space-x-2">
                             <span class="text-sm text-gray-600">Cenário:</span>
-                            <select id="cenarioFilter" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 min-w-[200px]">
+                            <select id="scenarioFilter" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 min-w-[200px]">
                                 <option value="">Selecione um cenário</option>
                             </select>
                         </div>
@@ -116,195 +115,214 @@
                         </button>
                     </div>
                 </div>
-            </div>        <!-- Resumo Executivo -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-            <!-- Desconto Nominal -->
-            <div class="metric-card p-6 rounded-2xl">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="p-3 rounded-xl bg-gradient-to-r from-red-500 to-red-600">
-                        <i class="fas fa-percentage text-white text-xl"></i>
-                    </div>
-                    <span class="text-sm font-medium text-gray-500 uppercase tracking-wide">Desconto Nominal</span>
-                </div>
-                <div class="space-y-1">
-                    <h3 id="descontoNominal" class="text-2xl md:text-3xl font-bold text-gray-800">0,00%</h3>
-                    <p class="text-sm text-gray-500">=(Valor Proposta/Valor Imóvel)-1</p>
-                </div>
             </div>
 
-            <!-- Delta Desconto -->
-            <div class="metric-card p-6 rounded-2xl">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="p-3 rounded-xl bg-gradient-to-r from-yellow-500 to-yellow-600">
-                        <i class="fas fa-minus text-white text-xl"></i>
-                    </div>
-                    <span class="text-sm font-medium text-gray-500 uppercase tracking-wide">Delta Desconto</span>
-                </div>
-                <div class="space-y-1">
-                    <h3 id="deltaDesconto" class="text-2xl md:text-3xl font-bold text-gray-800">R$ 0,00</h3>
-                    <p class="text-sm text-gray-500">=Valor Imóvel - Valor Proposta</p>
-                </div>
-            </div>
 
-            <!-- VPL Tabela -->
-            <div class="metric-card p-6 rounded-2xl">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600">
-                        <i class="fas fa-chart-line text-white text-xl"></i>
-                    </div>
-                    <span class="text-sm font-medium text-gray-500 uppercase tracking-wide">VPL Tabela</span>
-                </div>
-                <div class="space-y-1">
-                    <h3 id="vplTabela" class="text-2xl md:text-3xl font-bold text-gray-800">R$ 0,00</h3>
-                    <p class="text-sm text-gray-500">=VPL(TMA_mês;Fluxo_mês1:mês250)</p>
-                </div>
-            </div>
 
-            <!-- VPL Proposta -->
-            <div class="metric-card p-6 rounded-2xl">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="p-3 rounded-xl bg-gradient-to-r from-green-500 to-green-600">
-                        <i class="fas fa-handshake text-white text-xl"></i>
-                    </div>
-                    <span class="text-sm font-medium text-gray-500 uppercase tracking-wide">VPL Proposta</span>
-                </div>
-                <div class="space-y-1">
-                    <h3 id="vplProposta" class="text-2xl md:text-3xl font-bold text-gray-800">R$ 0,00</h3>
-                    <p class="text-sm text-gray-500">=VPL(TMA_mês;Proposta_mês1:mês250)</p>
-                </div>
-            </div>
 
-            <!-- Delta de VPL -->
-            <div class="metric-card p-6 rounded-2xl">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="p-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600">
-                        <i class="fas fa-arrows-alt-h text-white text-xl"></i>
-                    </div>
-                    <span class="text-sm font-medium text-gray-500 uppercase tracking-wide">Delta de VPL</span>
-                </div>
-                <div class="space-y-1">
-                    <h3 id="deltaVPL" class="text-2xl md:text-3xl font-bold text-gray-800">R$ 0,00</h3>
-                    <p class="text-sm text-gray-500">=VPL Proposta - VPL Tabela</p>
-                </div>
-            </div>
 
-            <!-- % Delta VPL -->
-            <div class="metric-card p-6 rounded-2xl">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="p-3 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600">
-                        <i class="fas fa-percentage text-white text-xl"></i>
-                    </div>
-                    <span class="text-sm font-medium text-gray-500 uppercase tracking-wide">% Delta VPL</span>
-                </div>
-                <div class="space-y-1">
-                    <h3 id="percentDeltaVPL" class="text-2xl md:text-3xl font-bold text-gray-800">0,00%</h3>
-                    <p class="text-sm text-gray-500">=SE(VPL_Tabela=0;0;Delta_VPL/VPL_Tabela)</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Fluxo de Caixa Mensal -->
-        <div class="metric-card p-6 rounded-2xl mb-8">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-bold text-gray-800">Fluxo de Caixa Mensal</h3>
-                <div class="flex items-center space-x-3">
-                    <span class="text-sm text-gray-600">Período de Análise:</span>
-                    <select id="periodoAnalise" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-                        <option value="60">60 meses</option>
-                        <option value="120">120 meses</option>
-                        <option value="240">240 meses</option>
-                    </select>
-                </div>
-            </div>
-            
-            <!-- Tabela de Fluxo -->
-            <div class="overflow-x-auto">
-                <table class="w-full table-auto">
-                    <thead>
-                        <tr class="bg-gray-50">
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mês</th>
-                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Tabela TMA</th>
-                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Entrada</th>
-                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Parcelas</th>
-                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Reforços</th>
-                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Nas Chaves</th>
-                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Proposta Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="fluxoCaixaTable" class="bg-white divide-y divide-gray-200">
-                        <!-- Dados serão inseridos via JavaScript -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Gráficos -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <!-- Gráfico VPL Comparativo -->
-            <div class="metric-card p-6 rounded-2xl">
-                <h3 class="text-lg font-bold text-gray-800 mb-4">Comparativo VPL</h3>
-                <canvas id="vplChart" width="400" height="300"></canvas>
-            </div>
-
-            <!-- Gráfico Fluxo de Caixa -->
-            <div class="metric-card p-6 rounded-2xl">
-                <h3 class="text-lg font-bold text-gray-800 mb-4">Fluxo de Caixa Acumulado</h3>
-                <canvas id="fluxoChart" width="400" height="300"></canvas>
-            </div>
-        </div>
-
-        <!-- Dados dos Inputs -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Dados Gerais -->
-            <div class="metric-card p-6 rounded-2xl">
-                <h3 class="text-lg font-bold text-gray-800 mb-4">Dados Gerais do Empreendimento</h3>
-                <div class="space-y-3">
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Cliente:</span>
-                        <span id="dadosCliente" class="font-medium">-</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Empreendimento:</span>
-                        <span id="dadosEmpreendimento" class="font-medium">-</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Unidade:</span>
-                        <span id="dadosUnidade" class="font-medium">-</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Área Privativa:</span>
-                        <span id="dadosArea" class="font-medium">-</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">TMA Ano:</span>
-                        <span id="dadosTMAano" class="font-medium">-</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">TMA Mês:</span>
-                        <span id="dadosTMAmês" class="font-medium">-</span>
+            <!-- Results Content -->
+            <div id="resultsContent">
+                <!-- Scenario Info -->
+                <div class="glassmorphism rounded-2xl p-6 mb-6 shadow-xl">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 id="scenarioName" class="text-2xl font-bold text-gray-800">Nome do Cenário</h2>
+                            <p class="text-gray-600 mt-1">
+                                <span id="scenarioClient">Cliente</span> • 
+                                <span id="scenarioEmpreendimento">Empreendimento</span> • 
+                                <span id="scenarioUnidade">Unidade</span>
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-gray-500">TMA Anual</p>
+                            <p id="scenarioTMA" class="text-lg font-semibold text-gray-800">0%</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Resumo Financeiro -->
-            <div class="metric-card p-6 rounded-2xl">
-                <h3 class="text-lg font-bold text-gray-800 mb-4">Resumo Financeiro</h3>
-                <div class="space-y-3">
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Valor Total Imóvel:</span>
-                        <span id="resumoValorImovel" class="font-medium">R$ 0,00</span>
+                <!-- Main Cards - 6 indicadores financeiros -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                    <!-- Card 1: Desconto Nominal % -->
+                    <div class="metric-card p-6 rounded-2xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 rounded-xl bg-gradient-to-r from-red-500 to-red-600">
+                                <i class="fas fa-percentage text-white text-xl"></i>
+                            </div>
+                            <span class="text-sm font-medium text-gray-500 uppercase tracking-wide">Desconto Nominal</span>
+                        </div>
+                        <div class="space-y-1">
+                            <h3 id="descontoNominalPercent" class="text-2xl md:text-3xl font-bold text-gray-800">0,00%</h3>
+                            <p class="text-sm text-gray-500">=(Valor Proposta/Valor Imóvel)-1</p>
+                        </div>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Valor Total Proposta:</span>
-                        <span id="resumoValorProposta" class="font-medium">R$ 0,00</span>
+
+                    <!-- Card 2: Desconto Nominal R$ -->
+                    <div class="metric-card p-6 rounded-2xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600">
+                                <i class="fas fa-dollar-sign text-white text-xl"></i>
+                            </div>
+                            <span class="text-sm font-medium text-gray-500 uppercase tracking-wide">Desconto Nominal</span>
+                        </div>
+                        <div class="space-y-1">
+                            <h3 id="descontoNominalReais" class="text-2xl md:text-3xl font-bold text-gray-800">R$ 0,00</h3>
+                            <p class="text-sm text-gray-500">=Valor Imóvel - Valor Proposta</p>
+                        </div>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Desconto Nominal:</span>
-                        <span id="resumoDescontoNominal" class="font-medium">0,00%</span>
+
+                    <!-- Card 3: VPL Tabela -->
+                    <div class="metric-card p-6 rounded-2xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600">
+                                <i class="fas fa-table text-white text-xl"></i>
+                            </div>
+                            <span class="text-sm font-medium text-gray-500 uppercase tracking-wide">VPL Tabela</span>
+                        </div>
+                        <div class="space-y-1">
+                            <h3 id="vplTabela" class="text-2xl md:text-3xl font-bold text-gray-800">R$ 0,00</h3>
+                            <p class="text-sm text-gray-500">=VPL(TMA_mês;Fluxo_mês1:mês250)</p>
+                        </div>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Mês da Venda:</span>
-                        <span id="resumoMesVenda" class="font-medium">-</span>
+
+                    <!-- Card 4: VPL Proposta -->
+                    <div class="metric-card p-6 rounded-2xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 rounded-xl bg-gradient-to-r from-green-500 to-green-600">
+                                <i class="fas fa-handshake text-white text-xl"></i>
+                            </div>
+                            <span class="text-sm font-medium text-gray-500 uppercase tracking-wide">VPL Proposta</span>
+                        </div>
+                        <div class="space-y-1">
+                            <h3 id="vplProposta" class="text-2xl md:text-3xl font-bold text-gray-800">R$ 0,00</h3>
+                            <p class="text-sm text-gray-500">=VPL(TMA_mês;Proposta_mês1:mês250)</p>
+                        </div>
+                    </div>
+
+                    <!-- Card 5: Delta VPL -->
+                    <div class="metric-card p-6 rounded-2xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600">
+                                <i class="fas fa-arrows-alt-h text-white text-xl"></i>
+                            </div>
+                            <span class="text-sm font-medium text-gray-500 uppercase tracking-wide">Delta de VPL</span>
+                        </div>
+                        <div class="space-y-1">
+                            <h3 id="deltaVPL" class="text-2xl md:text-3xl font-bold text-gray-800">R$ 0,00</h3>
+                            <p class="text-sm text-gray-500">=VPL Proposta - VPL Tabela</p>
+                        </div>
+                    </div>
+
+                    <!-- Card 6: % Delta VPL -->
+                    <div class="metric-card p-6 rounded-2xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600">
+                                <i class="fas fa-chart-line text-white text-xl"></i>
+                            </div>
+                            <span class="text-sm font-medium text-gray-500 uppercase tracking-wide">% Delta VPL</span>
+                        </div>
+                        <div class="space-y-1">
+                            <h3 id="percentDeltaVPL" class="text-2xl md:text-3xl font-bold text-gray-800">0,00%</h3>
+                            <p class="text-sm text-gray-500">=SEERRO(Delta_VPL/VPL_Tabela;0)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela Completa de Fluxo de Caixa (como no Excel) -->
+                <div class="metric-card p-6 rounded-2xl mb-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                            <i class="fas fa-table text-teal-600 mr-3 text-lg"></i>
+                            Fluxo de Caixa Detalhado
+                        </h3>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-sm text-gray-600">Período de Análise:</span>
+                            <select id="periodoAnalise" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                                <option value="12">12 meses</option>
+                                <option value="24">24 meses</option>
+                                <option value="36">36 meses</option>
+                                <option value="60">60 meses</option>
+                                <option value="120">120 meses</option>
+                                <option value="250">250 meses (completo)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabela de Fluxo -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full table-auto text-sm">
+                            <thead>
+                                <tr class="bg-gradient-to-r from-teal-500 to-teal-600 text-white">
+                                <th class="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider border-r border-teal-400">MÊS</th>
+                                <th class="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider border-r border-teal-400">TABELA INC</th>
+                                <th class="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider border-r border-teal-400">ENTRADA</th>
+                                <th class="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider border-r border-teal-400">PARCELAS</th>
+                                <th class="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider border-r border-teal-400">REFORÇOS</th>
+                                <th class="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider border-r border-teal-400">NAS CHAVES</th>
+                                <th class="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider border-r border-teal-400">PROPOSTA CLIENTE</th>
+                                <th class="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider border-r border-teal-400">ENTRADA</th>
+                                <th class="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider border-r border-teal-400">PARCELAS</th>
+                                <th class="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider border-r border-teal-400">REFORÇOS</th>
+                                <th class="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider">BENS MÓVEIS/IMÓVEIS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fluxoCaixaDetalhado" class="bg-white divide-y divide-gray-200">
+                                <!-- Dados serão inseridos via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Resumo Financeiro -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="metric-card p-6 rounded-2xl">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-calculator text-teal-600 mr-3 text-lg"></i>
+                            Resumo Financeiro
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Valor Total Imóvel:</span>
+                                <span id="valorTotalImovel" class="font-semibold text-gray-800">R$ 0,00</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Valor Total Proposta:</span>
+                                <span id="valorTotalProposta" class="font-semibold text-gray-800">R$ 0,00</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Mês da Venda:</span>
+                                <span id="mesVenda" class="font-semibold text-gray-800">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">TMA Mensal:</span>
+                                <span id="tmaMensal" class="font-semibold text-gray-800">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card p-6 rounded-2xl">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-info-circle text-teal-600 mr-3 text-lg"></i>
+                            Informações do Cenário
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Cliente:</span>
+                                <span id="infoCliente" class="font-semibold text-gray-800">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Empreendimento:</span>
+                                <span id="infoEmpreendimento" class="font-semibold text-gray-800">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Unidade:</span>
+                                <span id="infoUnidade" class="font-semibold text-gray-800">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Área Privativa:</span>
+                                <span id="infoArea" class="font-semibold text-gray-800">-</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -320,8 +338,12 @@
     <script src="js/resultados.js"></script>
     
     <script>
-        // Mobile menu toggle
+        // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 Página de resultados carregada');
+            initializeResultsPage();
+            
+            // Mobile menu toggle
             const mobileMenuToggle = document.getElementById('mobileMenuToggle');
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobileOverlay');

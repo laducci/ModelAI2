@@ -1,684 +1,698 @@
-// ================================
-// RESULTADOS.JS - VERSÃO LIMPA
-// ================================
+// Renderizar tabela de fluxo de caixa zerada (default) com 11 colunas
+function renderDefaultFluxoCaixa(periodos = 12) {
+    const tbody = document.getElementById('fluxoCaixaDetalhado');
+    if (!tbody) return;
+    let html = '';
+    for (let i = 1; i <= periodos; i++) {
+        html += `<tr>
+            <td class="text-center">${i}</td>
+            <td class="text-center">R$ 0,00</td>
+            <td class="text-center">R$ 0,00</td>
+            <td class="text-center">R$ 0,00</td>
+            <td class="text-center">R$ 0,00</td>
+            <td class="text-center">R$ 0,00</td>
+            <td class="text-center">R$ 0,00</td>
+            <td class="text-center">R$ 0,00</td>
+            <td class="text-center">R$ 0,00</td>
+            <td class="text-center">R$ 0,00</td>
+            <td class="text-center">R$ 0,00</td>
+        </tr>`;
+    }
+    tbody.innerHTML = html;
+}
+// resultados.js - Cálculos financeiros com fórmulas exatas do Excel
 
-// Sidebar toggle functionality
-const sidebar = document.getElementById('sidebar');
-const mainContent = document.getElementById('mainContent');
-const toggleBtn = document.getElementById('toggleSidebar');
+let currentScenarioData = null;
 
-if (toggleBtn) {
-    toggleBtn.addEventListener('click', function() {
-        sidebar.classList.toggle('collapsed');
-        mainContent.classList.toggle('expanded');
-    });
+// Inicialização da página
+function initializeResultsPage() {
+    console.log('🔄 Inicializando página de resultados...');
+    checkAuthentication();
+    renderDefaultCards(); // Mostra os 6 cards zerados e fórmulas
+    renderDefaultFluxoCaixa(); // Mostra a tabela zerada
+    loadScenariosForFilter();
+    setupEventListeners();
+}
+// Renderizar os 6 cards SEMPRE zerados e com fórmulas
+function renderDefaultCards() {
+    document.getElementById('descontoNominalPercent').textContent = '0,00%';
+    document.getElementById('descontoNominalReais').textContent = 'R$ 0,00';
+    document.getElementById('vplTabela').textContent = 'R$ 0,00';
+    document.getElementById('vplProposta').textContent = 'R$ 0,00';
+    document.getElementById('deltaVPL').textContent = 'R$ 0,00';
+    document.getElementById('percentDeltaVPL').textContent = '0,00%';
+    // Se quiser garantir que as fórmulas estejam visíveis, pode atualizar os elementos de descrição também aqui se necessário
+    // Exemplo: document.getElementById('descDescontoNominalPercent').textContent = '(Valor Proposta/Valor Imóvel)-1';
 }
 
-// Responsive handling
-function handleResize() {
-    if (window.innerWidth <= 768) {
-        sidebar.classList.add('collapsed');
-        mainContent.classList.add('expanded');
-    } else {
-        sidebar.classList.remove('collapsed');
-        mainContent.classList.remove('expanded');
+// Verificar autenticação
+function checkAuthentication() {
+    const token = localStorage.getItem('token') || localStorage.getItem('modelai_token');
+    if (!token) {
+        console.log('❌ Token não encontrado, redirecionando para login');
+        window.location.href = 'login.html';
+        return false;
+    }
+    return true;
+}
+
+// Configurar event listeners
+function setupEventListeners() {
+    const scenarioFilter = document.getElementById('scenarioFilter');
+    if (scenarioFilter) {
+        scenarioFilter.addEventListener('change', handleScenarioSelection);
     }
 }
 
-// Funções de formatação brasileira
-function formatCurrency(value) {
-    if (!value || isNaN(value)) return 'R$ 0,00';
-    return new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-    }).format(value);
-}
-
-function formatNumber(value) {
-    if (!value || isNaN(value)) return '0';
-    return new Intl.NumberFormat('pt-BR').format(value);
-}
-
-function formatPercent(value) {
-    if (!value || isNaN(value)) return '0,00%';
-    return new Intl.NumberFormat('pt-BR', {
-        style: 'percent',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    }).format(value / 100);
-}
-
-function parseCurrency(value) {
-    if (!value) return 0;
-    return parseFloat(value.replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
-}
-
-// Função para calcular TMA mensal
-function calcularTmaMensal(tmaAnual) {
-    return Math.pow(1 + (tmaAnual / 100), 1/12) - 1;
-}
-
-// ================================
-// FUNÇÕES PARA EXIBIR RESULTADOS CALCULADOS
-// ================================
-
-// Função para exibir resultados pré-calculados nos 6 cards
-function displayCalculatedResults(results) {
-    console.log('🎯 === EXIBINDO RESULTADOS CALCULADOS ===');
-    console.log('📊 Resultados recebidos:', results);
-    
+// Carregar cenários para o filtro
+async function loadScenariosForFilter() {
     try {
-        // Card 1: DESCONTO NOMINAL (%)
-        const descontoNominalEl = document.getElementById('descontoNominal');
-        if (descontoNominalEl && results.descontoNominalPercent !== undefined) {
-            descontoNominalEl.textContent = formatPercent(results.descontoNominalPercent);
-            console.log('✅ Desconto Nominal atualizado:', formatPercent(results.descontoNominalPercent));
-        } else {
-            console.warn('⚠️ Elemento descontoNominal não encontrado ou valor undefined');
-        }
-        
-        // Card 2: DELTA DESCONTO (R$)
-        const deltaDescontoEl = document.getElementById('deltaDesconto');
-        if (deltaDescontoEl && results.descontoNominalReais !== undefined) {
-            deltaDescontoEl.textContent = formatCurrency(results.descontoNominalReais);
-            console.log('✅ Delta Desconto atualizado:', formatCurrency(results.descontoNominalReais));
-        } else {
-            console.warn('⚠️ Elemento deltaDesconto não encontrado ou valor undefined');
-        }
-        
-        // Card 3: VPL TABELA
-        const vplTabelaEl = document.getElementById('vplTabela');
-        if (vplTabelaEl && results.vplTabela !== undefined) {
-            vplTabelaEl.textContent = formatCurrency(results.vplTabela);
-            console.log('✅ VPL Tabela atualizado:', formatCurrency(results.vplTabela));
-        } else {
-            console.warn('⚠️ Elemento vplTabela não encontrado ou valor undefined');
-        }
-        
-        // Card 4: VPL PROPOSTA
-        const vplPropostaEl = document.getElementById('vplProposta');
-        if (vplPropostaEl && results.vplProposta !== undefined) {
-            vplPropostaEl.textContent = formatCurrency(results.vplProposta);
-            console.log('✅ VPL Proposta atualizado:', formatCurrency(results.vplProposta));
-        } else {
-            console.warn('⚠️ Elemento vplProposta não encontrado ou valor undefined');
-        }
-        
-        // Card 5: DELTA VPL (R$)
-        const deltaVPLEl = document.getElementById('deltaVPL');
-        if (deltaVPLEl && results.deltaVPL !== undefined) {
-            deltaVPLEl.textContent = formatCurrency(results.deltaVPL);
-            console.log('✅ Delta VPL atualizado:', formatCurrency(results.deltaVPL));
-        } else {
-            console.warn('⚠️ Elemento deltaVPL não encontrado ou valor undefined');
-        }
-        
-        // Card 6: % DELTA VPL
-        const percentDeltaVPLEl = document.getElementById('percentDeltaVPL');
-        if (percentDeltaVPLEl && results.percentDeltaVPL !== undefined) {
-            percentDeltaVPLEl.textContent = formatPercent(results.percentDeltaVPL);
-            console.log('✅ % Delta VPL atualizado:', formatPercent(results.percentDeltaVPL));
-        } else {
-            console.warn('⚠️ Elemento percentDeltaVPL não encontrado ou valor undefined');
-        }
-        
-        console.log('✅ === TODOS OS CARDS ATUALIZADOS ===');
-        
-    } catch (error) {
-        console.error('❌ Erro ao exibir resultados:', error);
-    }
-}
-
-// Função alternativa para buscar cards por texto (caso data-card não exista)
-function displayCalculatedResultsByText(results) {
-    console.log('🎯 Exibindo resultados por busca de texto:', results);
-    
-    try {
-        // Encontrar cards pelos títulos
-        const cards = document.querySelectorAll('.bg-white, .glassmorphism');
-        
-        cards.forEach(card => {
-            const titleElement = card.querySelector('h3, h4, .font-bold');
-            if (!titleElement) return;
-            
-            const title = titleElement.textContent.trim().toUpperCase();
-            const valueElement = card.querySelector('.text-3xl, .text-4xl, .text-2xl');
-            
-            if (!valueElement) return;
-            
-            // Mapear títulos para valores
-            if (title.includes('DESCONTO NOMINAL') && title.includes('%')) {
-                valueElement.textContent = formatPercent(results.descontoNominalPercent || 0);
-            } else if (title.includes('DELTA DESCONTO') || (title.includes('DESCONTO') && title.includes('R$'))) {
-                valueElement.textContent = formatCurrency(results.descontoNominalReais || 0);
-            } else if (title.includes('VPL TABELA')) {
-                valueElement.textContent = formatCurrency(results.vplTabela || 0);
-            } else if (title.includes('VPL PROPOSTA')) {
-                valueElement.textContent = formatCurrency(results.vplProposta || 0);
-            } else if (title.includes('DELTA DE VPL') || title.includes('DELTA VPL')) {
-                valueElement.textContent = formatCurrency(results.deltaVpl || 0);
-            } else if (title.includes('% DELTA VPL') || title.includes('DELTA VPL %')) {
-                valueElement.textContent = formatPercent(results.percentualDeltaVpl || 0);
-            }
-        });
-        
-        console.log('✅ Resultados exibidos por texto com sucesso');
-        
-    } catch (error) {
-        console.error('❌ Erro ao exibir resultados por texto:', error);
-    }
-}
-
-// Função para atualizar os dados na página
-function updateResultados() {
-    try {
-        console.log('🔄 === ATUALIZANDO RESULTADOS ===');
-        
-        // Obter dados do cenário
-        const scenarioData = sessionStorage.getItem('currentInputData');
-        if (!scenarioData) {
-            console.log('⚠️ Nenhum dado de cenário encontrado');
-            displayEmptyResults();
-            return;
-        }
-        
-        const data = JSON.parse(scenarioData);
-        console.log('📊 Dados do cenário para cálculo:', data);
-        
-        // Verificar se há dados mínimos necessários
-        if (!data.dadosGerais || !data.dadosGerais.tmaMes) {
-            console.log('⚠️ Dados insuficientes para cálculo (TMA não definida)');
-            displayEmptyResults();
-            return;
-        }
-        
-        // Usar a mesma lógica de cálculo que implementamos no inputs.js
-        try {
-            const results = calculateAllIndicatorsInResults(data);
-            
-            // Exibir resultados nos cards usando as duas estratégias
-            displayCalculatedResults(results);
-            displayCalculatedResultsByText(results);
-            
-            console.log('✅ Resultados atualizados com sucesso');
-            
-        } catch (calcError) {
-            console.error('❌ Erro no cálculo:', calcError);
-            showError('Erro ao calcular indicadores: ' + calcError.message);
-            displayEmptyResults();
-        }
-        
-    } catch (error) {
-        console.error('❌ Erro geral ao atualizar resultados:', error);
-        displayEmptyResults();
-    }
-}
-
-// Função para exibir mensagem quando não há dados
-function displayEmptyResults() {
-    const defaultText = 'R$ 0,00';
-    const defaultPercent = '0,00%';
-    
-    // Buscar todos os elementos de valor nos cards
-    const valueElements = document.querySelectorAll('.text-3xl, .text-4xl, .text-2xl');
-    valueElements.forEach((el, index) => {
-        // Cards de porcentagem (1º e 6º geralmente)
-        if (index === 0 || index === 5) {
-            el.textContent = defaultPercent;
-        } else {
-            el.textContent = defaultText;
-        }
-    });
-}
-
-// Cópia da função de cálculo do inputs.js para usar aqui
-function calculateAllIndicatorsInResults(data) {
-    console.log('🚀 === CALCULANDO INDICADORES NOS RESULTADOS ===');
-    
-    try {
-        // 1. Verificar TMA
-        const tmaMes = data.dadosGerais.tmaMes;
-        if (!tmaMes || tmaMes <= 0) {
-            throw new Error('TMA mensal não definida ou inválida');
-        }
-        
-        // 2. Calcular valores totais
-        const valorTotalTabela = (data.tabelaVendas.entradaValor || 0) + 
-                                (data.tabelaVendas.parcelasValor || 0) + 
-                                (data.tabelaVendas.reforcoValor || 0) + 
-                                (data.tabelaVendas.bemMovelImovel || 0);
-        
-        const valorTotalProposta = (data.propostaCliente.entradaValor || 0) + 
-                                  (data.propostaCliente.parcelasValor || 0) + 
-                                  (data.propostaCliente.reforcoValor || 0) + 
-                                  (data.propostaCliente.bemMovelImovel || 0);
-        
-        // 3. Calcular descontos nominais
-        const descontoNominalPercent = valorTotalTabela > 0 ? 
-            ((valorTotalProposta / valorTotalTabela) - 1) * 100 : 0;
-        
-        const descontoNominalReais = valorTotalTabela - valorTotalProposta;
-        
-        // 4. Gerar fluxos de caixa
-        const fluxoTabela = generateCashFlowInResults(data, 'tabela');
-        const fluxoProposta = generateCashFlowInResults(data, 'proposta');
-        
-        // 5. Calcular VPLs
-        const vplTabela = calculateVPLInResults(fluxoTabela, tmaMes);
-        const vplProposta = calculateVPLInResults(fluxoProposta, tmaMes);
-        
-        // 6. Calcular deltas
-        const deltaVpl = vplProposta - vplTabela;
-        
-        // 7. Calcular % Delta VPL (com proteção SEERRO)
-        let percentualDeltaVpl = 0;
-        if (vplTabela !== 0) {
-            percentualDeltaVpl = (deltaVpl / vplTabela) * 100;
-        }
-        
-        const resultados = {
-            valorTotalTabela,
-            valorTotalProposta,
-            descontoNominalPercent,
-            descontoNominalReais,
-            vplTabela,
-            vplProposta,
-            deltaVpl,
-            percentualDeltaVpl,
-            tmaMesUsada: tmaMes,
-            periodosCalculados: Math.max(fluxoTabela.length, fluxoProposta.length),
-            calculatedAt: new Date()
-        };
-        
-        console.log('📊 === RESULTADOS CALCULADOS ===');
-        console.log('💰 Valor Total Tabela:', valorTotalTabela.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}));
-        console.log('💰 Valor Total Proposta:', valorTotalProposta.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}));
-        console.log('📉 Desconto Nominal %:', descontoNominalPercent.toFixed(2) + '%');
-        console.log('📉 Desconto Nominal R$:', descontoNominalReais.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}));
-        console.log('📈 VPL Tabela:', vplTabela.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}));
-        console.log('📈 VPL Proposta:', vplProposta.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}));
-        console.log('🔄 Delta VPL:', deltaVpl.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}));
-        console.log('📊 % Delta VPL:', percentualDeltaVpl.toFixed(2) + '%');
-        
-        return resultados;
-        
-    } catch (error) {
-        console.error('❌ Erro no cálculo dos indicadores:', error);
-        throw error;
-    }
-}
-
-// Cópia das funções auxiliares para os cálculos
-function generateCashFlowInResults(data, tipo) {
-    console.log(`🔢 Gerando fluxo de caixa para: ${tipo}`);
-    
-    const fluxo = [];
-    const MAX_MESES = 250;
-    
-    // Obter dados do tipo (tabela ou proposta)
-    const dadosFluxo = tipo === 'tabela' ? data.tabelaVendas : data.propostaCliente;
-    
-    // Valores de entrada
-    const entradaValor = dadosFluxo.entradaValor || 0;
-    const entradaParcelas = dadosFluxo.entradaParcelas || 1;
-    const entradaValorParcela = entradaValor / entradaParcelas;
-    
-    // Valores de parcelas
-    const parcelasValor = dadosFluxo.parcelasValor || 0;
-    const parcelasQtd = dadosFluxo.parcelasQtd || 0;
-    const parcelasValorParcela = parcelasQtd > 0 ? parcelasValor / parcelasQtd : 0;
-    
-    // Valores de reforço
-    const reforcoValor = dadosFluxo.reforcoValor || 0;
-    const reforcoQtd = dadosFluxo.reforcoQtd || 0;
-    const reforcoFrequencia = dadosFluxo.reforcoFrequencia || 6;
-    const reforcoValorParcela = reforcoQtd > 0 ? reforcoValor / reforcoQtd : 0;
-    
-    // Valores "nas chaves" ou "bem móvel"
-    const bemMovelValor = dadosFluxo.bemMovelImovel || 0;
-    const bemMovelMes = tipo === 'tabela' ? dadosFluxo.bemMovelImovelMes : data.propostaCliente.mesVenda;
-    
-    console.log(`💰 Valores para ${tipo}:`, {
-        entradaValorParcela, parcelasValorParcela, reforcoValorParcela, bemMovelValor, bemMovelMes
-    });
-    
-    // Gerar fluxo mês a mês
-    for (let mes = 1; mes <= MAX_MESES; mes++) {
-        let valorMes = 0;
-        
-        // 1. ENTRADA (primeiros meses conforme quantidade de parcelas de entrada)
-        if (mes <= entradaParcelas) {
-            valorMes += entradaValorParcela;
-        }
-        
-        // 2. PARCELAS (após entrada, durante quantidade de parcelas)
-        const inicioParcelamento = entradaParcelas + 1;
-        if (mes >= inicioParcelamento && mes < inicioParcelamento + parcelasQtd) {
-            valorMes += parcelasValorParcela;
-        }
-        
-        // 3. REFORÇO (a cada X meses conforme frequência)
-        if (reforcoValorParcela > 0 && mes % reforcoFrequencia === 0) {
-            // Verificar se ainda há parcelas de reforço disponíveis
-            const parcelasReforcoJaPagas = Math.floor(mes / reforcoFrequencia);
-            if (parcelasReforcoJaPagas <= reforcoQtd) {
-                valorMes += reforcoValorParcela;
-            }
-        }
-        
-        // 4. BEM MÓVEL/NAS CHAVES (no mês específico)
-        if (bemMovelMes && mes === bemMovelMes) {
-            valorMes += bemMovelValor;
-        }
-        
-        // Adicionar ao fluxo (apenas valores > 0 ou até onde há fluxo)
-        if (valorMes > 0) {
-            fluxo.push(valorMes);
-        } else if (fluxo.length > 0 && mes > Math.max(inicioParcelamento + parcelasQtd, bemMovelMes || 0, reforcoQtd * reforcoFrequencia)) {
-            // Parar quando não há mais fluxo esperado
-            break;
-        } else {
-            fluxo.push(0);
-        }
-    }
-    
-    console.log(`📊 Fluxo gerado para ${tipo}: ${fluxo.length} meses, soma total: ${fluxo.reduce((a, b) => a + b, 0)}`);
-    return fluxo;
-}
-
-function calculateVPLInResults(fluxoDeCaixa, tmaMes) {
-    console.log('🧮 Calculando VPL com TMA mensal:', tmaMes);
-    
-    if (!fluxoDeCaixa || fluxoDeCaixa.length === 0) {
-        console.log('⚠️ Fluxo de caixa vazio');
-        return 0;
-    }
-    
-    let vpl = 0;
-    const taxaDesconto = tmaMes / 100; // Converter de % para decimal
-    
-    fluxoDeCaixa.forEach((valor, index) => {
-        if (valor > 0) {
-            const valorPresente = valor / Math.pow(1 + taxaDesconto, index + 1);
-            vpl += valorPresente;
-            
-            // Log para debug (apenas primeiros 12 meses)
-            if (index < 12) {
-                console.log(`Mês ${index + 1}: R$ ${valor.toFixed(2)} -> VP: R$ ${valorPresente.toFixed(2)}`);
-            }
-        }
-    });
-    
-    console.log(`✅ VPL calculado: R$ ${vpl.toFixed(2)}`);
-    return vpl;
-}
-
-// ================================
-// FUNÇÕES PARA CARREGAR CENÁRIOS
-// ================================
-
-// Função para carregar cenários no filtro
-async function loadScenariosInFilter() {
-    try {
-        console.log('🔍 Carregando cenários para o filtro...');
-        
-        const token = localStorage.getItem('token') || localStorage.getItem('modelai_token');
-        if (!token) {
-            console.error('❌ Token não encontrado');
-            showError('Token de autenticação não encontrado');
-            return;
-        }
-        
-        console.log('🔑 Token encontrado, fazendo requisição...');
+        console.log('📂 === CARREGANDO CENÁRIOS PARA FILTRO ===');
         
         const response = await fetch('/api/scenarios', {
-            method: 'GET',
             headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
         });
-        
-        console.log('📡 Resposta da API:', response.status, response.statusText);
-        
+
+        console.log('📈 Status da resposta:', response.status);
+
         if (response.ok) {
             const data = await response.json();
             const scenarios = data.scenarios || [];
-            
-            console.log(`✅ ${scenarios.length} cenários carregados:`, scenarios.map(s => s.name));
-            
-            // Atualizar dropdown de cenários
-            const scenarioFilter = document.getElementById('scenarioFilter');
-            if (scenarioFilter) {
-                scenarioFilter.innerHTML = '<option value="">Selecione um cenário</option>';
-                
-                scenarios.forEach(scenario => {
-                    const option = document.createElement('option');
-                    option.value = scenario._id;
-                    option.textContent = scenario.name;
-                    scenarioFilter.appendChild(option);
-                });
-                
-                console.log('✅ Dropdown atualizado com', scenarios.length, 'cenários');
-            } else {
-                console.error('❌ Elemento scenarioFilter não encontrado!');
-            }
-            
+            console.log('✅ Cenários carregados da API:', scenarios.length);
+            populateScenarioFilter(scenarios);
         } else {
-            const error = await response.json().catch(() => ({}));
-            console.error('❌ Erro ao carregar cenários:', response.status, error.message);
-            showError(error.message || `Erro ${response.status}: Não foi possível carregar cenários`);
+            const errorText = await response.text();
+            console.error('❌ Erro da API:', response.status, errorText);
+            showAlert('Erro ao carregar cenários: ' + response.status, 'error');
         }
-        
+
     } catch (error) {
-        console.error('❌ Erro ao carregar cenários:', error);
-        showError('Erro ao carregar lista de cenários: ' + error.message);
+        console.error('❌ ERRO FATAL ao carregar cenários:', error);
+        showAlert('Erro ao carregar cenários: ' + error.message, 'error');
     }
 }
 
-// Configurar filtro de cenários
-function setupScenarioFilter() {
-    const filter = document.getElementById('scenarioFilter');
-    if (filter) {
-        filter.addEventListener('change', function() {
-            const scenarioId = this.value;
-            if (scenarioId) {
-                loadScenarioData(scenarioId);
-            }
+// Popular filtro de cenários
+function populateScenarioFilter(scenarios) {
+    console.log('🎨 === POPULANDO FILTRO DE CENÁRIOS ===');
+    console.log('📊 Cenários recebidos:', scenarios.length);
+    
+    const scenarioFilter = document.getElementById('scenarioFilter');
+    
+    if (!scenarioFilter) {
+        console.error('❌ Elemento scenarioFilter não encontrado!');
+        return;
+    }
+    
+    // Limpar opções existentes (manter primeira opção)
+    scenarioFilter.innerHTML = '<option value="">Selecione um cenário</option>';
+    
+    if (scenarios.length === 0) {
+        const option = document.createElement('option');
+        option.value = "";
+        option.textContent = "Nenhum cenário encontrado";
+        option.disabled = true;
+        scenarioFilter.appendChild(option);
+        console.log('⚠️ Nenhum cenário encontrado');
+        return;
+    }
+    
+    scenarios.forEach((scenario, index) => {
+        console.log(`📋 Cenário ${index + 1}:`, {
+            id: scenario._id,
+            name: scenario.name,
+            cliente: scenario.data?.cliente
         });
-    }
+        
+        const option = document.createElement('option');
+        option.value = scenario._id;
+        option.textContent = `${scenario.name} - ${scenario.data?.cliente || 'Sem cliente'}`;
+        scenarioFilter.appendChild(option);
+    });
+    
+    console.log('✅ Filtro de cenários populado com sucesso!');
 }
 
-async function loadScenarioData(scenarioId) {
+// Manipular seleção de cenário
+async function handleScenarioSelection(event) {
+    const scenarioId = event.target.value;
+    
+    if (!scenarioId) {
+        showEmptyState();
+        return;
+    }
+
+    // Nunca mostra loading, cards sempre visíveis
+    
     try {
-        console.log('📊 === CARREGANDO DADOS DO CENÁRIO ===');
-        console.log('📊 ID do cenário:', scenarioId);
+        await loadScenarioData(scenarioId);
         
-        if (!scenarioId) {
-            showError('ID do cenário é obrigatório');
-            return;
-        }
-
-        const token = localStorage.getItem('token') || localStorage.getItem('modelai_token');
-        if (!token) {
-            showError('Token de autenticação não encontrado');
-            return;
-        }
-        
-        console.log('🔑 Token encontrado, buscando cenário...');
-        
-        const response = await fetch(`/api/scenarios/${scenarioId}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        console.log('📡 Resposta da API:', response.status, response.statusText);
-        
-        if (response.ok) {
-            const data = await response.json();
-            const scenario = data.scenario;
-            
-            if (!scenario) {
-                throw new Error('Dados do cenário não encontrados na resposta');
-            }
-            
-            console.log('✅ Cenário carregado:', scenario.name);
-            console.log('📊 Dados do cenário:', scenario.data);
-            console.log('📈 Resultados pré-calculados:', scenario.results);
-            
-            // Salvar dados no sessionStorage
-            sessionStorage.setItem('currentInputData', JSON.stringify(scenario.data));
-            sessionStorage.setItem('currentScenarioName', scenario.name);
-            sessionStorage.setItem('currentScenarioId', scenarioId);
-            
-            // Exibir resultados pré-calculados se existirem
-            if (scenario.results) {
-                console.log('📊 Exibindo resultados pré-calculados');
-                displayCalculatedResults(scenario.results);
-                displayCalculatedResultsByText(scenario.results);
-            } else {
-                console.log('⚠️ Cenário sem resultados pré-calculados, calculando...');
-                // Atualizar resultados (cálculo em tempo real)
-                updateResultados();
-            }
-            
-            showSuccess(`Cenário "${scenario.name}" carregado com sucesso!`);
-            
+        if (currentScenarioData) {
+            displayResults();
         } else {
-            const errorData = await response.json().catch(() => ({}));
-            const errorMessage = errorData.message || `Erro ${response.status}: Não foi possível carregar o cenário`;
-            console.error('❌ Erro da API:', errorMessage);
-            showError(errorMessage);
+            // Mantém cards zerados se não conseguir carregar
+            renderDefaultCards();
+            renderDefaultFluxoCaixa();
         }
         
     } catch (error) {
         console.error('❌ Erro ao carregar cenário:', error);
-        showError(`Erro ao carregar dados do cenário: ${error.message}`);
+        showAlert('Erro ao carregar dados do cenário', 'error');
+        // Mantém cards zerados em caso de erro
+        renderDefaultCards();
+        renderDefaultFluxoCaixa();
     }
 }
 
-// Verificar se há dados de cenário ao carregar a página
-function checkForScenarioData() {
-    // Verificar se há um ID de cenário na URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const scenarioId = urlParams.get('scenario');
+// Carregar dados do cenário
+async function loadScenarioData(scenarioId) {
+    console.log('📊 Carregando dados do cenário:', scenarioId);
     
-    if (scenarioId) {
-        console.log('🔗 ID do cenário encontrado na URL:', scenarioId);
-        // Aguardar um pouco para garantir que o filtro foi carregado
-        setTimeout(() => {
-            const scenarioFilter = document.getElementById('scenarioFilter');
-            if (scenarioFilter) {
-                console.log('🎯 Selecionando cenário no filtro:', scenarioId);
-                scenarioFilter.value = scenarioId;
-                loadScenarioData(scenarioId);
-            } else {
-                console.warn('⚠️ Filtro de cenário não encontrado!');
-            }
-        }, 1000); // Aumentei o tempo para garantir carregamento
+    const token = localStorage.getItem('token') || localStorage.getItem('modelai_token');
+    const response = await fetch(`/api/scenarios/${scenarioId}`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
+    }
+
+    const scenario = await response.json();
+    currentScenarioData = scenario;
+    
+    console.log('✅ Dados do cenário carregados:', currentScenarioData);
+}
+
+// Estados da interface
+function showLoadingState() {
+    // Nunca mostra loading, sempre mantém cards visíveis
+    console.log('Loading ignorado - cards sempre visíveis');
+}
+
+function showEmptyState() {
+    // Nunca esconde conteúdo, apenas zera os valores
+    renderDefaultCards();
+    renderDefaultFluxoCaixa();
+}
+
+function showResultsState() {
+    // Cards sempre visíveis, apenas atualiza valores
+    console.log('Exibindo resultados - cards sempre visíveis');
+}
+
+// Exibir resultados calculados
+function displayResults() {
+    console.log('🎯 Exibindo resultados calculados...');
+    
+    showResultsState();
+    
+    // Atualizar informações do cenário
+    updateScenarioInfo();
+    
+    // Calcular e exibir indicadores financeiros
+    calculateAndDisplayIndicators();
+    
+    // Atualizar resumo financeiro
+    updateFinancialSummary();
+    
+    // Atualizar preview do fluxo de caixa
+    updateCashFlowPreview();
+}
+
+// Atualizar informações do cenário
+function updateScenarioInfo() {
+    const data = currentScenarioData.data;
+    
+    document.getElementById('scenarioName').textContent = currentScenarioData.name || 'Sem nome';
+    document.getElementById('scenarioClient').textContent = data.dadosGerais.cliente || 'Não informado';
+    document.getElementById('scenarioEmpreendimento').textContent = data.dadosGerais.empreendimento || 'Não informado';
+    document.getElementById('scenarioUnidade').textContent = data.dadosGerais.unidade || 'Não informada';
+    
+    // TMA Anual
+    const tmaAnual = parseFloat(data.dadosGerais.tmaAno) || 0;
+    document.getElementById('scenarioTMA').textContent = `${(tmaAnual * 100).toFixed(2)}%`;
+}
+
+// Calcular e exibir indicadores financeiros principais
+function calculateAndDisplayIndicators() {
+    console.log('🧮 Calculando indicadores financeiros...');
+    
+    const data = currentScenarioData.data;
+    
+    // Validar dados necessários
+    if (!data || !validateCalculationInputs(data)) {
+        console.error('❌ Dados insuficientes para cálculo');
+        showAlert('Dados insuficientes para realizar os cálculos', 'error');
         return;
     }
     
-    // Verificar dados no sessionStorage (fallback)
-    const scenarioData = sessionStorage.getItem('currentInputData');
-    const scenarioName = sessionStorage.getItem('currentScenarioName');
-    
-    if (scenarioData && scenarioName) {
-        console.log('📊 Dados de cenário encontrados no sessionStorage:', scenarioName);
-        // Atualizar resultados com dados do sessionStorage
-        updateResultados();
-        return;
+    try {
+        // 1. Calcular valores base
+        const valorTotalImovel = calculateValorTotalImovel(data);
+        const valorTotalProposta = calculateValorTotalProposta(data);
+        
+        // 2. Calcular Desconto Nominal % e R$
+        const descontoNominalPercent = calculateDescontoNominalPercent(valorTotalProposta, valorTotalImovel);
+        const descontoNominalReais = calculateDescontoNominalReais(valorTotalImovel, valorTotalProposta);
+        
+        // 3. Gerar fluxos de caixa
+        const fluxoTabela = generateFluxoTabela(data, valorTotalImovel);
+        const fluxoProposta = generateFluxoProposta(data, valorTotalProposta);
+        
+        // 4. Calcular VPLs
+        const tmaMes = calculateTMAMensal(data.dadosGerais.tmaAno);
+        const vplTabela = calculateVPL(tmaMes, fluxoTabela);
+        const vplProposta = calculateVPL(tmaMes, fluxoProposta);
+        
+        // 5. Calcular deltas
+        const deltaVPL = calculateDeltaVPL(vplProposta, vplTabela);
+        const percentDeltaVPL = calculatePercentDeltaVPL(deltaVPL, vplTabela);
+        
+        // 6. Exibir resultados nos cards
+        displayCalculatedValues({
+            descontoNominalPercent,
+            descontoNominalReais,
+            vplTabela,
+            vplProposta,
+            deltaVPL,
+            percentDeltaVPL,
+            valorTotalImovel,
+            valorTotalProposta,
+            tmaMes
+        });
+        
+        console.log('✅ Indicadores calculados e exibidos com sucesso');
+        
+    } catch (error) {
+        console.error('❌ Erro nos cálculos:', error);
+        showAlert('Erro ao calcular indicadores financeiros', 'error');
+    }
+}
+
+// Validar inputs para cálculo
+function validateCalculationInputs(data) {
+    // Verificar se temos as estruturas principais
+    if (!data.dadosGerais || !data.tabelaVendas || !data.propostaCliente) {
+        console.error('❌ Estruturas principais de dados ausentes');
+        return false;
     }
     
-    // Verificar formato antigo de dados
-    const oldScenarioData = sessionStorage.getItem('currentScenario');
-    if (oldScenarioData) {
-        try {
-            const parsedData = JSON.parse(oldScenarioData);
-            console.log('📊 Dados de cenário em formato antigo encontrados:', parsedData.name);
-            
-            // Converter para novo formato
-            sessionStorage.setItem('currentInputData', JSON.stringify(parsedData.data));
-            sessionStorage.setItem('currentScenarioName', parsedData.name);
-            sessionStorage.setItem('currentScenarioId', parsedData.id);
-            
-            // Remover formato antigo
-            sessionStorage.removeItem('currentScenario');
-            
-            // Atualizar resultados
-            updateResultados();
-        } catch (error) {
-            console.error('❌ Erro ao processar dados antigos:', error);
+    // Verificar campos essenciais
+    const required = {
+        'dadosGerais.areaPrivativa': data.dadosGerais.areaPrivativa,
+        'dadosGerais.tmaAno': data.dadosGerais.tmaAno,
+        'tabelaVendas.entradaValor': data.tabelaVendas.entradaValor,
+        'propostaCliente.mesVenda': data.propostaCliente.mesVenda
+    };
+    
+    for (const [field, value] of Object.entries(required)) {
+        if (!value && value !== 0) {
+            console.error(`❌ Campo obrigatório ausente: ${field}`);
+            return false;
         }
     }
     
-    console.log('ℹ️ Nenhum cenário encontrado para carregar');
+    return true;
 }
 
-// Inicializar quando DOM carregar
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('📋 DOM carregado - inicializando resultados...');
+// Calcular Valor Total do Imóvel = soma de todos os valores da tabela
+function calculateValorTotalImovel(data) {
+    const tabela = data.tabelaVendas;
+    const entradaValor = parseFloat(tabela.entradaValor) || 0;
+    const parcelasValor = parseFloat(tabela.parcelasValor) || 0;
+    const reforcoValor = parseFloat(tabela.reforcoValor) || 0;
+    const bemMovelValor = parseFloat(tabela.bemMovelImovel) || 0;
     
-    // Verificar elementos essenciais
-    const scenarioFilter = document.getElementById('scenarioFilter');
-    console.log('🔍 Filtro de cenários encontrado:', !!scenarioFilter);
+    const total = entradaValor + parcelasValor + reforcoValor + bemMovelValor;
     
-    loadScenariosInFilter();
-    setupScenarioFilter();
-    checkForScenarioData();
+    console.log('💰 Valor Total Imóvel:');
+    console.log('   Entrada:', entradaValor);
+    console.log('   Parcelas:', parcelasValor);  
+    console.log('   Reforço:', reforcoValor);
+    console.log('   Bem Móvel:', bemMovelValor);
+    console.log('   ✅ Total:', total);
     
-    // Log do estado inicial
-    console.log('📊 Estado inicial do sessionStorage:');
-    console.log('  - currentInputData:', !!sessionStorage.getItem('currentInputData'));
-    console.log('  - currentScenarioName:', sessionStorage.getItem('currentScenarioName'));
-    console.log('  - currentScenarioId:', sessionStorage.getItem('currentScenarioId'));
+    return total;
+}
+
+// Calcular Valor Total da Proposta = soma de todos os valores da proposta
+function calculateValorTotalProposta(data) {
+    const proposta = data.propostaCliente;
+    const entradaValor = parseFloat(proposta.entradaValor) || 0;
+    const parcelasValor = parseFloat(proposta.parcelasValor) || 0;
+    const reforcoValor = parseFloat(proposta.reforcoValor) || 0;
+    // Assumindo que bem móvel na proposta é o mesmo da tabela
+    const bemMovelValor = parseFloat(data.tabelaVendas.bemMovelImovel) || 0;
     
-    // TESTE: Função para testar exibição com dados fake
-    window.testResultados = function() {
-        console.log('🧪 TESTANDO EXIBIÇÃO DE RESULTADOS...');
-        const fakeResults = {
-            descontoNominalPercent: -5.5,
-            descontoNominalReais: -27500,
-            vplTabela: 45000,
-            vplProposta: 17500,
-            deltaVPL: -27500,
-            percentDeltaVPL: -61.11
-        };
-        displayCalculatedResults(fakeResults);
+    const total = entradaValor + parcelasValor + reforcoValor + bemMovelValor;
+    
+    console.log('💸 Valor Total Proposta:');
+    console.log('   Entrada:', entradaValor);
+    console.log('   Parcelas:', parcelasValor);
+    console.log('   Reforço:', reforcoValor);
+    console.log('   Bem Móvel:', bemMovelValor);
+    console.log('   ✅ Total:', total);
+    
+    return total;
+}
+
+// Calcular Desconto Nominal % = (Valor Proposta / Valor Imóvel) - 1
+function calculateDescontoNominalPercent(valorProposta, valorImovel) {
+    console.log('🧮 Calculando Desconto Nominal %:');
+    console.log('   Valor Proposta:', valorProposta);
+    console.log('   Valor Imóvel:', valorImovel);
+    
+    if (valorImovel === 0) {
+        console.log('   ⚠️ Valor Imóvel é zero, retornando 0');
+        return 0;
+    }
+    
+    const resultado = (valorProposta / valorImovel) - 1;
+    console.log('   ✅ Resultado:', resultado, '=', (resultado * 100).toFixed(2) + '%');
+    
+    return resultado;
+}
+
+// Calcular Desconto Nominal R$ = Valor Imóvel - Valor Proposta
+function calculateDescontoNominalReais(valorImovel, valorProposta) {
+    return valorImovel - valorProposta;
+}
+
+// Calcular TMA Mensal = (1 + TMA_Anual)^(1/12) - 1
+function calculateTMAMensal(tmaAnual) {
+    const tmaDecimal = parseFloat(tmaAnual) || 0;
+    return Math.pow(1 + tmaDecimal, 1/12) - 1;
+}
+
+// Gerar Fluxo de Caixa da Tabela (250 meses)
+function generateFluxoTabela(data, valorTotal) {
+    const fluxo = new Array(250).fill(0);
+    const tabela = data.tabelaVendas;
+    const mesVenda = parseInt(data.propostaCliente.mesVenda) || 1;
+    
+    // Valores da tabela
+    const entradaValor = parseFloat(tabela.entradaValor) || 0;
+    const entradaParcelas = parseInt(tabela.entradaParcelas) || 1;
+    const parcelasValor = parseFloat(tabela.parcelasValor) || 0;
+    const parcelasQtd = parseInt(tabela.parcelasQtd) || 0;
+    const reforcoValor = parseFloat(tabela.reforcoValor) || 0;
+    const reforcoQtd = parseInt(tabela.reforcoQtd) || 0;
+    const reforcoFrequencia = parseInt(tabela.reforcoFrequencia) || 12;
+    const bemMovelValor = parseFloat(tabela.bemMovelImovel) || 0;
+    const bemMovelMes = parseInt(tabela.bemMovelImovelMes) || mesVenda;
+    
+    // Calcular valores por parcela
+    const valorPorEntrada = entradaParcelas > 0 ? entradaValor / entradaParcelas : entradaValor;
+    const valorPorParcela = parcelasQtd > 0 ? parcelasValor / parcelasQtd : 0;
+    const valorPorReforco = reforcoQtd > 0 ? reforcoValor / reforcoQtd : 0;
+    
+    // 1. Entrada (primeiros meses)
+    for (let i = 0; i < entradaParcelas && (mesVenda - 1 + i) < 250; i++) {
+        fluxo[mesVenda - 1 + i] += valorPorEntrada;
+    }
+    
+    // 2. Parcelas mensais
+    for (let i = 0; i < parcelasQtd && (mesVenda - 1 + entradaParcelas + i) < 250; i++) {
+        fluxo[mesVenda - 1 + entradaParcelas + i] += valorPorParcela;
+    }
+    
+    // 3. Reforços conforme frequência
+    for (let i = 0; i < reforcoQtd; i++) {
+        const mesReforco = mesVenda - 1 + (i + 1) * reforcoFrequencia;
+        if (mesReforco < 250) {
+            fluxo[mesReforco] += valorPorReforco;
+        }
+    }
+    
+    // 4. Bem móvel no mês específico
+    if (bemMovelMes > 0 && bemMovelMes <= 250) {
+        fluxo[bemMovelMes - 1] += bemMovelValor;
+    }
+    
+    return fluxo;
+}
+
+// Gerar Fluxo de Caixa da Proposta (250 meses)
+function generateFluxoProposta(data, valorTotal) {
+    const fluxo = new Array(250).fill(0);
+    const proposta = data.propostaCliente;
+    const mesVenda = parseInt(proposta.mesVenda) || 1;
+    
+    // Valores da proposta
+    const entradaValor = parseFloat(proposta.entradaValor) || 0;
+    const entradaParcelas = parseInt(proposta.entradaParcelas) || 1;
+    const parcelasValor = parseFloat(proposta.parcelasValor) || 0;
+    const parcelasQtd = parseInt(proposta.parcelasQtd) || 0;
+    const reforcoValor = parseFloat(proposta.reforcoValor) || 0;
+    const reforcoQtd = parseInt(proposta.reforcoQtd) || 0;
+    const reforcoFrequencia = parseInt(proposta.reforcoFrequencia) || 12;
+    // Bem móvel assumindo mesmo da tabela
+    const bemMovelValor = parseFloat(data.tabelaVendas.bemMovelImovel) || 0;
+    const bemMovelMes = parseInt(data.tabelaVendas.bemMovelImovelMes) || mesVenda;
+    
+    // Calcular valores por parcela
+    const valorPorEntrada = entradaParcelas > 0 ? entradaValor / entradaParcelas : entradaValor;
+    const valorPorParcela = parcelasQtd > 0 ? parcelasValor / parcelasQtd : 0;
+    const valorPorReforco = reforcoQtd > 0 ? reforcoValor / reforcoQtd : 0;
+    
+    // 1. Entrada (primeiros meses)
+    for (let i = 0; i < entradaParcelas && (mesVenda - 1 + i) < 250; i++) {
+        fluxo[mesVenda - 1 + i] += valorPorEntrada;
+    }
+    
+    // 2. Parcelas mensais
+    for (let i = 0; i < parcelasQtd && (mesVenda - 1 + entradaParcelas + i) < 250; i++) {
+        fluxo[mesVenda - 1 + entradaParcelas + i] += valorPorParcela;
+    }
+    
+    // 3. Reforços conforme frequência
+    for (let i = 0; i < reforcoQtd; i++) {
+        const mesReforco = mesVenda - 1 + (i + 1) * reforcoFrequencia;
+        if (mesReforco < 250) {
+            fluxo[mesReforco] += valorPorReforco;
+        }
+    }
+    
+    // 4. Bem móvel no mês específico
+    if (bemMovelMes > 0 && bemMovelMes <= 250) {
+        fluxo[bemMovelMes - 1] += bemMovelValor;
+    }
+    
+    return fluxo;
+}
+
+// Calcular VPL usando fórmula do Excel: =VPL(taxa; fluxo_mensal)
+function calculateVPL(taxa, fluxoMensal) {
+    let vpl = 0;
+    
+    // VPL Excel considera o primeiro valor no período 1, não 0
+    // Fórmula: Σ(fluxo[i] / (1 + taxa)^(i+1))
+    for (let i = 0; i < fluxoMensal.length; i++) {
+        if (fluxoMensal[i] !== 0) {
+            vpl += fluxoMensal[i] / Math.pow(1 + taxa, i + 1);
+        }
+    }
+    
+    return vpl;
+}
+
+// Calcular Delta VPL = VPL Proposta - VPL Tabela
+function calculateDeltaVPL(vplProposta, vplTabela) {
+    return vplProposta - vplTabela;
+}
+
+// Calcular % Delta VPL com SEERRO = SE(VPL_Tabela=0; 0; Delta_VPL/VPL_Tabela)
+function calculatePercentDeltaVPL(deltaVPL, vplTabela) {
+    // Implementa SEERRO (IFERROR): se VPL_Tabela = 0, retorna 0, senão calcula percentual
+    if (vplTabela === 0) {
+        return 0;
+    }
+    return deltaVPL / vplTabela;
+}
+
+// Exibir valores calculados nos cards
+function displayCalculatedValues(values) {
+    // Card 1: Desconto Nominal %
+    let percent = 0;
+    if (values && typeof values.descontoNominalPercent === 'number' && !isNaN(values.descontoNominalPercent)) {
+        percent = values.descontoNominalPercent * 100;
+    }
+    console.log('📊 Atualizando Card 1 - Desconto Nominal %:', percent.toFixed(2) + '%');
+    document.getElementById('descontoNominalPercent').textContent = `${percent.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%`;
+    document.getElementById('descontoNominalReais').textContent =
+        values ? formatCurrency(values.descontoNominalReais) : 'R$ 0,00';
+    document.getElementById('vplTabela').textContent =
+        values ? formatCurrency(values.vplTabela) : 'R$ 0,00';
+    document.getElementById('vplProposta').textContent =
+        values ? formatCurrency(values.vplProposta) : 'R$ 0,00';
+    document.getElementById('deltaVPL').textContent =
+        values ? formatCurrency(values.deltaVPL) : 'R$ 0,00';
+    document.getElementById('percentDeltaVPL').textContent =
+        values && !isNaN(values.percentDeltaVPL) ? `${(values.percentDeltaVPL * 100).toFixed(2)}%` : '0,00%';
+    document.getElementById('valorTotalImovel').textContent =
+        values ? formatCurrency(values.valorTotalImovel) : 'R$ 0,00';
+    document.getElementById('valorTotalProposta').textContent =
+        values ? formatCurrency(values.valorTotalProposta) : 'R$ 0,00';
+    document.getElementById('tmaMensal').textContent =
+        values && !isNaN(values.tmaMes) ? `${(values.tmaMes * 100).toFixed(4)}%` : '0%';
+}
+
+// Atualizar resumo financeiro
+function updateFinancialSummary() {
+    const data = currentScenarioData.data;
+    
+    document.getElementById('mesVenda').textContent = data.propostaCliente.mesVenda || '1';
+    
+    // Atualizar informações do cenário
+    document.getElementById('infoCliente').textContent = data.dadosGerais.cliente || '-';
+    document.getElementById('infoEmpreendimento').textContent = data.dadosGerais.empreendimento || '-';
+    document.getElementById('infoUnidade').textContent = data.dadosGerais.unidade || '-';
+    
+    const areaPrivativa = data.dadosGerais.areaPrivativa;
+    document.getElementById('infoArea').textContent = areaPrivativa ? `${areaPrivativa} m²` : '-';
+}
+
+// Atualizar preview do fluxo de caixa (tabela detalhada como no Excel)
+function updateCashFlowPreview() {
+    const data = currentScenarioData.data;
+    
+    const valorTotalImovel = calculateValorTotalImovel(data);
+    const valorTotalProposta = calculateValorTotalProposta(data);
+    
+    const fluxoTabela = generateFluxoTabela(data, valorTotalImovel);
+    const fluxoProposta = generateFluxoProposta(data, valorTotalProposta);
+    
+    // Gerar componentes individuais do fluxo da proposta
+    const componentesFluxo = generateComponentesFluxoProposta(data);
+    
+    const tbody = document.getElementById('fluxoCaixaDetalhado');
+    tbody.innerHTML = '';
+    
+    // Obter período selecionado
+    const periodoAnalise = parseInt(document.getElementById('periodoAnalise')?.value) || 12;
+    const maxMeses = Math.min(periodoAnalise, 250);
+    
+    // Gerar tabela mês a mês
+    for (let mes = 0; mes < maxMeses; mes++) {
+        const row = document.createElement('tr');
+        row.className = mes % 2 === 0 ? 'bg-gray-50' : 'bg-white';
+        
+        // Valores das componentes individuais
+        const valorTabelaTMA = fluxoTabela[mes];
+        const valorEntrada = componentesFluxo.entrada[mes] || 0;
+        const valorParcelas = componentesFluxo.parcelas[mes] || 0;
+        const valorReforcos = componentesFluxo.reforcos[mes] || 0;
+        const valorNasChaves = componentesFluxo.nasChaves[mes] || 0;
+        const valorPropostaTotal = fluxoProposta[mes];
+        
+        row.innerHTML = `
+            <td class="px-3 py-2 text-center text-sm font-medium text-gray-900 border-r border-gray-200">${mes + 1}</td>
+            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-gray-200">${formatCurrency(valorTabelaTMA)}</td>
+            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-gray-200">${formatCurrency(valorEntrada)}</td>
+            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-gray-200">${formatCurrency(valorParcelas)}</td>
+            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-gray-200">${formatCurrency(valorReforcos)}</td>
+            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-gray-200">${formatCurrency(valorNasChaves)}</td>
+            <td class="px-3 py-2 text-right text-sm font-semibold text-gray-900">${formatCurrency(valorPropostaTotal)}</td>
+        `;
+        
+        tbody.appendChild(row);
+    }
+    
+    // Configurar event listener para mudança de período
+    const periodoSelect = document.getElementById('periodoAnalise');
+    if (periodoSelect) {
+        periodoSelect.removeEventListener('change', updateCashFlowPreview);
+        periodoSelect.addEventListener('change', updateCashFlowPreview);
+    }
+}
+
+// Gerar componentes individuais do fluxo da proposta
+function generateComponentesFluxoProposta(data) {
+    const proposta = data.propostaCliente;
+    const mesVenda = parseInt(proposta.mesVenda) || 1;
+    
+    // Arrays para cada componente
+    const entrada = new Array(250).fill(0);
+    const parcelas = new Array(250).fill(0);
+    const reforcos = new Array(250).fill(0);
+    const nasChaves = new Array(250).fill(0);
+    
+    // Valores da proposta
+    const entradaValor = parseFloat(proposta.entradaValor) || 0;
+    const entradaParcelas = parseInt(proposta.entradaParcelas) || 1;
+    const parcelasValor = parseFloat(proposta.parcelasValor) || 0;
+    const parcelasQtd = parseInt(proposta.parcelasQtd) || 0;
+    const reforcoValor = parseFloat(proposta.reforcoValor) || 0;
+    const reforcoQtd = parseInt(proposta.reforcoQtd) || 0;
+    const reforcoFrequencia = parseInt(proposta.reforcoFrequencia) || 12;
+    
+    // Bem móvel (nas chaves) - assumindo mesmo da tabela
+    const bemMovelValor = parseFloat(data.tabelaVendas.bemMovelImovel) || 0;
+    const bemMovelMes = parseInt(data.tabelaVendas.bemMovelImovelMes) || mesVenda;
+    
+    // Calcular valores por parcela
+    const valorPorEntrada = entradaParcelas > 0 ? entradaValor / entradaParcelas : entradaValor;
+    const valorPorParcela = parcelasQtd > 0 ? parcelasValor / parcelasQtd : 0;
+    const valorPorReforco = reforcoQtd > 0 ? reforcoValor / reforcoQtd : 0;
+    
+    // 1. Entrada (primeiros meses)
+    for (let i = 0; i < entradaParcelas && (mesVenda - 1 + i) < 250; i++) {
+        entrada[mesVenda - 1 + i] = valorPorEntrada;
+    }
+    
+    // 2. Parcelas mensais
+    for (let i = 0; i < parcelasQtd && (mesVenda - 1 + entradaParcelas + i) < 250; i++) {
+        parcelas[mesVenda - 1 + entradaParcelas + i] = valorPorParcela;
+    }
+    
+    // 3. Reforços conforme frequência
+    for (let i = 0; i < reforcoQtd; i++) {
+        const mesReforco = mesVenda - 1 + (i + 1) * reforcoFrequencia;
+        if (mesReforco < 250) {
+            reforcos[mesReforco] = valorPorReforco;
+        }
+    }
+    
+    // 4. Bem móvel no mês específico
+    if (bemMovelMes > 0 && bemMovelMes <= 250) {
+        nasChaves[bemMovelMes - 1] = bemMovelValor;
+    }
+    
+    return {
+        entrada,
+        parcelas,
+        reforcos,
+        nasChaves
     };
+}
+
+// Utilitários
+function formatCurrency(value) {
+    if (value === null || value === undefined || isNaN(value)) {
+        return 'R$ 0,00';
+    }
     
-    console.log('🧪 Para testar, digite: testResultados() no console');
-});
-
-// ================================
-// FUNÇÕES DE ALERTA (COMPATIBILITY)
-// ================================
-
-function showSuccess(message) {
-    console.log('✅', message);
-    // Usar alerts.js se disponível
-    if (window.alerts && window.alerts.success) {
-        window.alerts.success(message);
-    } else {
-        alert('✅ ' + message);
-    }
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(value);
 }
 
-function showError(message) {
-    console.error('❌', message);
-    // Usar alerts.js se disponível
-    if (window.alerts && window.alerts.error) {
-        window.alerts.error(message);
-    } else {
-        alert('❌ ' + message);
-    }
+function showAlert(message, type = 'info') {
+    console.log(`${type.toUpperCase()}: ${message}`);
+    // Aqui você pode implementar um sistema de alertas visual se necessário
 }
 
-// ================================
-// EVENTOS DE REDIMENSIONAMENTO
-// ================================
+// Exportar funções para uso global
+window.initializeResultsPage = initializeResultsPage;
 
-window.addEventListener('resize', handleResize);
-window.addEventListener('load', handleResize);
+// Inicializar quando a página carregar
+document.addEventListener('DOMContentLoaded', initializeResultsPage);
