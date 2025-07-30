@@ -256,10 +256,30 @@ function generateMonthlyFlow(dadosGerais, tabelaVendas, propostaCliente, periodo
 // Função para atualizar os dados na página
 function updateResultados() {
     try {
-        // Recuperar dados do localStorage
-        const dadosGerais = JSON.parse(localStorage.getItem('dadosGerais') || '{}');
-        const tabelaVendas = JSON.parse(localStorage.getItem('tabelaVendas') || '{}');
-        const propostaCliente = JSON.parse(localStorage.getItem('propostaCliente') || '{}');
+        // Primeiro tentar dados de cenário, depois localStorage antigo
+        let dadosGerais, tabelaVendas, propostaCliente;
+        
+        const scenarioData = sessionStorage.getItem('currentInputData');
+        if (scenarioData) {
+            console.log('📊 Usando dados do cenário');
+            const data = JSON.parse(scenarioData);
+            dadosGerais = data.dadosGerais || {};
+            tabelaVendas = data.tabelaVendas || {};
+            propostaCliente = data.propostaCliente || {};
+            
+            // Mostrar nome do cenário se disponível
+            const scenarioName = sessionStorage.getItem('currentScenarioName');
+            if (scenarioName) {
+                console.log('📋 Cenário atual:', scenarioName);
+                // Aqui podemos mostrar o nome do cenário na tela se necessário
+            }
+        } else {
+            console.log('📂 Usando dados do localStorage antigo');
+            // Recuperar dados do localStorage antigo
+            dadosGerais = JSON.parse(localStorage.getItem('dadosGerais') || '{}');
+            tabelaVendas = JSON.parse(localStorage.getItem('tabelaVendas') || '{}');
+            propostaCliente = JSON.parse(localStorage.getItem('propostaCliente') || '{}');
+        }
         
         // Se não há dados, mostrar mensagem e não tentar calcular
         if (!dadosGerais || Object.keys(dadosGerais).length === 0) {
@@ -688,40 +708,38 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Função para carregar cenários no filtro
-function loadScenariosInFilter() {
-    const scenarios = JSON.parse(localStorage.getItem('scenarios') || '[]');
-    const filter = document.getElementById('cenarioFilter');
-    const currentScenarioId = localStorage.getItem('currentScenarioId');
-    
-    if (filter) {
-        filter.innerHTML = '<option value="">Selecione um cenário</option>';
+async function loadScenariosInFilter() {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
         
-        scenarios.forEach(scenario => {
-            const option = document.createElement('option');
-            option.value = scenario.id;
-            option.textContent = scenario.name;
-            if (scenario.id === currentScenarioId) {
-                option.selected = true;
+        const response = await fetch('/api/scenarios', {
+            headers: {
+                'Authorization': `Bearer ${token}`
             }
-            filter.appendChild(option);
         });
-    }
-}
-
-// Função para carregar dados de um cenário específico
-function loadScenarioData(scenarioId) {
-    const scenarios = JSON.parse(localStorage.getItem('scenarios') || '[]');
-    const scenario = scenarios.find(s => s.id === scenarioId);
-    
-    if (scenario) {
-        // Carregar dados no localStorage
-        localStorage.setItem('dadosGerais', JSON.stringify(scenario.data.dadosGerais || {}));
-        localStorage.setItem('tabelaVendas', JSON.stringify(scenario.data.tabelaVendas || {}));
-        localStorage.setItem('propostaCliente', JSON.stringify(scenario.data.propostaCliente || {}));
-        localStorage.setItem('currentScenarioId', scenarioId);
         
-        // Atualizar resultados
-        updateResultados();
+        if (!response.ok) throw new Error('Erro ao carregar cenários');
+        
+        const scenarios = await response.json();
+        const filter = document.getElementById('cenarioFilter');
+        const currentScenarioId = sessionStorage.getItem('currentScenarioId');
+        
+        if (filter) {
+            filter.innerHTML = '<option value="">Selecione um cenário</option>';
+            
+            scenarios.forEach(scenario => {
+                const option = document.createElement('option');
+                option.value = scenario._id;
+                option.textContent = scenario.name;
+                if (scenario._id === currentScenarioId) {
+                    option.selected = true;
+                }
+                filter.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao carregar cenários:', error);
     }
 }
 
@@ -730,4 +748,71 @@ document.addEventListener('visibilitychange', function() {
     if (!document.hidden) {
         updateResultados();
     }
+});
+
+// ==================== INTEGRAÇÃO COM CENÁRIOS ====================
+
+function setupScenarioFilter() {
+    const filter = document.getElementById('cenarioFilter');
+    if (filter) {
+        filter.addEventListener('change', function() {
+            const scenarioId = this.value;
+            if (scenarioId) {
+                loadScenarioData(scenarioId);
+            }
+        });
+    }
+}
+
+async function loadScenarioData(scenarioId) {
+    try {
+        console.log('📊 Carregando dados do cenário:', scenarioId);
+        
+        const response = await fetch(`/api/scenarios/${scenarioId}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const scenario = data.scenario;
+            
+            // Salvar dados no sessionStorage
+            sessionStorage.setItem('currentInputData', JSON.stringify(scenario.data));
+            sessionStorage.setItem('currentScenarioName', scenario.name);
+            sessionStorage.setItem('currentScenarioId', scenarioId);
+            
+            // Atualizar resultados
+            updateResultados();
+            
+            showSuccess(`Cenário "${scenario.name}" carregado com sucesso!`);
+            
+        } else {
+            const error = await response.json();
+            showError(error.message || 'Erro ao carregar cenário');
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao carregar cenário:', error);
+        showError('Erro ao carregar dados do cenário');
+    }
+}
+
+// Verificar se há dados de cenário ao carregar a página
+function checkForScenarioData() {
+    const scenarioData = sessionStorage.getItem('currentInputData');
+    const scenarioName = sessionStorage.getItem('currentScenarioName');
+    
+    if (scenarioData && scenarioName) {
+        console.log('📊 Dados de cenário encontrados:', scenarioName);
+        // Os dados já estão no sessionStorage, updateResultados() irá usá-los
+    }
+}
+
+// Inicializar quando DOM carregar
+document.addEventListener('DOMContentLoaded', function() {
+    loadScenariosInFilter();
+    setupScenarioFilter();
+    checkForScenarioData();
 });

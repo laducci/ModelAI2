@@ -382,7 +382,7 @@ function saveScenario() {
     }
     
     // Verificar se está editando um cenário existente
-    const editingScenarioId = localStorage.getItem('editingScenarioId');
+    const editingScenarioId = sessionStorage.getItem('editingScenarioId');
     
     // Coletar dados gerais
     const dadosGerais = {
@@ -438,7 +438,7 @@ function saveScenario() {
             };
         }
         // Limpar flag de edição
-        localStorage.removeItem('editingScenarioId');
+        sessionStorage.removeItem('editingScenarioId');
     } else {
         // Criar novo cenário
         const scenario = {
@@ -532,7 +532,7 @@ function handleResize() {
 
 // Load saved data if editing
 function loadSavedData() {
-    const editingScenarioId = localStorage.getItem('editingScenarioId');
+    const editingScenarioId = sessionStorage.getItem('editingScenarioId');
     
     if (editingScenarioId) {
         // Carregar dados gerais
@@ -615,7 +615,7 @@ function clearAllFields() {
     localStorage.removeItem('dadosGerais');
     localStorage.removeItem('tabelaVendas');
     localStorage.removeItem('propostaCliente');
-    localStorage.removeItem('currentScenarioId');
+    sessionStorage.removeItem('currentScenarioId');
 }
 // Initialize page
 document.addEventListener('DOMContentLoaded', function() {
@@ -933,4 +933,386 @@ document.addEventListener('DOMContentLoaded', function() {
     calculatePropostaEntradaValorPorParcela();
     calculatePropostaParcelasValorPorParcela();
     calculatePropostaReforcoValorPorParcela();
+    
+    // Carregar dados se estivermos editando um cenário
+    loadScenarioDataIfEditing();
 });
+
+// ==================== FUNÇÕES DE CENÁRIO ====================
+
+function saveScenario() {
+    console.log('💾 Salvando cenário...');
+    
+    try {
+        // Coletar todos os dados dos inputs
+        const scenarioData = collectAllInputData();
+        
+        if (!scenarioData) {
+            showError('Erro ao coletar dados dos inputs');
+            return;
+        }
+        
+        // Salvar no sessionStorage
+        sessionStorage.setItem('currentInputData', JSON.stringify(scenarioData));
+        
+        // Abrir modal para nome do cenário
+        openScenarioModal();
+        
+    } catch (error) {
+        console.error('Erro ao salvar cenário:', error);
+        showError('Erro ao preparar dados para salvamento');
+    }
+}
+
+function collectAllInputData() {
+    try {
+        return {
+            dadosGerais: {
+                nomeEmpreendimento: document.getElementById('nomeEmpreendimento')?.value || '',
+                dataAnalise: document.getElementById('dataAnalise')?.value || '',
+                responsavel: document.getElementById('responsavel')?.value || '',
+                tmaAno: parseFloat(document.getElementById('tmaAno')?.value || 0),
+                tmaMes: parseFloat(document.getElementById('tmaMes')?.value || 0),
+                observacoes: document.getElementById('observacoes')?.value || ''
+            },
+            tabelaVendas: {
+                valorTabela: parseBRNumber(document.getElementById('valorTabela')?.value || '0'),
+                percentualEntrada: parseFloat(document.getElementById('percentualEntrada')?.value || 0),
+                valorEntrada: parseBRNumber(document.getElementById('valorEntrada')?.value || '0'),
+                quantidadeParcelas: parseInt(document.getElementById('quantidadeParcelas')?.value || 0),
+                valorParcelas: parseBRNumber(document.getElementById('valorParcelas')?.value || '0'),
+                percentualReforco: parseFloat(document.getElementById('percentualReforco')?.value || 0),
+                valorReforco: parseBRNumber(document.getElementById('valorReforco')?.value || '0'),
+                quantidadeReforcos: parseInt(document.getElementById('quantidadeReforcos')?.value || 0),
+                frequenciaReforcos: parseInt(document.getElementById('frequenciaReforcos')?.value || 0)
+            },
+            propostaCliente: {
+                valorProposta: parseBRNumber(document.getElementById('valorProposta')?.value || '0'),
+                percentualEntrada: parseFloat(document.getElementById('propostaPercentualEntrada')?.value || 0),
+                valorEntrada: parseBRNumber(document.getElementById('propostaValorEntrada')?.value || '0'),
+                quantidadeParcelas: parseInt(document.getElementById('propostaQuantidadeParcelas')?.value || 0),
+                valorParcelas: parseBRNumber(document.getElementById('propostaValorParcelas')?.value || '0'),
+                percentualReforco: parseFloat(document.getElementById('propostaPercentualReforco')?.value || 0),
+                valorReforco: parseBRNumber(document.getElementById('propostaReforcoValor')?.value || '0'),
+                quantidadeReforcos: parseInt(document.getElementById('propostaReforcoQtd')?.value || 0),
+                frequenciaReforcos: parseInt(document.getElementById('propostaReforcoFreq')?.value || 0),
+                bemMovelImovel: parseBRNumber(document.getElementById('bemMovelImovel')?.value || '0')
+            }
+        };
+    } catch (error) {
+        console.error('Erro ao coletar dados:', error);
+        return null;
+    }
+}
+
+function loadScenarioDataIfEditing() {
+    try {
+        const editingScenarioId = sessionStorage.getItem('editingScenarioId');
+        const editingScenarioName = sessionStorage.getItem('editingScenarioName');
+        const inputData = sessionStorage.getItem('currentInputData');
+        
+        if (editingScenarioId && inputData) {
+            console.log('📂 Carregando dados do cenário para edição:', editingScenarioName);
+            
+            const data = JSON.parse(inputData);
+            populateInputsWithData(data);
+            
+            // Mostrar notificação
+            showInfo(`Editando cenário: ${editingScenarioName}`);
+            
+            // Limpar flags de edição após carregar
+            sessionStorage.removeItem('editingScenarioId');
+            sessionStorage.removeItem('editingScenarioName');
+        }
+    } catch (error) {
+        console.error('Erro ao carregar dados do cenário:', error);
+    }
+}
+
+function populateInputsWithData(data) {
+    try {
+        // Dados Gerais
+        if (data.dadosGerais) {
+            const dg = data.dadosGerais;
+            if (dg.nomeEmpreendimento) document.getElementById('nomeEmpreendimento').value = dg.nomeEmpreendimento;
+            if (dg.dataAnalise) document.getElementById('dataAnalise').value = dg.dataAnalise;
+            if (dg.responsavel) document.getElementById('responsavel').value = dg.responsavel;
+            if (dg.tmaAno) document.getElementById('tmaAno').value = dg.tmaAno;
+            if (dg.tmaMes) document.getElementById('tmaMes').value = dg.tmaMes;
+            if (dg.observacoes) document.getElementById('observacoes').value = dg.observacoes;
+        }
+        
+        // Tabela de Vendas
+        if (data.tabelaVendas) {
+            const tv = data.tabelaVendas;
+            if (tv.valorTabela) document.getElementById('valorTabela').value = formatToBR(tv.valorTabela);
+            if (tv.percentualEntrada) document.getElementById('percentualEntrada').value = tv.percentualEntrada;
+            if (tv.valorEntrada) document.getElementById('valorEntrada').value = formatToBR(tv.valorEntrada);
+            if (tv.quantidadeParcelas) document.getElementById('quantidadeParcelas').value = tv.quantidadeParcelas;
+            if (tv.valorParcelas) document.getElementById('valorParcelas').value = formatToBR(tv.valorParcelas);
+            if (tv.percentualReforco) document.getElementById('percentualReforco').value = tv.percentualReforco;
+            if (tv.valorReforco) document.getElementById('valorReforco').value = formatToBR(tv.valorReforco);
+            if (tv.quantidadeReforcos) document.getElementById('quantidadeReforcos').value = tv.quantidadeReforcos;
+            if (tv.frequenciaReforcos) document.getElementById('frequenciaReforcos').value = tv.frequenciaReforcos;
+        }
+        
+        // Proposta Cliente
+        if (data.propostaCliente) {
+            const pc = data.propostaCliente;
+            if (pc.valorProposta) document.getElementById('valorProposta').value = formatToBR(pc.valorProposta);
+            if (pc.percentualEntrada) document.getElementById('propostaPercentualEntrada').value = pc.percentualEntrada;
+            if (pc.valorEntrada) document.getElementById('propostaValorEntrada').value = formatToBR(pc.valorEntrada);
+            if (pc.quantidadeParcelas) document.getElementById('propostaQuantidadeParcelas').value = pc.quantidadeParcelas;
+            if (pc.valorParcelas) document.getElementById('propostaValorParcelas').value = formatToBR(pc.valorParcelas);
+            if (pc.percentualReforco) document.getElementById('propostaPercentualReforco').value = pc.percentualReforco;
+            if (pc.valorReforco) document.getElementById('propostaReforcoValor').value = formatToBR(pc.valorReforco);
+            if (pc.quantidadeReforcos) document.getElementById('propostaReforcoQtd').value = pc.quantidadeReforcos;
+            if (pc.frequenciaReforcos) document.getElementById('propostaReforcoFreq').value = pc.frequenciaReforcos;
+            if (pc.bemMovelImovel) document.getElementById('bemMovelImovel').value = formatToBR(pc.bemMovelImovel);
+        }
+        
+        console.log('✅ Dados carregados nos inputs com sucesso');
+        
+    } catch (error) {
+        console.error('Erro ao preencher inputs:', error);
+        showError('Erro ao carregar dados do cenário');
+    }
+}
+
+function openScenarioModal() {
+    // Verificar se estamos na página de inputs
+    const modal = document.getElementById('scenarioModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        const input = document.getElementById('scenarioNameInput');
+        if (input) {
+            input.value = '';
+            input.focus();
+        }
+    } else {
+        // Se não há modal na página, criar um simples
+        const name = prompt('Digite o nome do cenário:');
+        if (name && name.trim()) {
+            saveScenarioWithName(name.trim());
+        }
+    }
+}
+
+function closeScenarioModal() {
+    const modal = document.getElementById('scenarioModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+async function confirmSaveScenarioFromInputs() {
+    const nameInput = document.getElementById('scenarioNameInput');
+    const name = nameInput?.value?.trim();
+    
+    if (!name) {
+        showError('Digite um nome para o cenário');
+        return;
+    }
+    
+    closeScenarioModal();
+    await saveScenarioWithName(name);
+}
+
+async function saveScenarioWithName(name) {
+    try {
+        const inputData = localStorage.getItem('currentInputData');
+        if (!inputData) {
+            showError('Nenhum dado encontrado para salvar');
+            return;
+        }
+        
+        const data = JSON.parse(inputData);
+        
+        const response = await fetch('/api/scenarios', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                name: name,
+                description: `Cenário criado em ${new Date().toLocaleDateString('pt-BR')}`,
+                data: data
+            })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            showSuccess('Cenário salvo com sucesso!');
+            
+            // Redirecionar para cenários após 2 segundos
+            setTimeout(() => {
+                window.location.href = '/cenarios.html';
+            }, 2000);
+        } else {
+            const error = await response.json();
+            showError(error.message || 'Erro ao salvar cenário');
+        }
+        
+    } catch (error) {
+        console.error('Erro ao salvar cenário:', error);
+        showError('Erro ao salvar cenário. Tente novamente.');
+    }
+}
+
+// ==================== INTEGRAÇÃO COM CENÁRIOS ====================
+
+// Initialize page with scenario data if editing
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if editing a scenario
+    const editingScenario = sessionStorage.getItem('editingScenario');
+    if (editingScenario) {
+        const scenario = JSON.parse(editingScenario);
+        console.log('📝 Carregando cenário para edição:', scenario.name);
+        loadScenarioData(scenario.data);
+        showInfo(`Editando cenário: ${scenario.name}`);
+        
+        // Atualizar texto do botão para "Atualizar Cenário"
+        const saveButton = document.querySelector('[onclick="saveScenario()"]');
+        if (saveButton) {
+            saveButton.innerHTML = '<i class="fas fa-save mr-2"></i><span>Atualizar Cenário</span>';
+            saveButton.setAttribute('onclick', 'updateScenario()');
+        }
+    }
+});
+
+// Function to collect all input data
+function collectAllInputData() {
+    const data = {
+        dadosGerais: {
+            nomeEmpreendimento: document.getElementById('nomeEmpreendimento')?.value || '',
+            dataAnalise: document.getElementById('dataAnalise')?.value || '',
+            responsavel: document.getElementById('responsavel')?.value || '',
+            tmaAno: parseFloat(document.getElementById('tmaAno')?.value || 0),
+            tmaMes: parseFloat(document.getElementById('tmaMes')?.value || 0),
+            observacoes: document.getElementById('observacoes')?.value || ''
+        },
+        tabelaVendas: {
+            valorTabela: parseBRNumber(document.getElementById('valorTabela')?.value || '0'),
+            percentualEntrada: parseFloat(document.getElementById('percentualEntrada')?.value || 0),
+            valorEntrada: parseBRNumber(document.getElementById('valorEntrada')?.value || '0'),
+            quantidadeParcelas: parseInt(document.getElementById('quantidadeParcelas')?.value || 0),
+            valorParcelas: parseBRNumber(document.getElementById('valorParcelas')?.value || '0'),
+            percentualReforco: parseFloat(document.getElementById('percentualReforco')?.value || 0),
+            valorReforco: parseBRNumber(document.getElementById('valorReforco')?.value || '0'),
+            quantidadeReforcos: parseInt(document.getElementById('quantidadeReforcos')?.value || 0),
+            frequenciaReforcos: parseInt(document.getElementById('frequenciaReforcos')?.value || 0)
+        },
+        propostaCliente: {
+            valorProposta: parseBRNumber(document.getElementById('valorProposta')?.value || '0'),
+            percentualEntradaProposta: parseFloat(document.getElementById('percentualEntradaProposta')?.value || 0),
+            valorEntradaProposta: parseBRNumber(document.getElementById('valorEntradaProposta')?.value || '0'),
+            quantidadeParcelasProposta: parseInt(document.getElementById('quantidadeParcelasProposta')?.value || 0),
+            valorParcelasProposta: parseBRNumber(document.getElementById('valorParcelasProposta')?.value || '0'),
+            percentualReforcoProposta: parseFloat(document.getElementById('percentualReforcoProposta')?.value || 0),
+            valorReforcoProposta: parseBRNumber(document.getElementById('valorReforcoProposta')?.value || '0'),
+            quantidadeReforcosProposta: parseInt(document.getElementById('quantidadeReforcosProposta')?.value || 0),
+            frequenciaReforcosProposta: parseInt(document.getElementById('frequenciaReforcosProposta')?.value || 0)
+        }
+    };
+    
+    console.log('📊 Dados coletados:', data);
+    return data;
+}
+
+// Function to load scenario data into inputs
+function loadScenarioData(data) {
+    if (!data) return;
+    
+    console.log('📂 Carregando dados do cenário nos inputs:', data);
+    
+    // Dados Gerais
+    if (data.dadosGerais) {
+        const dg = data.dadosGerais;
+        if (document.getElementById('nomeEmpreendimento')) document.getElementById('nomeEmpreendimento').value = dg.nomeEmpreendimento || '';
+        if (document.getElementById('dataAnalise')) document.getElementById('dataAnalise').value = dg.dataAnalise || '';
+        if (document.getElementById('responsavel')) document.getElementById('responsavel').value = dg.responsavel || '';
+        if (document.getElementById('tmaAno')) document.getElementById('tmaAno').value = dg.tmaAno || '';
+        if (document.getElementById('tmaMes')) document.getElementById('tmaMes').value = dg.tmaMes || '';
+        if (document.getElementById('observacoes')) document.getElementById('observacoes').value = dg.observacoes || '';
+    }
+    
+    // Tabela de Vendas
+    if (data.tabelaVendas) {
+        const tv = data.tabelaVendas;
+        if (document.getElementById('valorTabela')) document.getElementById('valorTabela').value = formatBRCurrency(tv.valorTabela || 0);
+        if (document.getElementById('percentualEntrada')) document.getElementById('percentualEntrada').value = tv.percentualEntrada || '';
+        if (document.getElementById('valorEntrada')) document.getElementById('valorEntrada').value = formatBRCurrency(tv.valorEntrada || 0);
+        if (document.getElementById('quantidadeParcelas')) document.getElementById('quantidadeParcelas').value = tv.quantidadeParcelas || '';
+        if (document.getElementById('valorParcelas')) document.getElementById('valorParcelas').value = formatBRCurrency(tv.valorParcelas || 0);
+        if (document.getElementById('percentualReforco')) document.getElementById('percentualReforco').value = tv.percentualReforco || '';
+        if (document.getElementById('valorReforco')) document.getElementById('valorReforco').value = formatBRCurrency(tv.valorReforco || 0);
+        if (document.getElementById('quantidadeReforcos')) document.getElementById('quantidadeReforcos').value = tv.quantidadeReforcos || '';
+        if (document.getElementById('frequenciaReforcos')) document.getElementById('frequenciaReforcos').value = tv.frequenciaReforcos || '';
+    }
+    
+    // Proposta Cliente
+    if (data.propostaCliente) {
+        const pc = data.propostaCliente;
+        if (document.getElementById('valorProposta')) document.getElementById('valorProposta').value = formatBRCurrency(pc.valorProposta || 0);
+        if (document.getElementById('percentualEntradaProposta')) document.getElementById('percentualEntradaProposta').value = pc.percentualEntradaProposta || '';
+        if (document.getElementById('valorEntradaProposta')) document.getElementById('valorEntradaProposta').value = formatBRCurrency(pc.valorEntradaProposta || 0);
+        if (document.getElementById('quantidadeParcelasProposta')) document.getElementById('quantidadeParcelasProposta').value = pc.quantidadeParcelasProposta || '';
+        if (document.getElementById('valorParcelasProposta')) document.getElementById('valorParcelasProposta').value = formatBRCurrency(pc.valorParcelasProposta || 0);
+        if (document.getElementById('percentualReforcoProposta')) document.getElementById('percentualReforcoProposta').value = pc.percentualReforcoProposta || '';
+        if (document.getElementById('valorReforcoProposta')) document.getElementById('valorReforcoProposta').value = formatBRCurrency(pc.valorReforcoProposta || 0);
+        if (document.getElementById('quantidadeReforcosProposta')) document.getElementById('quantidadeReforcosProposta').value = pc.quantidadeReforcosProposta || '';
+        if (document.getElementById('frequenciaReforcosProposta')) document.getElementById('frequenciaReforcosProposta').value = pc.frequenciaReforcosProposta || '';
+    }
+    
+    showSuccess('Dados do cenário carregados com sucesso!');
+}
+
+// Function to update scenario (when editing)
+async function updateScenario() {
+    const editingScenario = sessionStorage.getItem('editingScenario');
+    if (!editingScenario) {
+        showError('Nenhum cenário em edição encontrado.');
+        return;
+    }
+    
+    const scenario = JSON.parse(editingScenario);
+    const data = collectAllInputData();
+    
+    try {
+        const response = await fetch(`/api/scenarios/${scenario.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                name: scenario.name,
+                description: `Cenário atualizado em ${new Date().toLocaleDateString('pt-BR')}`,
+                data: data
+            })
+        });
+        
+        if (response.ok) {
+            showSuccess('Cenário atualizado com sucesso!');
+            sessionStorage.removeItem('editingScenario');
+            
+            // Redirecionar para cenários após 2 segundos
+            setTimeout(() => {
+                window.location.href = '/cenarios.html';
+            }, 2000);
+        } else {
+            const error = await response.json();
+            showError(error.message || 'Erro ao atualizar cenário');
+        }
+        
+    } catch (error) {
+        console.error('Erro ao atualizar cenário:', error);
+        showError('Erro ao atualizar cenário. Tente novamente.');
+    }
+}
+
+// Global functions
+window.collectAllInputData = collectAllInputData;
+window.loadScenarioData = loadScenarioData;
+window.updateScenario = updateScenario;

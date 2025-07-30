@@ -806,6 +806,90 @@ const handler = async (req, res) => {
     }
   }
 
+  // Atualizar cenário
+  if (url.startsWith('/api/scenarios/') && method === 'PUT') {
+    try {
+      const scenarioId = url.split('/')[3];
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      
+      if (!token) {
+        return sendResponse(401, { message: 'Token não fornecido.' });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
+      const { name, description, data } = body;
+
+      if (!name || !data) {
+        return sendResponse(400, { message: 'Nome e dados do cenário são obrigatórios.' });
+      }
+      
+      const scenario = await Scenario.findOne({ _id: scenarioId, userId: decoded.userId });
+      
+      if (!scenario) {
+        return sendResponse(404, { message: 'Cenário não encontrado.' });
+      }
+
+      // Atualizar campos
+      scenario.name = name;
+      scenario.description = description || '';
+      scenario.data = data;
+      scenario.updatedAt = new Date();
+
+      await scenario.save();
+
+      return sendResponse(200, { 
+        message: 'Cenário atualizado com sucesso!',
+        scenario: {
+          id: scenario._id,
+          name: scenario.name,
+          description: scenario.description,
+          data: scenario.data,
+          createdAt: scenario.createdAt,
+          updatedAt: scenario.updatedAt
+        }
+      });
+
+    } catch (error) {
+      console.error('❌ Erro ao atualizar cenário:', error);
+      return sendResponse(500, { message: 'Erro no servidor.', error: error.message });
+    }
+  }
+
+  // Obter cenário específico
+  if (url.startsWith('/api/scenarios/') && method === 'GET') {
+    try {
+      const scenarioId = url.split('/')[3];
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      
+      if (!token) {
+        return sendResponse(401, { message: 'Token não fornecido.' });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
+      
+      const scenario = await Scenario.findOne({ _id: scenarioId, userId: decoded.userId });
+      
+      if (!scenario) {
+        return sendResponse(404, { message: 'Cenário não encontrado.' });
+      }
+
+      return sendResponse(200, { 
+        scenario: {
+          id: scenario._id,
+          name: scenario.name,
+          description: scenario.description,
+          data: scenario.data,
+          createdAt: scenario.createdAt,
+          updatedAt: scenario.updatedAt
+        }
+      });
+
+    } catch (error) {
+      console.error('❌ Erro ao buscar cenário:', error);
+      return sendResponse(500, { message: 'Erro no servidor.', error: error.message });
+    }
+  }
+
   // HEALTH CHECK
   if (cleanUrl === '/api/health' && method === 'GET') {
     const result = res.json({ status: 'ok', time: new Date().toISOString() });
