@@ -1016,6 +1016,92 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ==================== FUNÇÕES DE CENÁRIO ====================
 
+// Função para atualizar cenário existente (modo edição)
+async function updateExistingScenario() {
+    console.log('🔄 Atualizando cenário existente...');
+    
+    const editingScenario = sessionStorage.getItem('editingScenario');
+    if (!editingScenario) {
+        console.error('❌ Cenário em edição não encontrado');
+        showError('Erro: dados do cenário não encontrados');
+        return;
+    }
+    
+    try {
+        const scenario = JSON.parse(editingScenario);
+        console.log('📋 Cenário sendo editado:', scenario);
+        
+        // 1. Coletar dados dos inputs atuais
+        const data = collectAllInputData();
+        console.log('📊 Novos dados coletados:', data);
+        
+        // 2. Calcular todos os indicadores com os novos dados
+        let results = null;
+        try {
+            results = calculateAllIndicators(data);
+            console.log('✅ Novos indicadores calculados:', results);
+        } catch (calcError) {
+            console.warn('⚠️ Erro no cálculo dos indicadores:', calcError.message);
+            showError('Aviso: Cenário atualizado, mas alguns cálculos podem estar incompletos: ' + calcError.message);
+        }
+        
+        // 3. Preparar payload para atualização
+        const payload = {
+            name: scenario.name, // Manter nome original
+            description: scenario.description || `Cenário atualizado em ${new Date().toLocaleDateString('pt-BR')}`,
+            data: data,
+            results: results,
+            lastModified: new Date().toISOString()
+        };
+        
+        console.log('📤 Enviando atualização para API:', payload);
+        
+        // 4. Enviar atualização para o backend
+        const response = await fetch(`/api/scenarios/${scenario._id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            console.log('✅ Cenário atualizado:', result);
+            
+            // Armazenar dados atualizados para resultados
+            const updatedScenario = {
+                ...result,
+                data: data,
+                results: results
+            };
+            
+            sessionStorage.setItem('resultadosData', JSON.stringify(updatedScenario));
+            sessionStorage.setItem('lastScenarioData', JSON.stringify(updatedScenario));
+            
+            // Limpar dados de edição
+            sessionStorage.removeItem('editingScenario');
+            
+            showSuccess('Cenário atualizado com sucesso!');
+            
+            // Redirecionar para resultados
+            setTimeout(() => {
+                window.location.href = 'resultados.html';
+            }, 1500);
+            
+        } else {
+            const error = await response.text();
+            console.error('❌ Erro na atualização:', error);
+            showError('Erro ao atualizar cenário: ' + error);
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao processar atualização:', error);
+        showError('Erro ao processar atualização: ' + error.message);
+    }
+}
+
 function saveScenario() {
     console.log('💾 Salvando NOVO cenário...');
     
@@ -2018,6 +2104,12 @@ function getFieldLabel(fieldId) {
 function nextStep() {
     console.log('🚀 Iniciando próxima etapa...');
     
+    // Verificar se está em modo de edição
+    const editingScenario = sessionStorage.getItem('editingScenario');
+    const isEditMode = !!editingScenario;
+    
+    console.log('📝 Modo de edição:', isEditMode);
+    
     // Validar campos obrigatórios
     const missingFields = validateRequiredFields();
     
@@ -2027,8 +2119,15 @@ function nextStep() {
         return;
     }
     
-    // Mostrar modal para nome do cenário
-    showScenarioNameModal();
+    if (isEditMode) {
+        // Modo edição: salvar diretamente sem pedir nome
+        console.log('💾 Modo edição detectado - atualizando cenário...');
+        updateExistingScenario(); // Usar a nova função específica para edição
+    } else {
+        // Modo criação: mostrar modal para nome do cenário
+        console.log('📝 Modo criação: solicitando nome do cenário...');
+        showScenarioNameModal();
+    }
 }
 
 function showScenarioNameModal() {

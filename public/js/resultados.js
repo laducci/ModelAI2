@@ -64,73 +64,68 @@ function calcularTmaMensal(tmaAnual) {
 
 // Função para exibir resultados pré-calculados nos 6 cards
 function displayCalculatedResults(results) {
-    console.log('🎯 Exibindo resultados calculados:', results);
+    console.log('🎯 === EXIBINDO RESULTADOS CALCULADOS ===');
+    console.log('📊 Resultados recebidos:', results);
     
     try {
         // Card 1: DESCONTO NOMINAL (%)
-        const descontoNominalCard = document.querySelector('[data-card="desconto-nominal"]');
-        if (descontoNominalCard) {
-            const valueEl = descontoNominalCard.querySelector('.text-3xl, .text-4xl');
-            if (valueEl && results.descontoNominalPercent !== undefined) {
-                valueEl.textContent = formatPercent(results.descontoNominalPercent);
-            }
+        const descontoNominalEl = document.getElementById('descontoNominal');
+        if (descontoNominalEl && results.descontoNominalPercent !== undefined) {
+            descontoNominalEl.textContent = formatPercent(results.descontoNominalPercent);
+            console.log('✅ Desconto Nominal atualizado:', formatPercent(results.descontoNominalPercent));
+        } else {
+            console.warn('⚠️ Elemento descontoNominal não encontrado ou valor undefined');
         }
         
         // Card 2: DELTA DESCONTO (R$)
-        const deltaDescontoCard = document.querySelector('[data-card="delta-desconto"]');
-        if (deltaDescontoCard) {
-            const valueEl = deltaDescontoCard.querySelector('.text-3xl, .text-4xl');
-            if (valueEl && results.descontoNominalReais !== undefined) {
-                valueEl.textContent = formatCurrency(results.descontoNominalReais);
-            }
+        const deltaDescontoEl = document.getElementById('deltaDesconto');
+        if (deltaDescontoEl && results.descontoNominalReais !== undefined) {
+            deltaDescontoEl.textContent = formatCurrency(results.descontoNominalReais);
+            console.log('✅ Delta Desconto atualizado:', formatCurrency(results.descontoNominalReais));
+        } else {
+            console.warn('⚠️ Elemento deltaDesconto não encontrado ou valor undefined');
         }
         
         // Card 3: VPL TABELA
-        const vplTabelaCard = document.querySelector('[data-card="vpl-tabela"]');
-        if (vplTabelaCard) {
-            const valueEl = vplTabelaCard.querySelector('.text-3xl, .text-4xl');
-            if (valueEl && results.vplTabela !== undefined) {
-                valueEl.textContent = formatCurrency(results.vplTabela);
-            }
+        const vplTabelaEl = document.getElementById('vplTabela');
+        if (vplTabelaEl && results.vplTabela !== undefined) {
+            vplTabelaEl.textContent = formatCurrency(results.vplTabela);
+            console.log('✅ VPL Tabela atualizado:', formatCurrency(results.vplTabela));
+        } else {
+            console.warn('⚠️ Elemento vplTabela não encontrado ou valor undefined');
         }
         
         // Card 4: VPL PROPOSTA
-        const vplPropostaCard = document.querySelector('[data-card="vpl-proposta"]');
-        if (vplPropostaCard) {
-            const valueEl = vplPropostaCard.querySelector('.text-3xl, .text-4xl');
-            if (valueEl && results.vplProposta !== undefined) {
-                valueEl.textContent = formatCurrency(results.vplProposta);
-            }
+        const vplPropostaEl = document.getElementById('vplProposta');
+        if (vplPropostaEl && results.vplProposta !== undefined) {
+            vplPropostaEl.textContent = formatCurrency(results.vplProposta);
+            console.log('✅ VPL Proposta atualizado:', formatCurrency(results.vplProposta));
+        } else {
+            console.warn('⚠️ Elemento vplProposta não encontrado ou valor undefined');
         }
         
-        // Card 5: DELTA DE VPL
-        const deltaVplCard = document.querySelector('[data-card="delta-vpl"]');
-        if (deltaVplCard) {
-            const valueEl = deltaVplCard.querySelector('.text-3xl, .text-4xl');
-            if (valueEl && results.deltaVpl !== undefined) {
-                valueEl.textContent = formatCurrency(results.deltaVpl);
-            }
+        // Card 5: DELTA VPL (R$)
+        const deltaVPLEl = document.getElementById('deltaVPL');
+        if (deltaVPLEl && results.deltaVPL !== undefined) {
+            deltaVPLEl.textContent = formatCurrency(results.deltaVPL);
+            console.log('✅ Delta VPL atualizado:', formatCurrency(results.deltaVPL));
+        } else {
+            console.warn('⚠️ Elemento deltaVPL não encontrado ou valor undefined');
         }
         
         // Card 6: % DELTA VPL
-        const percentDeltaVplCard = document.querySelector('[data-card="percent-delta-vpl"]');
-        if (percentDeltaVplCard) {
-            const valueEl = percentDeltaVplCard.querySelector('.text-3xl, .text-4xl');
-            if (valueEl && results.percentualDeltaVpl !== undefined) {
-                valueEl.textContent = formatPercent(results.percentualDeltaVpl);
-            }
+        const percentDeltaVPLEl = document.getElementById('percentDeltaVPL');
+        if (percentDeltaVPLEl && results.percentDeltaVPL !== undefined) {
+            percentDeltaVPLEl.textContent = formatPercent(results.percentDeltaVPL);
+            console.log('✅ % Delta VPL atualizado:', formatPercent(results.percentDeltaVPL));
+        } else {
+            console.warn('⚠️ Elemento percentDeltaVPL não encontrado ou valor undefined');
         }
         
-        console.log('✅ Resultados exibidos nos cards com sucesso');
-        
-        // Atualizar timestamp se houver
-        if (results.calculatedAt) {
-            const timestamp = new Date(results.calculatedAt);
-            console.log('🕐 Cálculo realizado em:', timestamp.toLocaleString('pt-BR'));
-        }
+        console.log('✅ === TODOS OS CARDS ATUALIZADOS ===');
         
     } catch (error) {
-        console.error('❌ Erro ao exibir resultados calculados:', error);
+        console.error('❌ Erro ao exibir resultados:', error);
     }
 }
 
@@ -639,6 +634,22 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('  - currentInputData:', !!sessionStorage.getItem('currentInputData'));
     console.log('  - currentScenarioName:', sessionStorage.getItem('currentScenarioName'));
     console.log('  - currentScenarioId:', sessionStorage.getItem('currentScenarioId'));
+    
+    // TESTE: Função para testar exibição com dados fake
+    window.testResultados = function() {
+        console.log('🧪 TESTANDO EXIBIÇÃO DE RESULTADOS...');
+        const fakeResults = {
+            descontoNominalPercent: -5.5,
+            descontoNominalReais: -27500,
+            vplTabela: 45000,
+            vplProposta: 17500,
+            deltaVPL: -27500,
+            percentDeltaVPL: -61.11
+        };
+        displayCalculatedResults(fakeResults);
+    };
+    
+    console.log('🧪 Para testar, digite: testResultados() no console');
 });
 
 // ================================
