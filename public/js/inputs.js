@@ -708,7 +708,7 @@ document.addEventListener('DOMContentLoaded', function() {
         calculatePropostaEntradaValorPorParcela();
         calculatePropostaParcelasValorPorParcela();
         calculatePropostaReforcoValorPorParcela();
-        calculateValorProposta();
+        calculatePropostaTotal();
         updateResumos();
     }, 100);
     
@@ -1056,6 +1056,17 @@ async function updateExistingScenario() {
         
         console.log('📤 Enviando atualização para API:', payload);
         
+        // Verificar se temos um ID válido
+        if (!scenario._id) {
+            console.error('❌ ID do cenário não encontrado:', scenario);
+            showError('Erro: ID do cenário não encontrado. Criando novo cenário...');
+            // Fallback: criar novo cenário
+            await saveScenarioWithName(scenario.name || 'Cenário Editado');
+            return;
+        }
+        
+        console.log('🔄 Atualizando cenário ID:', scenario._id);
+        
         // 4. Enviar atualização para o backend
         const response = await fetch(`/api/scenarios/${scenario._id}`, {
             method: 'PUT',
@@ -1070,7 +1081,12 @@ async function updateExistingScenario() {
             const result = await response.json();
             console.log('✅ Cenário atualizado:', result);
             
-            // Armazenar dados atualizados para resultados
+            // Salvar dados necessários para exibição dos resultados
+            sessionStorage.setItem('currentInputData', JSON.stringify(data));
+            sessionStorage.setItem('currentScenarioName', scenario.name);
+            sessionStorage.setItem('currentScenarioId', scenario._id);
+            
+            // Também salvar no formato antigo para compatibilidade
             const updatedScenario = {
                 ...result,
                 data: data,
@@ -1079,6 +1095,12 @@ async function updateExistingScenario() {
             
             sessionStorage.setItem('resultadosData', JSON.stringify(updatedScenario));
             sessionStorage.setItem('lastScenarioData', JSON.stringify(updatedScenario));
+            
+            console.log('💾 Dados salvos no sessionStorage após atualização:', {
+                currentInputData: !!data,
+                currentScenarioName: scenario.name,
+                currentScenarioId: scenario._id
+            });
             
             // Limpar dados de edição
             sessionStorage.removeItem('editingScenario');
@@ -2162,6 +2184,23 @@ async function saveScenarioAndProceed() {
     try {
         showSuccess('Salvando cenário...');
         const savedScenario = await saveScenarioWithName(name);
+        
+        // Salvar dados necessários para exibição dos resultados
+        if (savedScenario) {
+            // Coletar dados atuais dos inputs
+            const currentData = collectAllInputData();
+            
+            // Salvar no sessionStorage com as chaves que resultados.js espera
+            sessionStorage.setItem('currentInputData', JSON.stringify(currentData));
+            sessionStorage.setItem('currentScenarioName', name);
+            sessionStorage.setItem('currentScenarioId', savedScenario._id || savedScenario.id);
+            
+            console.log('💾 Dados salvos no sessionStorage para resultados:', {
+                currentInputData: !!currentData,
+                currentScenarioName: name,
+                currentScenarioId: savedScenario._id || savedScenario.id
+            });
+        }
         
         // Redirecionar para resultados com o ID do cenário salvo
         if (savedScenario && savedScenario._id) {

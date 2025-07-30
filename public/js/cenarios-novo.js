@@ -249,8 +249,10 @@ class ScenarioManager {
             
             // Salvar dados do cenário para a página de inputs
             sessionStorage.setItem('editingScenario', JSON.stringify({
-                id: scenario._id || scenario.id,
+                _id: scenario._id || scenario.id, // Usar _id como chave principal
+                id: scenario._id || scenario.id,  // Manter id para compatibilidade
                 name: scenario.name,
+                description: scenario.description,
                 data: scenario.data
             }));
             
