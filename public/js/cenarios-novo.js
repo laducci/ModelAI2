@@ -137,16 +137,16 @@ class ScenarioManager {
                 
                 <div class="space-y-2 mb-4">
                     <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Cliente:</span>
+                        <span class="font-medium text-gray-800">${dadosGerais.cliente || 'N/A'}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Unidade:</span>
+                        <span class="font-medium text-gray-800">${dadosGerais.unidade || 'N/A'}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
                         <span class="text-gray-600">Empreendimento:</span>
                         <span class="font-medium text-gray-800">${dadosGerais.nomeEmpreendimento || 'N/A'}</span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-600">Valor Tabela:</span>
-                        <span class="font-medium text-gray-800">R$ ${(tabelaVendas.valorTabela || 0).toLocaleString('pt-BR')}</span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-600">TMA Ano:</span>
-                        <span class="font-medium text-gray-800">${dadosGerais.tmaAno || 0}%</span>
                     </div>
                 </div>
                 

@@ -1185,6 +1185,8 @@ document.addEventListener('DOMContentLoaded', function() {
 function collectAllInputData() {
     const data = {
         dadosGerais: {
+            cliente: document.getElementById('cliente')?.value || '',
+            unidade: document.getElementById('unidade')?.value || '',
             nomeEmpreendimento: document.getElementById('nomeEmpreendimento')?.value || '',
             dataAnalise: document.getElementById('dataAnalise')?.value || '',
             responsavel: document.getElementById('responsavel')?.value || '',
@@ -1229,6 +1231,8 @@ function loadScenarioData(data) {
     // Dados Gerais
     if (data.dadosGerais) {
         const dg = data.dadosGerais;
+        if (document.getElementById('cliente')) document.getElementById('cliente').value = dg.cliente || '';
+        if (document.getElementById('unidade')) document.getElementById('unidade').value = dg.unidade || '';
         if (document.getElementById('nomeEmpreendimento')) document.getElementById('nomeEmpreendimento').value = dg.nomeEmpreendimento || '';
         if (document.getElementById('dataAnalise')) document.getElementById('dataAnalise').value = dg.dataAnalise || '';
         if (document.getElementById('responsavel')) document.getElementById('responsavel').value = dg.responsavel || '';
