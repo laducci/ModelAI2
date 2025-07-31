@@ -6,7 +6,6 @@
     <title>ModelAI - Sistema de Análise VPL de Empreendimentos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/index.css">
     <style>
         .hero-gradient {
             background: linear-gradient(135deg, #0d9488 0%, #059669 50%, #0891b2 100%);
@@ -38,7 +37,6 @@
         }
         .glassmorphism {
             background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
     </style>
@@ -348,15 +346,15 @@
                     <ul class="space-y-2">
                         <li class="text-gray-300 flex items-center">
                             <i class="fas fa-envelope mr-2 text-teal-400"></i>
-                            contato@modelai.com.br
+                            laura@modelai.com.br
                         </li>
                         <li class="text-gray-300 flex items-center">
                             <i class="fas fa-phone mr-2 text-teal-400"></i>
-                            (11) 9999-9999
+                            (41) 99707-0665
                         </li>
                         <li class="text-gray-300 flex items-center">
                             <i class="fas fa-map-marker-alt mr-2 text-teal-400"></i>
-                            São Paulo, SP
+                            Curitiba, PR
                         </li>
                     </ul>
                 </div>
@@ -422,9 +420,9 @@
         window.addEventListener('scroll', function() {
             const header = document.querySelector('header');
             if (window.scrollY > 100) {
-                header.classList.add('bg-white/95', 'backdrop-blur-sm');
+                header.classList.add('bg-white/95');
             } else {
-                header.classList.remove('bg-white/95', 'backdrop-blur-sm');
+                header.classList.remove('bg-white/95');
             }
         });
     </script>
