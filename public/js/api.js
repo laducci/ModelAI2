@@ -5,7 +5,6 @@ class ApiClient {
             ? 'http://localhost:3000/api' 
             : '/api'; // Usar URL relativa para Vercel
         this.token = localStorage.getItem('token') || localStorage.getItem('modelai_token');
-        console.log('🔗 API Base URL:', this.baseURL);
     }
 
     // Configurar cabeçalhos padrão
@@ -30,7 +29,6 @@ class ApiClient {
         };
 
         try {
-            console.log(`🔗 ${options.method || 'GET'}: ${url}`);
             const response = await fetch(url, config);
             const data = await response.json();
 

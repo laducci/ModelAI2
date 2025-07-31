@@ -36,7 +36,7 @@ function forceAdminMenuVisibility() {
         
         usuariosLink.innerHTML = `
             <i class="fas fa-users sidebar-icon mr-3 text-lg"></i>
-            <span class="font-medium sidebar-text">Usuários (Admin)</span>
+            <span class="font-medium sidebar-text">Usuários</span>
         `;
         
         // Inserir após o link de resultados
@@ -86,8 +86,6 @@ function updateAdminUserInfo() {
                 }
             }
         });
-        
-        console.log('🎨 Informações do usuário atualizadas:', user.name, 'Role:', user.role);
         
     } catch (error) {
         console.error('❌ Erro ao atualizar info do usuário:', error);

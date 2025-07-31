@@ -365,6 +365,73 @@ const handler = async (req, res) => {
     }
   }
 
+  // CRIAR USUÁRIO (rota para admins - compatibilidade com frontend)
+  if (cleanUrl === '/api/users' && method === 'POST') {
+    try {
+      // Verificar se o usuário logado é admin
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      
+      if (!token) {
+        return sendResponse(401, { message: 'Token de acesso necessário.' });
+      }
+      
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
+        const requestUser = await User.findById(decoded.userId);
+        
+        if (!requestUser || requestUser.role !== 'admin') {
+          return sendResponse(403, { message: 'Acesso negado. Apenas administradores podem criar usuários.' });
+        }
+      } catch (tokenError) {
+        return sendResponse(401, { message: 'Token inválido.' });
+      }
+      
+      const { name, email, password, company, role = 'user' } = body;
+      
+      console.log('👥 Criando novo usuário via /api/users:', email, 'Role:', role);
+      
+      // Validações básicas
+      if (!name || !email || !password) {
+        return sendResponse(400, { message: 'Nome, email e senha são obrigatórios.' });
+      }
+      
+      // Verificar se o usuário já existe
+      const existingUser = await User.findOne({ email: email.toLowerCase() });
+      if (existingUser) {
+        return sendResponse(400, { message: 'Usuário já existe com este email' });
+      }
+      
+      // Criar novo usuário
+      const newUser = new User({
+        name: name.trim(),
+        email: email.toLowerCase().trim(),
+        password, // Senha será hasheada automaticamente pelo middleware do modelo
+        role: role || 'user',
+        company: company || 'Não informado',
+        isActive: true
+      });
+      
+      await newUser.save();
+      
+      console.log('✅ Usuário criado com sucesso via /api/users:', newUser.email, 'Role:', newUser.role);
+      
+      return sendResponse(201, { 
+        message: 'Usuário criado com sucesso!',
+        user: {
+          _id: newUser._id,
+          name: newUser.name,
+          email: newUser.email,
+          role: newUser.role,
+          company: newUser.company,
+          active: newUser.isActive
+        }
+      });
+    } catch (error) {
+      console.error('❌ Erro ao criar usuário via /api/users:', error);
+      return sendResponse(500, { message: 'Erro no servidor.', error: error.message });
+    }
+  }
+
   // LISTAR USUÁRIOS (apenas para admins)
   if (cleanUrl === '/api/users' && method === 'GET') {
     try {

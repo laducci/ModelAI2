@@ -13,7 +13,6 @@ function getUserData() {
     
     try {
         const user = JSON.parse(userData);
-        console.log('✅ Usuário encontrado:', user.name, 'Role:', user.role);
         return { user, token };
     } catch (error) {
         console.error('❌ Erro ao parsear dados:', error);
@@ -60,8 +59,6 @@ function forceAdminMenu() {
 function updateUserInterface() {
     if (!currentUser) return;
     
-    console.log('🎨 Atualizando UI para:', currentUser.name, 'Role:', currentUser.role);
-    
     // Nome do usuário
     setTimeout(() => {
         const nameElements = document.querySelectorAll('#user-name, #userName, .user-name');
@@ -105,38 +102,58 @@ function checkPageAccess() {
 // Logout
 function logout() {
     try {
-        // Usar a função de alerta bonita se estiver disponível
-        if (typeof showQuestion === 'function') {
-            showQuestion('Confirmar Logout', 'Deseja realmente sair do sistema?', function() {
-                // Confirmou
-                if (menuMonitor) clearInterval(menuMonitor);
-                localStorage.clear();
-                sessionStorage.clear();
-                currentUser = null;
-                if (typeof showSuccess === 'function') {
-                    showSuccess('Logout realizado com sucesso! Redirecionando...');
-                    setTimeout(() => window.location.replace('login.html'), 1500);
-                } else {
+        // Adicionar delay extra para garantir que alerts.js esteja carregado
+        setTimeout(() => {
+            // Usar a função de alerta bonita se estiver disponível
+            if (typeof confirmAction === 'function' || typeof window.confirmAction === 'function') {
+                const confirmFunc = confirmAction || window.confirmAction;
+                confirmFunc('Deseja realmente sair do sistema? Você precisará fazer login novamente para acessar o sistema.', 'Confirmar Logout')
+                    .then((confirmed) => {
+                        if (confirmed) {
+                            // Confirmou o logout
+                            if (menuMonitor) clearInterval(menuMonitor);
+                            localStorage.clear();
+                            sessionStorage.clear();
+                            currentUser = null;
+                            if (typeof showSuccess === 'function' || typeof window.showSuccess === 'function') {
+                                const successFunc = showSuccess || window.showSuccess;
+                                successFunc('Logout realizado com sucesso! Redirecionando...');
+                                setTimeout(() => window.location.replace('login.html'), 1500);
+                            } else {
+                                window.location.replace('login.html');
+                            }
+                        } else {
+                            // Cancelou o logout
+                            if (typeof showInfo === 'function' || typeof window.showInfo === 'function') {
+                                const infoFunc = showInfo || window.showInfo;
+                                infoFunc('Logout cancelado.');
+                            }
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('❌ Erro no modal de confirmação:', error);
+                        // Fallback simples
+                        if (confirm('Deseja realmente sair do sistema?')) {
+                            if (menuMonitor) clearInterval(menuMonitor);
+                            localStorage.clear();
+                            sessionStorage.clear();
+                            currentUser = null;
+                            window.location.replace('login.html');
+                        }
+                    });
+            } else {
+                // Fallback para quando não há função de alerta
+                if (confirm('Deseja realmente sair do sistema?')) {
+                    if (menuMonitor) clearInterval(menuMonitor);
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    currentUser = null;
                     window.location.replace('login.html');
                 }
-            }, function() {
-                // Cancelou - não faz nada
-                if (typeof showInfo === 'function') {
-                    showInfo('Logout cancelado.');
-                }
-            });
-        } else {
-            // Fallback para quando não há função de alerta
-            if (confirm('Deseja realmente sair do sistema?')) {
-                if (menuMonitor) clearInterval(menuMonitor);
-                localStorage.clear();
-                sessionStorage.clear();
-                currentUser = null;
-                window.location.replace('login.html');
             }
-        }
+        }, 100); // Delay de 100ms para garantir que tudo esteja carregado
     } catch (error) {
-        console.error('Erro no logout:', error);
+        console.error('❌ Erro no logout:', error);
         // Fallback simples
         if (menuMonitor) clearInterval(menuMonitor);
         localStorage.clear();
@@ -159,23 +176,32 @@ function initializeAuth() {
     const authData = getUserData();
     
     if (!authData) {
-        console.log('❌ Redirecionando para login');
         window.location.replace('login.html');
         return;
     }
     
     currentUser = authData.user;
-    console.log('✅ Usuário logado:', currentUser.name, 'Role:', currentUser.role);
     
     if (!checkPageAccess()) {
-        console.log('🚫 Sem acesso a esta página');
-        // Não redirecionar automaticamente - deixar o usuário navegar
-        // if (currentUser.role === 'admin') {
-        //     window.location.replace('usuarios.html');
-        // } else {
-        //     window.location.replace('inputs.html');
-        // }
-        // return;
+        // Usar alerta bonito se disponível
+        setTimeout(() => {
+            if (typeof showError === 'function' || typeof window.showError === 'function') {
+                const errorFunc = showError || window.showError;
+                errorFunc('Acesso Negado! Você não tem permissão para acessar esta página.');
+            } else {
+                alert('Acesso negado! Você não tem permissão para acessar esta página.');
+            }
+            
+            // Redirecionar após o alerta
+            setTimeout(() => {
+                if (currentUser.role === 'admin') {
+                    window.location.replace('usuarios.html');
+                } else {
+                    window.location.replace('inputs.html');
+                }
+            }, 2000);
+        }, 100);
+        return;
     }
     
     updateUserInterface();
@@ -189,14 +215,26 @@ function initializeAuth() {
     
     // Configurar logout
     setTimeout(() => {
-        const logoutElements = document.querySelectorAll('a[href="login.html"], [data-action="logout"], .logout-btn');
+        const logoutElements = document.querySelectorAll('a[href="login.html"], [data-action="logout"], .logout-btn, [onclick*="logout()"], button[title="Sair"]');
         logoutElements.forEach(el => {
-            el.addEventListener('click', function(e) {
-                e.preventDefault();
-                logout();
-            });
+            // Remover onclick inline se existir
+            if (el.hasAttribute('onclick')) {
+                el.removeAttribute('onclick');
+            }
+            
+            // Remover listeners anteriores para evitar duplicação
+            el.removeEventListener('click', handleLogoutClick);
+            
+            el.addEventListener('click', handleLogoutClick);
         });
     }, 500);
+}
+
+// Função separada para o click do logout
+function handleLogoutClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    logout();
 }
 
 // Event Listeners

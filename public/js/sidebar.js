@@ -54,8 +54,6 @@ function toggleSidebar() {
             toggleIcon.style.transform = 'rotate(0deg)';
         }
     }
-
-    console.log(sidebarCollapsed ? '📱 Sidebar colapsada' : '📺 Sidebar expandida');
 }
 
 function setupSidebarTextElements() {
@@ -70,8 +68,6 @@ function setupSidebarTextElements() {
     if (sidebar) {
         sidebar.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
     }
-    
-    console.log('🔧 Sidebar elements configurados para animações suaves');
 }
 
 // Responsive handling

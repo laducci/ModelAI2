@@ -152,7 +152,7 @@
                     <button class="text-teal-200 hover:text-white p-2 rounded-lg hover:bg-teal-700/50 transition-colors sidebar-text" title="Configurações">
                         <i class="fas fa-cog text-sm"></i>
                     </button>
-                    <button onclick="logout()" class="text-teal-200 hover:text-white p-2 rounded-lg hover:bg-teal-700/50 transition-colors sidebar-text" title="Sair">
+                    <button class="text-teal-200 hover:text-white p-2 rounded-lg hover:bg-teal-700/50 transition-colors sidebar-text logout-btn" title="Sair">
                         <i class="fas fa-sign-out-alt text-sm"></i>
                     </button>
                 </div>
@@ -168,7 +168,7 @@
                 <i class="fas fa-bars text-xl"></i>
             </button>
             <img src="images/Logo-ModelAI-positiva.png" alt="Model AI" class="h-8">
-            <button onclick="logout()" class="text-white">
+            <button class="text-white logout-btn">
                 <i class="fas fa-sign-out-alt text-xl"></i>
             </button>
         </div>
@@ -344,13 +344,6 @@
             }
 
             // Mostrar link de usuários apenas para administradores
-            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-            if (currentUser.role === 'admin') {
-                const adminUsersLink = document.getElementById('adminUsersLink');
-                if (adminUsersLink) {
-                    adminUsersLink.style.display = 'flex';
-                }
-            }
         });
     </script>
 </body>
