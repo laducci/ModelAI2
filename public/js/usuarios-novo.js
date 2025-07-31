@@ -59,62 +59,19 @@ function renderizarUsuarios() {
         tbody.innerHTML = `
             <tr>
                 <td colspan="7" class="text-center text-gray-500 p-8">
-                    <i class="fas fa-users text-4xl mb-4"></i>
-                    <p>Nenhum usuário encontrado</p>
+                    <div class="flex flex-col items-center gap-3">
+                        <i class="fas fa-users text-4xl mb-4"></i>
+                        <p>Nenhum usuário encontrado</p>
+                    </div>
                 </td>
             </tr>
         `;
         return;
     }
     
-    tbody.innerHTML = usuarios.map(usuario => {
-        const status = usuario.active !== false ? 
-            '<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Ativo</span>' : 
-            '<span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Inativo</span>';
-            
-        const role = usuario.role === 'admin' ? 
-            '<span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">Admin</span>' :
-            '<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Usuário</span>';
-            
-        const ultimoLogin = usuario.lastLogin ? 
-            new Date(usuario.lastLogin).toLocaleDateString('pt-BR') : 
-            'Nunca';
-            
-        return `
-            <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4">
-                    <div class="flex items-center">
-                        <div class="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center mr-3">
-                            <span class="text-teal-600 font-semibold">
-                                ${usuario.name.charAt(0).toUpperCase()}
-                            </span>
-                        </div>
-                        <div>
-                            <div class="font-medium text-gray-900">${usuario.name}</div>
-                        </div>
-                    </div>
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-500">${usuario.email}</td>
-                <td class="px-6 py-4 text-sm text-gray-500">${usuario.company || '-'}</td>
-                <td class="px-6 py-4">${role}</td>
-                <td class="px-6 py-4">${status}</td>
-                <td class="px-6 py-4 text-sm text-gray-500">${ultimoLogin}</td>
-                <td class="px-6 py-4 text-sm font-medium">
-                    <div class="flex space-x-2">
-                        <button onclick="editarUsuario('${usuario._id}')" class="text-blue-600 hover:text-blue-900 px-2 py-1 rounded">
-                            <i class="fas fa-edit"></i> Editar
-                        </button>
-                        <button onclick="toggleUsuario('${usuario._id}')" class="text-yellow-600 hover:text-yellow-900 px-2 py-1 rounded">
-                            <i class="fas fa-toggle-${usuario.active !== false ? 'on' : 'off'}"></i> ${usuario.active !== false ? 'Desativar' : 'Ativar'}
-                        </button>
-                        <button onclick="deletarUsuario('${usuario._id}')" class="text-red-600 hover:text-red-900 px-2 py-1 rounded">
-                            <i class="fas fa-trash"></i> Excluir
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    }).join('');
+    // Inicializar com todos os usuários e aplicar filtros
+    usuariosFiltrados = usuarios;
+    filtrarUsuarios();
     
     console.log('Usuários renderizados!');
 }
@@ -355,6 +312,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Event listeners para o modal
         setupModalEventListeners();
         
+        // Inicializar filtros
+        inicializarFiltros();
+        
         console.log('Inicialização completa!');
         
     } catch (error) {
@@ -506,5 +466,126 @@ window.salvarEdicaoUsuario = async function(event) {
         showError('Erro de conexão');
     }
 };
+
+// Variáveis para filtros
+let usuariosFiltrados = [];
+
+// Função para filtrar usuários
+function filtrarUsuarios() {
+    const searchTerm = document.getElementById('searchUsers').value.toLowerCase();
+    const statusFilter = document.getElementById('filterStatus').value;
+    const roleFilter = document.getElementById('filterRole').value;
+    
+    usuariosFiltrados = usuarios.filter(usuario => {
+        // Filtro de busca por nome ou email
+        const matchesSearch = !searchTerm || 
+            usuario.name.toLowerCase().includes(searchTerm) ||
+            usuario.email.toLowerCase().includes(searchTerm) ||
+            (usuario.company && usuario.company.toLowerCase().includes(searchTerm));
+        
+        // Filtro de status
+        const matchesStatus = !statusFilter || 
+            (statusFilter === 'active' && usuario.active !== false) ||
+            (statusFilter === 'inactive' && usuario.active === false);
+        
+        // Filtro de role
+        const matchesRole = !roleFilter || usuario.role === roleFilter;
+        
+        return matchesSearch && matchesStatus && matchesRole;
+    });
+    
+    renderizarUsuariosFiltrados();
+}
+
+// Função para renderizar usuários filtrados
+function renderizarUsuariosFiltrados() {
+    const tbody = document.getElementById('tabelaUsuarios');
+    if (!tbody) {
+        console.error('Tabela não encontrada!');
+        return;
+    }
+    
+    if (usuariosFiltrados.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center text-gray-500 p-8">
+                    <div class="flex flex-col items-center gap-3">
+                        <i class="fas fa-search text-2xl text-gray-400"></i>
+                        <span>Nenhum usuário encontrado com os filtros aplicados</span>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = usuariosFiltrados.map(usuario => {
+        const status = usuario.active !== false ? 
+            '<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Ativo</span>' : 
+            '<span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Inativo</span>';
+            
+        const role = usuario.role === 'admin' ? 
+            '<span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">Admin</span>' :
+            '<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Usuário</span>';
+            
+        const ultimoLogin = usuario.lastLogin ? 
+            new Date(usuario.lastLogin).toLocaleDateString('pt-BR') : 
+            'Nunca';
+            
+        return `
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center mr-3">
+                            <span class="text-teal-600 font-semibold">
+                                ${usuario.name.charAt(0).toUpperCase()}
+                            </span>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-900">${usuario.name}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-500">${usuario.email}</td>
+                <td class="px-6 py-4 text-sm text-gray-500">${usuario.company || '-'}</td>
+                <td class="px-6 py-4">${role}</td>
+                <td class="px-6 py-4">${status}</td>
+                <td class="px-6 py-4 text-sm text-gray-500">${ultimoLogin}</td>
+                <td class="px-6 py-4 text-sm font-medium">
+                    <div class="flex space-x-2">
+                        <button onclick="editarUsuario('${usuario._id}')" class="text-blue-600 hover:text-blue-900 px-2 py-1 rounded">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button onclick="toggleUsuario('${usuario._id}')" class="text-yellow-600 hover:text-yellow-900 px-2 py-1 rounded">
+                            <i class="fas fa-toggle-${usuario.active !== false ? 'on' : 'off'}"></i> ${usuario.active !== false ? 'Desativar' : 'Ativar'}
+                        </button>
+                        <button onclick="deletarUsuario('${usuario._id}')" class="text-red-600 hover:text-red-900 px-2 py-1 rounded">
+                            <i class="fas fa-trash"></i> Excluir
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Inicializar event listeners para filtros
+function inicializarFiltros() {
+    const searchInput = document.getElementById('searchUsers');
+    const statusFilter = document.getElementById('filterStatus');
+    const roleFilter = document.getElementById('filterRole');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', filtrarUsuarios);
+    }
+    
+    if (statusFilter) {
+        statusFilter.addEventListener('change', filtrarUsuarios);
+    }
+    
+    if (roleFilter) {
+        roleFilter.addEventListener('change', filtrarUsuarios);
+    }
+}
 
 console.log('usuarios.js carregado!');

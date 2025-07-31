@@ -91,6 +91,84 @@
     transform: scale(1.1);
 }
 
+/* User Profile */
+.user-profile {
+    transition: all 0.6s ease;
+}
+
+.modern-sidebar.collapsed .user-profile {
+    padding: 1rem 0.75rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    border-radius: 16px;
+    margin: 0.5rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modern-sidebar.collapsed .user-profile .flex {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.modern-sidebar.collapsed .user-profile .user-info {
+    opacity: 0;
+    transform: translateX(-20px);
+    pointer-events: none;
+    display: none;
+}
+
+.modern-sidebar.collapsed .user-profile .user-actions {
+    justify-content: center;
+    gap: 0;
+    margin: 0;
+}
+
+.modern-sidebar.collapsed .user-profile .config-btn {
+    display: none;
+}
+
+/* User Avatar quando colapsado */
+.modern-sidebar.collapsed .user-avatar {
+    margin: 0 auto 0.75rem auto;
+    width: 3rem;
+    height: 3rem;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.modern-sidebar.collapsed .user-avatar:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Logout button quando colapsado */
+.modern-sidebar.collapsed .logout-btn {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
+    border-radius: 12px;
+    padding: 0.75rem;
+    margin: 0;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.modern-sidebar.collapsed .logout-btn:hover {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+.modern-sidebar.collapsed .logout-btn i {
+    color: #ef4444;
+    font-size: 1.1rem;
+}
+
 /* Responsivo */
 @media (max-width: 768px) {
     .modern-sidebar {

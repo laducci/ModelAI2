@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações - ModelAI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/sidebar-mobile.css">
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+    <!-- Mobile Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+
+    <!-- Modern Sidebar -->
+    <div id="sidebar" class="modern-sidebar fixed left-0 top-0 w-72 h-full z-50 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-[2500ms]">
+        <!-- Logo Section -->
+        <div class="p-6 border-b border-teal-700/50 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <img src="images/Logo-ModelAI-positiva.png" alt="Model AI" class="h-8">
+            </div>
+            <button id="toggleSidebar" class="text-white hover:text-teal-200 p-2">
+                <i class="fas fa-bars text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 p-4">
+            <div class="space-y-2">
+                <a href="inputs.html" class="sidebar-item flex items-center p-3 text-teal-200 hover:text-white">
+                    <i class="fas fa-edit sidebar-icon mr-3 text-lg"></i>
+                    <span class="font-medium sidebar-text">Inputs</span>
+                </a>
+                
+                <a href="cenarios.html" class="sidebar-item flex items-center p-3 text-teal-200 hover:text-white">
+                    <i class="fas fa-folder sidebar-icon mr-3 text-lg"></i>
+                    <span class="font-medium sidebar-text">Cenários</span>
+                </a>
+                
+                <a href="resultados.html" class="sidebar-item flex items-center p-3 text-teal-200 hover:text-white">
+                    <i class="fas fa-chart-line sidebar-icon mr-3 text-lg"></i>
+                    <span class="font-medium sidebar-text">Resultados</span>
+                </a>
+                
+                <a href="usuarios.html" id="adminUsersLink" class="sidebar-item flex items-center p-3 text-teal-200 hover:text-white" style="display: none;">
+                    <i class="fas fa-users sidebar-icon mr-3 text-lg"></i>
+                    <span class="font-medium sidebar-text">Usuários</span>
+                </a>
+            </div>
+            
+            <!-- Divider -->
+            <div class="my-6 border-t border-teal-700/50"></div>
+            
+            <!-- Quick Actions -->
+            <div class="space-y-2">
+                <a href="configuracoes.html" class="sidebar-item active flex items-center p-3 text-white">
+                    <i class="fas fa-cog sidebar-icon mr-3 text-lg"></i>
+                    <span class="font-medium sidebar-text">Configurações</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- User Profile -->
+        <div class="p-4 border-t border-teal-700/50 user-profile">
+            <div class="flex items-center space-x-3 p-3 rounded-xl bg-teal-800/50">
+                <div class="w-10 h-10 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center user-avatar">
+                    <i id="user-icon" class="fas fa-crown text-white"></i>
+                </div>
+                <div class="flex-1 min-w-0 user-info">
+                    <p class="text-white text-sm font-semibold truncate" id="user-name">Administrador</p>
+                    <p class="text-teal-200 text-xs truncate" id="userEmail">admin@modelai.com</p>
+                </div>
+                <div class="flex space-x-1 user-actions">
+                    <button class="text-teal-200 hover:text-white p-2 rounded-lg hover:bg-teal-700/50 transition-colors logout-btn" title="Sair">
+                        <i class="fas fa-sign-out-alt text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" class="main-content ml-0 lg:ml-72 min-h-screen transition-all duration-300 bg-gray-50">
+        <!-- Mobile Header -->
+        <div class="lg:hidden bg-gradient-to-r from-teal-600 to-teal-700 p-4 flex items-center justify-between shadow-lg">
+            <button id="mobileMenuToggle" class="text-white hover:text-teal-200 transition-colors">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            <img src="images/Logo-ModelAI-positiva.png" alt="Model AI" class="h-8">
+            <button class="text-white logout-btn hover:text-teal-200 transition-colors">
+                <i class="fas fa-sign-out-alt text-xl"></i>
+            </button>
+        </div>
+
+        <div class="p-6 lg:p-8 max-w-4xl mx-auto">
+            <!-- Header Section -->
+            <div class="mb-8">
+                <div class="bg-white rounded-2xl p-6 lg:p-8 shadow-lg border border-gray-100">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 bg-gradient-to-r from-teal-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
+                            <i class="fas fa-cog text-white text-2xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl lg:text-3xl font-bold text-gray-900">Configurações</h1>
+                            <p class="text-gray-600 mt-1">Gerencie suas informações pessoais e preferências</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Settings Content -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Sidebar de Configurações -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+                        <h2 class="text-lg font-bold text-gray-900 mb-4">Menu de Configurações</h2>
+                        <nav class="space-y-2">
+                            <button onclick="showSection('perfil')" class="config-nav-item active w-full flex items-center gap-3 p-3 text-left rounded-xl hover:bg-gray-50 transition-colors">
+                                <i class="fas fa-user text-teal-600"></i>
+                                <span class="font-medium">Perfil Pessoal</span>
+                            </button>
+                            <button onclick="showSection('senha')" class="config-nav-item w-full flex items-center gap-3 p-3 text-left rounded-xl hover:bg-gray-50 transition-colors">
+                                <i class="fas fa-lock text-red-600"></i>
+                                <span class="font-medium">Segurança</span>
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+
+                <!-- Content Area -->
+                <div class="lg:col-span-2">
+                    <!-- Perfil Section -->
+                    <div id="section-perfil" class="config-section">
+                        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 lg:p-8">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center">
+                                    <i class="fas fa-user text-teal-600"></i>
+                                </div>
+                                <h2 class="text-xl font-bold text-gray-900">Informações Pessoais</h2>
+                            </div>
+
+                            <form id="formPerfil" class="space-y-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-3">Nome Completo</label>
+                                        <input type="text" id="perfilNome" required
+                                               class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-3">Email</label>
+                                        <input type="email" id="perfilEmail" required
+                                               class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-gray-50" readonly>
+                                        <p class="text-xs text-gray-500 mt-2">O email não pode ser alterado</p>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-3">Empresa (Opcional)</label>
+                                    <input type="text" id="perfilEmpresa"
+                                           class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                                </div>
+
+                                <div class="pt-4">
+                                    <button type="submit" class="px-6 py-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors font-medium flex items-center gap-2">
+                                        <i class="fas fa-save"></i>
+                                        Salvar Alterações
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Senha Section -->
+                    <div id="section-senha" class="config-section hidden">
+                        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 lg:p-8">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                                    <i class="fas fa-lock text-red-600"></i>
+                                </div>
+                                <h2 class="text-xl font-bold text-gray-900">Segurança da Conta</h2>
+                            </div>
+
+                            <form id="formSenha" class="space-y-6">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-3">Senha Atual</label>
+                                    <input type="password" id="senhaAtual" required
+                                           class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-3">Nova Senha</label>
+                                    <input type="password" id="novaSenha" required minlength="6"
+                                           class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                                    <p class="text-xs text-gray-500 mt-2">Mínimo 6 caracteres</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-3">Confirmar Nova Senha</label>
+                                    <input type="password" id="confirmarSenha" required minlength="6"
+                                           class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                                </div>
+
+                                <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                                    <div class="flex items-start gap-3">
+                                        <i class="fas fa-exclamation-triangle text-yellow-600 mt-1"></i>
+                                        <div>
+                                            <h3 class="font-semibold text-yellow-800">Dicas de Segurança</h3>
+                                            <ul class="text-sm text-yellow-700 mt-2 space-y-1">
+                                                <li>• Use pelo menos 6 caracteres</li>
+                                                <li>• Combine letras, números e símbolos</li>
+                                                <li>• Evite informações pessoais óbvias</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="pt-4">
+                                    <button type="submit" class="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium flex items-center gap-2">
+                                        <i class="fas fa-key"></i>
+                                        Alterar Senha
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/alerts.js"></script>
+    <script src="js/admin-menu.js"></script>
+    <script src="js/configuracoes.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/sidebar-mobile.js"></script>
+</body>
+</html>

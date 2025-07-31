@@ -95,60 +95,80 @@ class ScenarioManager {
             const tabelaVendas = data.tabelaVendas || {};
             
             return `
-            <div class="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow border border-gray-100" data-scenario-id="${scenario._id || scenario.id}">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-12 h-12 bg-gradient-to-r from-teal-500 to-teal-600 rounded-xl flex items-center justify-center">
-                            <i class="fas fa-folder text-white text-xl"></i>
+            <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-200 group" data-scenario-id="${scenario._id || scenario.id}">
+                <!-- Header do Card -->
+                <div class="flex items-start justify-between mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-teal-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-folder text-white text-lg"></i>
                         </div>
                         <div>
-                            <h3 class="text-lg font-semibold text-gray-800">${scenario.name}</h3>
-                            <p class="text-sm text-gray-500">Criado em ${new Date(scenario.createdAt).toLocaleDateString('pt-BR')}</p>
+                            <h3 class="text-lg font-bold text-gray-900 mb-1">${scenario.name}</h3>
+                            <p class="text-sm text-gray-500">
+                                <i class="fas fa-calendar text-xs mr-1"></i>
+                                ${new Date(scenario.createdAt).toLocaleDateString('pt-BR')}
+                            </p>
                         </div>
                     </div>
-                    <div class="flex space-x-2">
+                    <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button onclick="scenarioManager.editScenario('${scenario._id || scenario.id}')" 
-                                class="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors" 
+                                class="w-8 h-8 flex items-center justify-center text-teal-600 hover:bg-teal-50 rounded-lg transition-colors" 
                                 title="Editar cenário">
-                            <i class="fas fa-edit"></i>
+                            <i class="fas fa-edit text-sm"></i>
                         </button>
                         <button onclick="scenarioManager.deleteScenario('${scenario._id || scenario.id}')" 
-                                class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                class="w-8 h-8 flex items-center justify-center text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                 title="Excluir cenário">
-                            <i class="fas fa-trash"></i>
+                            <i class="fas fa-trash text-sm"></i>
                         </button>
                     </div>
                 </div>
                 
                 ${scenario.description ? `
-                <div class="mb-3">
-                    <p class="text-sm text-gray-600">${scenario.description}</p>
+                <div class="mb-6 p-4 bg-gray-50 rounded-xl">
+                    <p class="text-sm text-gray-700">${scenario.description}</p>
                 </div>
                 ` : ''}
                 
-                <div class="space-y-2 mb-4">
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-600">Cliente:</span>
-                        <span class="font-medium text-gray-800">${dadosGerais.cliente || 'N/A'}</span>
+                <!-- Informações do Cenário -->
+                <div class="space-y-4 mb-6">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600 flex items-center gap-2">
+                            <i class="fas fa-user text-gray-400 text-xs"></i>
+                            Cliente:
+                        </span>
+                        <span class="font-medium text-gray-900 text-sm">${dadosGerais.cliente || 'N/A'}</span>
                     </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-600">Unidade:</span>
-                        <span class="font-medium text-gray-800">${dadosGerais.unidade || 'N/A'}</span>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600 flex items-center gap-2">
+                            <i class="fas fa-home text-gray-400 text-xs"></i>
+                            Unidade:
+                        </span>
+                        <span class="font-medium text-gray-900 text-sm">${dadosGerais.unidade || 'N/A'}</span>
                     </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-600">Empreendimento:</span>
-                        <span class="font-medium text-gray-800">${dadosGerais.empreendimento || 'N/A'}</span>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600 flex items-center gap-2">
+                            <i class="fas fa-building text-gray-400 text-xs"></i>
+                            Empreendimento:
+                        </span>
+                        <span class="font-medium text-gray-900 text-sm">${dadosGerais.empreendimento || 'N/A'}</span>
                     </div>
                 </div>
                 
-                <div class="flex space-x-2">
+                <!-- Separador -->
+                <div class="border-t border-gray-100 mb-6"></div>
+                
+                <!-- Botões de Ação -->
+                <div class="flex gap-3">
                     <button onclick="scenarioManager.loadScenario('${scenario._id || scenario.id}')" 
-                            class="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors">
-                        <i class="fas fa-edit mr-2"></i>Editar
+                            class="flex-1 px-4 py-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors font-medium flex items-center justify-center gap-2">
+                        <i class="fas fa-edit text-sm"></i>
+                        Editar
                     </button>
                     <button onclick="scenarioManager.viewResults('${scenario._id || scenario.id}')" 
-                            class="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
-                        <i class="fas fa-chart-line mr-2"></i>Resultados
+                            class="flex-1 px-4 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors font-medium flex items-center justify-center gap-2">
+                        <i class="fas fa-chart-line text-sm"></i>
+                        Resultados
                     </button>
                 </div>
             </div>
@@ -157,7 +177,204 @@ class ScenarioManager {
     }
 
     setupEventListeners() {
-        // Os event listeners serão configurados via onclick no HTML
+        // Busca em tempo real
+        const searchInput = document.getElementById('searchScenarios');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                this.filterScenarios();
+            });
+        }
+
+        // Filtro por cliente
+        const clientFilter = document.getElementById('filterClient');
+        if (clientFilter) {
+            clientFilter.addEventListener('change', (e) => {
+                this.filterScenarios();
+            });
+        }
+
+        // Ordenação
+        const sortBy = document.getElementById('sortBy');
+        if (sortBy) {
+            sortBy.addEventListener('change', (e) => {
+                this.filterScenarios();
+            });
+        }
+
+        // Popular filtro de clientes
+        this.populateClientFilter();
+    }
+
+    populateClientFilter() {
+        const clientFilter = document.getElementById('filterClient');
+        if (!clientFilter || !this.scenarios) return;
+
+        // Extrair clientes únicos
+        const clients = [...new Set(this.scenarios.map(scenario => {
+            const data = scenario.data || {};
+            const dadosGerais = data.dadosGerais || {};
+            return dadosGerais.cliente;
+        }).filter(client => client && client !== 'N/A'))];
+
+        // Limpar e adicionar opções
+        clientFilter.innerHTML = '<option value="">Todos os Clientes</option>';
+        clients.forEach(client => {
+            const option = document.createElement('option');
+            option.value = client;
+            option.textContent = client;
+            clientFilter.appendChild(option);
+        });
+    }
+
+    filterScenarios() {
+        const searchTerm = document.getElementById('searchScenarios')?.value.toLowerCase() || '';
+        const selectedClient = document.getElementById('filterClient')?.value || '';
+        const sortBy = document.getElementById('sortBy')?.value || 'date';
+
+        let filteredScenarios = [...this.scenarios];
+
+        // Filtrar por busca
+        if (searchTerm) {
+            filteredScenarios = filteredScenarios.filter(scenario => {
+                const data = scenario.data || {};
+                const dadosGerais = data.dadosGerais || {};
+                
+                return (
+                    scenario.name.toLowerCase().includes(searchTerm) ||
+                    (dadosGerais.cliente && dadosGerais.cliente.toLowerCase().includes(searchTerm)) ||
+                    (dadosGerais.empreendimento && dadosGerais.empreendimento.toLowerCase().includes(searchTerm)) ||
+                    (dadosGerais.unidade && dadosGerais.unidade.toLowerCase().includes(searchTerm))
+                );
+            });
+        }
+
+        // Filtrar por cliente
+        if (selectedClient) {
+            filteredScenarios = filteredScenarios.filter(scenario => {
+                const data = scenario.data || {};
+                const dadosGerais = data.dadosGerais || {};
+                return dadosGerais.cliente === selectedClient;
+            });
+        }
+
+        // Ordenar
+        filteredScenarios.sort((a, b) => {
+            switch (sortBy) {
+                case 'name':
+                    return a.name.localeCompare(b.name);
+                case 'client':
+                    const clientA = (a.data?.dadosGerais?.cliente || '').toLowerCase();
+                    const clientB = (b.data?.dadosGerais?.cliente || '').toLowerCase();
+                    return clientA.localeCompare(clientB);
+                case 'date':
+                default:
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+            }
+        });
+
+        // Renderizar cenários filtrados
+        this.renderFilteredScenarios(filteredScenarios);
+    }
+
+    renderFilteredScenarios(scenarios) {
+        const grid = document.getElementById('scenariosGrid');
+        const emptyState = document.getElementById('emptyState');
+        
+        if (!grid) return;
+        
+        if (scenarios.length === 0) {
+            grid.style.display = 'none';
+            if (emptyState) emptyState.classList.remove('hidden');
+            return;
+        }
+        
+        grid.style.display = 'grid';
+        if (emptyState) emptyState.classList.add('hidden');
+        
+        grid.innerHTML = scenarios.map(scenario => {
+            const data = scenario.data || {};
+            const dadosGerais = data.dadosGerais || {};
+            
+            return `
+            <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-200 group" data-scenario-id="${scenario._id || scenario.id}">
+                <!-- Header do Card -->
+                <div class="flex items-start justify-between mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-teal-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-folder text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 mb-1">${scenario.name}</h3>
+                            <p class="text-sm text-gray-500">
+                                <i class="fas fa-calendar text-xs mr-1"></i>
+                                ${new Date(scenario.createdAt).toLocaleDateString('pt-BR')}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="scenarioManager.editScenario('${scenario._id || scenario.id}')" 
+                                class="w-8 h-8 flex items-center justify-center text-teal-600 hover:bg-teal-50 rounded-lg transition-colors" 
+                                title="Editar cenário">
+                            <i class="fas fa-edit text-sm"></i>
+                        </button>
+                        <button onclick="scenarioManager.deleteScenario('${scenario._id || scenario.id}')" 
+                                class="w-8 h-8 flex items-center justify-center text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Excluir cenário">
+                            <i class="fas fa-trash text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                ${scenario.description ? `
+                <div class="mb-6 p-4 bg-gray-50 rounded-xl">
+                    <p class="text-sm text-gray-700">${scenario.description}</p>
+                </div>
+                ` : ''}
+                
+                <!-- Informações do Cenário -->
+                <div class="space-y-4 mb-6">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600 flex items-center gap-2">
+                            <i class="fas fa-user text-gray-400 text-xs"></i>
+                            Cliente:
+                        </span>
+                        <span class="font-medium text-gray-900 text-sm">${dadosGerais.cliente || 'N/A'}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600 flex items-center gap-2">
+                            <i class="fas fa-home text-gray-400 text-xs"></i>
+                            Unidade:
+                        </span>
+                        <span class="font-medium text-gray-900 text-sm">${dadosGerais.unidade || 'N/A'}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600 flex items-center gap-2">
+                            <i class="fas fa-building text-gray-400 text-xs"></i>
+                            Empreendimento:
+                        </span>
+                        <span class="font-medium text-gray-900 text-sm">${dadosGerais.empreendimento || 'N/A'}</span>
+                    </div>
+                </div>
+                
+                <!-- Separador -->
+                <div class="border-t border-gray-100 mb-6"></div>
+                
+                <!-- Botões de Ação -->
+                <div class="flex gap-3">
+                    <button onclick="scenarioManager.loadScenario('${scenario._id || scenario.id}')" 
+                            class="flex-1 px-4 py-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors font-medium flex items-center justify-center gap-2">
+                        <i class="fas fa-edit text-sm"></i>
+                        Editar
+                    </button>
+                    <button onclick="scenarioManager.viewResults('${scenario._id || scenario.id}')" 
+                            class="flex-1 px-4 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors font-medium flex items-center justify-center gap-2">
+                        <i class="fas fa-chart-line text-sm"></i>
+                        Resultados
+                    </button>
+                </div>
+            </div>
+            `;
+        }).join('');
     }
 
     async deleteScenario(scenarioId) {
@@ -403,6 +620,45 @@ function collectCurrentInputData() {
         return window.collectAllInputData();
     }
     return {};
+}
+
+// Função para atualizar estatísticas na página de cenários
+function updateScenarioStats(scenarios) {
+    if (!scenarios || !Array.isArray(scenarios)) return;
+    
+    // Total de cenários
+    const totalElement = document.getElementById('totalScenarios');
+    if (totalElement) {
+        totalElement.textContent = scenarios.length;
+    }
+    
+    // Cenários criados hoje
+    const today = new Date().toDateString();
+    const todayScenarios = scenarios.filter(scenario => {
+        const scenarioDate = new Date(scenario.createdAt).toDateString();
+        return scenarioDate === today;
+    }).length;
+    
+    const todayElement = document.getElementById('todayScenarios');
+    if (todayElement) {
+        todayElement.textContent = todayScenarios;
+    }
+    
+    // Favoritos (implementar quando houver funcionalidade)
+    const favoriteElement = document.getElementById('favoriteScenarios');
+    if (favoriteElement) {
+        favoriteElement.textContent = '0'; // Placeholder
+    }
+    
+    // Analisados (cenários que têm resultados)
+    const analyzedScenarios = scenarios.filter(scenario => 
+        scenario.data && Object.keys(scenario.data).length > 0
+    ).length;
+    
+    const analyzedElement = document.getElementById('analyzedScenarios');
+    if (analyzedElement) {
+        analyzedElement.textContent = analyzedScenarios;
+    }
 }
 
 // Tornar a instância global disponível

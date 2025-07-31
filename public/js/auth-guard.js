@@ -21,6 +21,25 @@ function getUserData() {
     }
 }
 
+// ATUALIZAR DADOS IMEDIATAMENTE
+function loadUserDataImmediately() {
+    console.log('🔍 [AUTH-GUARD] loadUserDataImmediately chamada');
+    const userData = getUserData();
+    console.log('🔍 [AUTH-GUARD] getUserData retornou:', userData);
+    
+    if (userData) {
+        currentUser = userData.user;
+        console.log('🔥 DADOS DO USUÁRIO CARREGADOS IMEDIATAMENTE:', currentUser);
+        console.log('🔥 Nome:', currentUser?.name, 'Email:', currentUser?.email, 'Role:', currentUser?.role);
+        updateUserInterface();
+    } else {
+        console.log('❌ [AUTH-GUARD] Nenhum userData encontrado');
+    }
+}
+
+// Executar IMEDIATAMENTE
+loadUserDataImmediately();
+
 // FORÇA MENU USUÁRIOS SEMPRE VISÍVEL PARA ADMIN
 function forceAdminMenu() {
     // DESABILITADO - Menu já está fixo no HTML das páginas
@@ -57,34 +76,46 @@ function forceAdminMenu() {
 
 // Atualizar interface do usuário
 function updateUserInterface() {
-    if (!currentUser) return;
+
     
-    // Nome do usuário
-    setTimeout(() => {
-        const nameElements = document.querySelectorAll('#user-name, #userName, .user-name');
-        nameElements.forEach(el => {
-            if (el) el.textContent = currentUser.name;
-        });
-    }, 100);
+    if (!currentUser) {
+        return;
+    }
     
-    // Ícone do usuário
-    setTimeout(() => {
-        const iconElements = document.querySelectorAll('#user-icon, .user-icon');
-        iconElements.forEach(icon => {
-            if (icon) {
-                icon.className = 'fas text-white';
-                if (currentUser.role === 'admin') {
-                    icon.classList.add('fa-crown');
-                } else {
-                    icon.classList.add('fa-user');
-                }
+    console.log('🔄 Atualizando interface para:', currentUser.name, currentUser.email);
+    
+    // Nome do usuário - IMEDIATAMENTE
+    const nameElements = document.querySelectorAll('#user-name, #userName, .user-name');
+    nameElements.forEach(el => {
+        if (el) {
+            el.textContent = currentUser.name;
+        }
+    });
+    
+    // Email do usuário - IMEDIATAMENTE  
+    const emailElements = document.querySelectorAll('#userEmail, .user-email');
+    emailElements.forEach(el => {
+        if (el) {
+            el.textContent = currentUser.email;
+        }
+    });
+        }
+    
+    // Ícone do usuário - IMEDIATAMENTE
+    const iconElements = document.querySelectorAll('#user-icon, .user-icon');
+    iconElements.forEach(icon => {
+        if (icon) {
+            icon.className = 'fas text-white';
+            if (currentUser.role === 'admin') {
+                icon.classList.add('fa-crown');
+            } else {
+                icon.classList.add('fa-user');
             }
-        });
-    }, 200);
+        }
+    });
     
     // FORÇA MENU ADMIN
     setTimeout(forceAdminMenu, 300);
-}
 
 // Verificar acesso à página
 function checkPageAccess() {
@@ -239,13 +270,12 @@ function handleLogoutClick(e) {
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(initializeAuth, 200);
+    initializeAuth();
+    updateUserInterface(); // Força atualização
 });
 
 window.addEventListener('load', function() {
-    setTimeout(() => {
-        if (currentUser) updateUserInterface();
-    }, 300);
+    if (currentUser) updateUserInterface();
 });
 
 // Garantir atualização em navegação
@@ -253,7 +283,7 @@ window.addEventListener('focus', function() {
     if (currentUser) {
         updateUserInterface();
         if (currentUser.role === 'admin') {
-            setTimeout(forceAdminMenu, 100);
+            forceAdminMenu();
         }
     }
 });

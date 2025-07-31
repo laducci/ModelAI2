@@ -14,6 +14,11 @@ router.use(auth);
 router.get('/profile', async (req, res) => {
     try {
         const user = await User.findById(req.user._id).select('-password');
+        console.log('🔍 [PROFILE API] Usuário encontrado:', { 
+            name: user.name, 
+            email: user.email, 
+            role: user.role 
+        });
         
         // Estatísticas básicas
         const scenarioCount = await Scenario.countDocuments({
@@ -21,14 +26,16 @@ router.get('/profile', async (req, res) => {
             isActive: true
         });
 
-        res.json({
+        const responseData = {
             user,
             stats: {
                 totalScenarios: scenarioCount,
                 memberSince: user.createdAt,
                 lastLogin: user.lastLogin
             }
-        });
+        };
+
+        res.json(responseData);
 
     } catch (error) {
         console.error('Erro ao buscar perfil:', error);
@@ -444,6 +451,192 @@ router.get('/stats/dashboard', adminAuth, async (req, res) => {
 
     } catch (error) {
         console.error('Erro ao gerar estatísticas:', error);
+        res.status(500).json({
+            error: 'Erro interno do servidor.'
+        });
+    }
+});
+
+// @route   GET /api/users/stats
+// @desc    Estatísticas pessoais do usuário
+// @access  Private
+router.get('/stats', async (req, res) => {
+    try {
+        const scenarioCount = await Scenario.countDocuments({
+            userId: req.user._id,
+            isActive: true
+        });
+
+        // Contar análises (simulando baseado em cenários ativos)
+        const analysesCount = scenarioCount * 2; // Estimativa
+
+        res.json({
+            scenarios: scenarioCount,
+            analyses: analysesCount
+        });
+
+    } catch (error) {
+        console.error('Erro ao buscar estatísticas:', error);
+        res.status(500).json({
+            error: 'Erro interno do servidor.'
+        });
+    }
+});
+
+// @route   PUT /api/users/change-password
+// @desc    Alterar senha do usuário
+// @access  Private
+router.put('/change-password', async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({
+                error: 'Senha atual e nova senha são obrigatórias.'
+            });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({
+                error: 'A nova senha deve ter pelo menos 6 caracteres.'
+            });
+        }
+
+        const user = await User.findById(req.user._id);
+        
+        // Verificar senha atual
+        const isMatch = await user.comparePassword(currentPassword);
+        if (!isMatch) {
+            return res.status(400).json({
+                error: 'Senha atual incorreta.'
+            });
+        }
+
+        // Atualizar senha
+        user.password = newPassword;
+        await user.save();
+
+        res.json({
+            message: 'Senha alterada com sucesso.'
+        });
+
+    } catch (error) {
+        console.error('Erro ao alterar senha:', error);
+        res.status(500).json({
+            error: 'Erro interno do servidor.'
+        });
+    }
+});
+
+// @route   PUT /api/users/preferences
+// @desc    Salvar preferências do usuário
+// @access  Private
+router.put('/preferences', async (req, res) => {
+    try {
+        const { notifications, language, theme } = req.body;
+
+        const user = await User.findById(req.user._id);
+        
+        // Atualizar preferências
+        user.preferences = {
+            notifications: notifications || {},
+            language: language || 'pt-BR',
+            theme: theme || 'claro'
+        };
+
+        await user.save();
+
+        res.json({
+            message: 'Preferências salvas com sucesso.',
+            preferences: user.preferences
+        });
+
+    } catch (error) {
+        console.error('Erro ao salvar preferências:', error);
+        res.status(500).json({
+            error: 'Erro interno do servidor.'
+        });
+    }
+});
+
+// @route   GET /api/users/export
+// @desc    Exportar dados do usuário
+// @access  Private
+router.get('/export', async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select('-password');
+        const scenarios = await Scenario.find({
+            userId: req.user._id,
+            isActive: true
+        });
+
+        const exportData = {
+            user: {
+                name: user.name,
+                email: user.email,
+                company: user.company,
+                role: user.role,
+                createdAt: user.createdAt,
+                preferences: user.preferences
+            },
+            scenarios: scenarios.map(scenario => ({
+                name: scenario.name,
+                description: scenario.description,
+                inputs: scenario.inputs,
+                createdAt: scenario.createdAt,
+                updatedAt: scenario.updatedAt
+            })),
+            exportedAt: new Date()
+        };
+
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', `attachment; filename="dados-modelai-${user.email}-${new Date().toISOString().split('T')[0]}.json"`);
+        
+        res.json(exportData);
+
+    } catch (error) {
+        console.error('Erro ao exportar dados:', error);
+        res.status(500).json({
+            error: 'Erro interno do servidor.'
+        });
+    }
+});
+
+// @route   DELETE /api/users/delete-account
+// @desc    Excluir conta do usuário
+// @access  Private
+router.delete('/delete-account', async (req, res) => {
+    try {
+        const { password } = req.body;
+
+        if (!password) {
+            return res.status(400).json({
+                error: 'Senha é obrigatória para confirmar exclusão.'
+            });
+        }
+
+        const user = await User.findById(req.user._id);
+        
+        // Verificar senha
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            return res.status(400).json({
+                error: 'Senha incorreta.'
+            });
+        }
+
+        // Excluir cenários do usuário
+        await Scenario.deleteMany({ userId: req.user._id });
+
+        // Excluir usuário
+        await User.findByIdAndDelete(req.user._id);
+
+        res.json({
+            message: 'Conta excluída com sucesso.'
+        });
+
+    } catch (error) {
+        console.error('Erro ao excluir conta:', error);
         res.status(500).json({
             error: 'Erro interno do servidor.'
         });

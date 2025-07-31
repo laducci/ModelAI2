@@ -478,6 +478,163 @@ const handler = async (req, res) => {
     }
   }
 
+  // OBTER PERFIL DO USUÁRIO ATUAL
+  if (cleanUrl === '/api/users/profile' && method === 'GET') {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      
+      if (!token) {
+        return sendResponse(401, { message: 'Token não fornecido.' });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
+      const user = await User.findById(decoded.userId).select('-password');
+      
+      if (!user) {
+        return sendResponse(404, { message: 'Usuário não encontrado.' });
+      }
+
+      // Estatísticas básicas
+      const scenarioCount = await Scenario.countDocuments({
+        userId: user._id,
+        isActive: true
+      });
+
+      return sendResponse(200, {
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          company: user.company,
+          role: user.role,
+          lastLogin: user.lastLogin,
+          createdAt: user.createdAt
+        },
+        stats: {
+          totalScenarios: scenarioCount,
+          memberSince: user.createdAt,
+          lastLogin: user.lastLogin
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao buscar perfil:', error);
+      return sendResponse(500, { message: 'Erro interno do servidor.' });
+    }
+  }
+
+  // ATUALIZAR PERFIL DO USUÁRIO
+  if (cleanUrl === '/api/users/profile' && method === 'PUT') {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      
+      if (!token) {
+        return sendResponse(401, { message: 'Token não fornecido.' });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
+      const { name, company } = req.body;
+      
+      const updateData = {};
+      if (name) updateData.name = name.trim();
+      if (company !== undefined) updateData.company = company.trim();
+      
+      const user = await User.findByIdAndUpdate(
+        decoded.userId,
+        updateData,
+        { new: true, runValidators: true }
+      ).select('-password');
+      
+      if (!user) {
+        return sendResponse(404, { message: 'Usuário não encontrado.' });
+      }
+
+      return sendResponse(200, {
+        message: 'Perfil atualizado com sucesso!',
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          company: user.company,
+          role: user.role,
+          lastLogin: user.lastLogin,
+          createdAt: user.createdAt
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error);
+      return sendResponse(500, { message: 'Erro interno do servidor.' });
+    }
+  }
+
+  // ALTERAR SENHA DO USUÁRIO
+  if (cleanUrl === '/api/users/change-password' && method === 'PUT') {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      
+      if (!token) {
+        return sendResponse(401, { message: 'Token não fornecido.' });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return sendResponse(400, { message: 'Senha atual e nova senha são obrigatórias.' });
+      }
+
+      if (newPassword.length < 6) {
+        return sendResponse(400, { message: 'A nova senha deve ter pelo menos 6 caracteres.' });
+      }
+
+      const user = await User.findById(decoded.userId);
+      
+      if (!user) {
+        return sendResponse(404, { message: 'Usuário não encontrado.' });
+      }
+
+      // Verificar senha atual
+      const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+      if (!isValidPassword) {
+        return sendResponse(400, { message: 'Senha atual incorreta.' });
+      }
+
+      // Atualizar senha
+      user.password = newPassword; // O pre-save hook irá hasher automaticamente
+      await user.save();
+
+      return sendResponse(200, { message: 'Senha alterada com sucesso!' });
+    } catch (error) {
+      console.error('Erro ao alterar senha:', error);
+      return sendResponse(500, { message: 'Erro interno do servidor.' });
+    }
+  }
+
+  // ESTATÍSTICAS DO USUÁRIO
+  if (cleanUrl === '/api/users/stats' && method === 'GET') {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      
+      if (!token) {
+        return sendResponse(401, { message: 'Token não fornecido.' });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
+      
+      const scenarioCount = await Scenario.countDocuments({
+        userId: decoded.userId,
+        isActive: true
+      });
+
+      return sendResponse(200, {
+        totalScenarios: scenarioCount,
+        totalActiveScenarios: scenarioCount
+      });
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas:', error);
+      return sendResponse(500, { message: 'Erro interno do servidor.' });
+    }
+  }
+
   // DEBUG: LISTAR TODOS OS USUÁRIOS (temporário para debug)
   if (url === '/api/debug/users' && method === 'GET') {
     try {

@@ -41,17 +41,18 @@ const userSchema = new mongoose.Schema({
     preferences: {
         theme: {
             type: String,
-            enum: ['light', 'dark', 'auto'],
-            default: 'light'
+            enum: ['claro', 'escuro', 'auto'],
+            default: 'claro'
         },
         language: {
             type: String,
-            enum: ['pt-BR', 'en-US'],
+            enum: ['pt-BR', 'en-US', 'es-ES'],
             default: 'pt-BR'
         },
         notifications: {
-            email: { type: Boolean, default: true },
-            push: { type: Boolean, default: true }
+            scenarios: { type: Boolean, default: true },
+            results: { type: Boolean, default: true },
+            system: { type: Boolean, default: false }
         }
     }
 }, {
