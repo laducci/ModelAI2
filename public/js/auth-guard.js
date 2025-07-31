@@ -104,11 +104,46 @@ function checkPageAccess() {
 
 // Logout
 function logout() {
-    if (menuMonitor) clearInterval(menuMonitor);
-    localStorage.clear();
-    sessionStorage.clear();
-    currentUser = null;
-    window.location.replace('login.html');
+    try {
+        // Usar a função de alerta bonita se estiver disponível
+        if (typeof showQuestion === 'function') {
+            showQuestion('Confirmar Logout', 'Deseja realmente sair do sistema?', function() {
+                // Confirmou
+                if (menuMonitor) clearInterval(menuMonitor);
+                localStorage.clear();
+                sessionStorage.clear();
+                currentUser = null;
+                if (typeof showSuccess === 'function') {
+                    showSuccess('Logout realizado com sucesso! Redirecionando...');
+                    setTimeout(() => window.location.replace('login.html'), 1500);
+                } else {
+                    window.location.replace('login.html');
+                }
+            }, function() {
+                // Cancelou - não faz nada
+                if (typeof showInfo === 'function') {
+                    showInfo('Logout cancelado.');
+                }
+            });
+        } else {
+            // Fallback para quando não há função de alerta
+            if (confirm('Deseja realmente sair do sistema?')) {
+                if (menuMonitor) clearInterval(menuMonitor);
+                localStorage.clear();
+                sessionStorage.clear();
+                currentUser = null;
+                window.location.replace('login.html');
+            }
+        }
+    } catch (error) {
+        console.error('Erro no logout:', error);
+        // Fallback simples
+        if (menuMonitor) clearInterval(menuMonitor);
+        localStorage.clear();
+        sessionStorage.clear();
+        currentUser = null;
+        window.location.replace('login.html');
+    }
 }
 
 // INICIALIZAÇÃO PRINCIPAL

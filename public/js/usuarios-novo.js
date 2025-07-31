@@ -351,6 +351,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         // Carregar usuários
         await window.carregarUsuarios();
+        
+        // Event listeners para o modal
+        setupModalEventListeners();
+        
         console.log('Inicialização completa!');
         
     } catch (error) {
@@ -358,5 +362,149 @@ document.addEventListener('DOMContentLoaded', async function() {
         showError('Erro ao inicializar: ' + error.message);
     }
 });
+
+// Configurar event listeners do modal
+function setupModalEventListeners() {
+    console.log('Configurando event listeners do modal...');
+    
+    // Botão Novo Usuário
+    const btnNovoUsuario = document.getElementById('btnNovoUsuario');
+    if (btnNovoUsuario) {
+        btnNovoUsuario.addEventListener('click', abrirModalNovoUsuario);
+        console.log('Event listener do botão Novo Usuário configurado');
+    }
+    
+    // Form de novo usuário
+    const formNovoUsuario = document.getElementById('formNovoUsuario');
+    if (formNovoUsuario) {
+        formNovoUsuario.addEventListener('submit', criarNovoUsuario);
+        console.log('Event listener do form configurado');
+    }
+    
+    // Modal - fechar clicando fora
+    const modalNovoUsuario = document.getElementById('modalNovoUsuario');
+    if (modalNovoUsuario) {
+        modalNovoUsuario.addEventListener('click', function(e) {
+            if (e.target === modalNovoUsuario) {
+                fecharModalNovoUsuario();
+            }
+        });
+        console.log('Event listener para fechar modal clicando fora configurado');
+    }
+}
+
+// Abrir modal de novo usuário
+function abrirModalNovoUsuario() {
+    console.log('Abrindo modal de novo usuário...');
+    const modal = document.getElementById('modalNovoUsuario');
+    if (modal) {
+        modal.classList.remove('hidden');
+        // Limpar form
+        document.getElementById('formNovoUsuario').reset();
+    }
+}
+
+// Fechar modal de novo usuário
+window.fecharModalNovoUsuario = function() {
+    console.log('Fechando modal de novo usuário...');
+    const modal = document.getElementById('modalNovoUsuario');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+};
+
+// Criar novo usuário
+async function criarNovoUsuario(event) {
+    event.preventDefault();
+    console.log('Criando novo usuário...');
+    
+    const formData = new FormData(event.target);
+    const userData = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        password: formData.get('password'),
+        company: formData.get('company') || '',
+        role: formData.get('role') || 'user'
+    };
+    
+    try {
+        const response = await fetch('/api/users', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(userData)
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            showSuccess('Usuário criado com sucesso!');
+            fecharModalNovoUsuario();
+            // Recarregar lista de usuários
+            await carregarUsuarios();
+        } else {
+            const error = await response.json();
+            showError(error.message || 'Erro ao criar usuário');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showError('Erro de conexão');
+    }
+}
+
+// Fechar modal de editar usuário
+window.fecharModalEditarUsuario = function() {
+    console.log('Fechando modal de editar usuário...');
+    const modal = document.getElementById('modalEditarUsuario');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+};
+
+// Salvar edição de usuário
+window.salvarEdicaoUsuario = async function(event) {
+    event.preventDefault();
+    console.log('Salvando edição de usuário...');
+    
+    const userId = document.getElementById('editarUsuarioId').value;
+    const userData = {
+        name: document.getElementById('editarNome').value,
+        email: document.getElementById('editarEmail').value,
+        company: document.getElementById('editarEmpresa').value,
+        role: document.getElementById('editarRole').value,
+        active: document.getElementById('editarStatus').value === 'true'
+    };
+    
+    // Só incluir senha se foi preenchida
+    const senha = document.getElementById('editarSenha').value;
+    if (senha) {
+        userData.password = senha;
+    }
+    
+    try {
+        const response = await fetch(`/api/users/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(userData)
+        });
+        
+        if (response.ok) {
+            showSuccess('Usuário atualizado com sucesso!');
+            fecharModalEditarUsuario();
+            // Recarregar lista de usuários
+            await carregarUsuarios();
+        } else {
+            const error = await response.json();
+            showError(error.message || 'Erro ao atualizar usuário');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showError('Erro de conexão');
+    }
+};
 
 console.log('usuarios.js carregado!');
