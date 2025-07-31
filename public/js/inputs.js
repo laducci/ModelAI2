@@ -1,15 +1,5 @@
 // Inputs Page JavaScript - Model AI
 
-// Sidebar toggle functionality
-const sidebar = document.getElementById('sidebar');
-const mainContent = document.getElementById('mainContent');
-const toggleBtn = document.getElementById('toggleSidebar');
-
-toggleBtn.addEventListener('click', function() {
-    sidebar.classList.toggle('collapsed');
-    mainContent.classList.toggle('expanded');
-});
-
 // Tab functionality
 document.querySelectorAll('.subtab-btn').forEach(button => {
     button.addEventListener('click', function() {
@@ -254,84 +244,24 @@ function formatBRNumber(value) {
 }
 
 function parseBRNumber(value) {
-    console.log(`🔄 parseBRNumber chamado com valor: "${value}" (tipo: ${typeof value})`);
     if (typeof value === 'string') {
         // Remove todos os pontos (separadores de milhares) e substitui vírgula por ponto
         const cleanValue = value.replace(/\./g, '').replace(',', '.');
         const result = parseFloat(cleanValue) || 0;
-        console.log(`🔄 parseBRNumber resultado: "${value}" → "${cleanValue}" → ${result}`);
         return result;
     }
     const result = parseFloat(value) || 0;
-    console.log(`🔄 parseBRNumber resultado direto: ${value} → ${result}`);
     return result;
 }
 
 // FUNÇÃO DE TESTE PARA DEBUG
 window.testParseBRNumber = function() {
-    console.log('🧪 === TESTE parseBRNumber ===');
     const testValues = ['100000', '100.000', '100.000,00', 'R$ 100.000,00', '500000'];
     testValues.forEach(val => {
-        console.log(`🧪 Testando: "${val}"`);
         const result = parseBRNumber(val);
-        console.log(`🧪 Resultado: ${result}`);
+        console.log(`🧪 Testando: "${val}" → Resultado: ${result}`);
         console.log('---');
     });
-};
-
-// FUNÇÃO SIMPLES PARA TESTAR COLETA DE INPUTS
-window.debugInputValues = function() {
-    console.log('🔍 === DEBUG DOS VALORES DOS INPUTS ===');
-    
-    // Teste simples dos campos problemáticos
-    const problematicFields = [
-        'vendaEntradaValor',
-        'vendaParcelasValor', 
-        'areaPrivativa',
-        'tmaAno',
-        'tmaMes'
-    ];
-    
-    problematicFields.forEach(fieldId => {
-        const element = document.getElementById(fieldId);
-        if (element) {
-            console.log(`📍 ${fieldId}:`);
-            console.log(`  📝 Valor bruto: "${element.value}"`);
-            console.log(`  🔧 parseBRNumber: ${parseBRNumber(element.value)}`);
-            console.log(`  🔧 parseFloat: ${parseFloat(element.value)}`);
-            console.log('---');
-        } else {
-            console.log(`❌ Elemento ${fieldId} não encontrado!`);
-        }
-    });
-};
-
-// TESTE RÁPIDO DA COLETA
-window.testCollectData = function() {
-    console.log('🔍 === TESTE RÁPIDO DA COLETA ===');
-    const data = collectAllInputData();
-    console.log('📊 Resultado final:', data);
-};
-
-// TESTE SUPER SIMPLES DOS VALORES DIRETOS
-window.testDirectValues = function() {
-    console.log('🔍 === TESTE VALORES DIRETOS ===');
-    
-    // Teste campos que funcionam
-    const tmaAno = document.getElementById('tmaAno');
-    const tmaMes = document.getElementById('tmaMes');
-    
-    // Teste campos que falham  
-    const areaPrivativa = document.getElementById('areaPrivativa');
-    const vendaEntradaValor = document.getElementById('vendaEntradaValor');
-    
-    console.log('✅ CAMPOS QUE FUNCIONAM:');
-    console.log(`tmaAno: elemento existe=${!!tmaAno}, valor="${tmaAno?.value}", parseFloat=${parseFloat(tmaAno?.value)}`);
-    console.log(`tmaMes: elemento existe=${!!tmaMes}, valor="${tmaMes?.value}", parseFloat=${parseFloat(tmaMes?.value)}`);
-    
-    console.log('❌ CAMPOS QUE FALHAM:');
-    console.log(`areaPrivativa: elemento existe=${!!areaPrivativa}, valor="${areaPrivativa?.value}", parseFloat=${parseFloat(areaPrivativa?.value)}`);
-    console.log(`vendaEntradaValor: elemento existe=${!!vendaEntradaValor}, valor="${vendaEntradaValor?.value}", parseBRNumber=${parseBRNumber(vendaEntradaValor?.value)}`);
 };
 
 function formatInputValue(input) {
@@ -594,17 +524,6 @@ function saveAndAnalyze() {
     window.location.href = 'resultados.html';
 }
 
-// Responsive handling
-function handleResize() {
-    if (window.innerWidth <= 768) {
-        sidebar.classList.add('collapsed');
-        mainContent.classList.add('expanded');
-    } else {
-        sidebar.classList.remove('collapsed');
-        mainContent.classList.remove('expanded');
-    }
-}
-
 // Load saved data if editing
 function loadSavedData() {
     const editingScenarioId = sessionStorage.getItem('editingScenarioId');
@@ -695,10 +614,6 @@ function clearAllFields() {
 // Initialize page
 document.addEventListener('DOMContentLoaded', function() {
     loadSavedData();
-    
-    // Initial check and resize listener
-    handleResize();
-    window.addEventListener('resize', handleResize);
     
     // Executar cálculos iniciais após um pequeno delay para garantir que DOM está pronto
     setTimeout(() => {
@@ -1256,14 +1171,11 @@ async function saveScenarioWithName(name) {
 
 // Initialize page with scenario data ONLY if editing
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 DOMContentLoaded disparado - verificando modo de edição...');
     
     // Verificar se veio através de navegação direta (novo cenário) ou de edição
     const referrer = document.referrer;
     const cameFromScenarios = referrer.includes('cenarios.html');
     
-    console.log('🔗 Referrer:', referrer);
-    console.log('🔗 Veio de cenarios.html?', cameFromScenarios);
     
     // Verificar todas as chaves do sessionStorage
     console.log('🔍 Conteúdo completo do sessionStorage:');
@@ -1275,7 +1187,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // ONLY load scenario data if explicitly editing AND came from scenarios page
     const editingScenario = sessionStorage.getItem('editingScenario');
-    console.log('📋 editingScenario RAW:', editingScenario);
     
     if (editingScenario && cameFromScenarios) {
         try {
@@ -1323,8 +1234,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function setupCreateMode() {
-    console.log('🆕 Configurando modo de criação...');
-    console.log('ℹ️ sessionStorage.editingScenario está vazio ou não existe');
     
     // Garantir que o botão esteja configurado para salvar novo cenário
     const saveButton = document.querySelector('button[onclick="saveScenario()"], button[onclick="updateScenario()"]');
@@ -1690,19 +1599,14 @@ function loadScenarioData(data) {
         console.log('⚠️ propostaCliente não encontrado nos dados');
     }
     
-    console.log('✅ === CARREGAMENTO DOS DADOS CONCLUÍDO ===');
 }
 
 // Function to update scenario (when editing)
 async function updateScenario() {
-    console.log('🔄 === ATUALIZANDO CENÁRIO ===');
-    
+
     const editingScenario = sessionStorage.getItem('editingScenario');
-    console.log('📂 Cenário em edição:', editingScenario ? 'ENCONTRADO' : 'NÃO ENCONTRADO');
-    console.log('📂 Dados completos do editingScenario:', editingScenario);
     
     if (!editingScenario) {
-        console.error('❌ Nenhum cenário em edição no sessionStorage');
         showError('Nenhum cenário em edição encontrado.');
         return;
     }
@@ -1738,8 +1642,6 @@ async function updateScenario() {
             results: results
         };
         
-        console.log('� Enviando PUT para:', `/api/scenarios/${scenario.id}`);
-        console.log('📦 Body da requisição:', requestBody);
         
         const response = await fetch(`/api/scenarios/${scenario.id}`, {
             method: 'PUT',
@@ -1750,18 +1652,14 @@ async function updateScenario() {
             body: JSON.stringify(requestBody)
         });
         
-        console.log('📈 Status da resposta:', response.status);
-        console.log('📈 Headers da resposta:', Object.fromEntries(response.headers));
         
         if (response.ok) {
             const result = await response.json();
-            console.log('✅ Cenário atualizado com sucesso:', result);
             
             showSuccess('Cenário atualizado com sucesso!');
             
             // Limpar modo de edição
             sessionStorage.removeItem('editingScenario');
-            console.log('🗑️ Modo de edição limpo após atualização');
             
             // Resetar para modo de criação
             setupCreateMode();
@@ -1803,7 +1701,6 @@ async function updateScenario() {
 
 // Função para gerar o fluxo de caixa mensal
 function generateCashFlow(data, tipo) {
-    console.log(`🔢 Gerando fluxo de caixa para: ${tipo}`);
     
     const fluxo = [];
     const MAX_MESES = 250;
@@ -1875,13 +1772,12 @@ function generateCashFlow(data, tipo) {
         }
     }
     
-    console.log(`📊 Fluxo gerado para ${tipo}: ${fluxo.length} meses, soma total: ${fluxo.reduce((a, b) => a + b, 0)}`);
+    console.log(`Fluxo gerado para ${tipo}: ${fluxo.length} meses, soma total: ${fluxo.reduce((a, b) => a + b, 0)}`);
     return fluxo;
 }
 
 // Função para calcular VPL
 function calculateVPL(fluxoDeCaixa, tmaMes) {
-    console.log('🧮 Calculando VPL com TMA mensal:', tmaMes);
     
     if (!fluxoDeCaixa || fluxoDeCaixa.length === 0) {
         console.log('⚠️ Fluxo de caixa vazio');
@@ -1903,13 +1799,11 @@ function calculateVPL(fluxoDeCaixa, tmaMes) {
         }
     });
     
-    console.log(`✅ VPL calculado: R$ ${vpl.toFixed(2)}`);
     return vpl;
 }
 
 // Função principal para calcular todos os indicadores
 function calculateAllIndicators(data) {
-    console.log('🚀 === INICIANDO CÁLCULO DE TODOS OS INDICADORES ===');
     
     try {
         // 1. Verificar TMA
@@ -1965,21 +1859,9 @@ function calculateAllIndicators(data) {
             periodosCalculados: Math.max(fluxoTabela.length, fluxoProposta.length),
             calculatedAt: new Date()
         };
-        
-        console.log('📊 === RESULTADOS CALCULADOS ===');
-        console.log('💰 Valor Total Tabela:', valorTotalTabela.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}));
-        console.log('💰 Valor Total Proposta:', valorTotalProposta.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}));
-        console.log('📉 Desconto Nominal %:', descontoNominalPercent.toFixed(2) + '%');
-        console.log('📉 Desconto Nominal R$:', descontoNominalReais.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}));
-        console.log('📈 VPL Tabela:', vplTabela.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}));
-        console.log('📈 VPL Proposta:', vplProposta.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}));
-        console.log('🔄 Delta VPL:', deltaVpl.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}));
-        console.log('📊 % Delta VPL:', percentualDeltaVpl.toFixed(2) + '%');
-        
         return resultados;
         
     } catch (error) {
-        console.error('❌ Erro no cálculo dos indicadores:', error);
         throw error;
     }
 }
@@ -2124,13 +2006,11 @@ function getFieldLabel(fieldId) {
 
 // Função para próxima etapa
 function nextStep() {
-    console.log('🚀 Iniciando próxima etapa...');
     
     // Verificar se está em modo de edição
     const editingScenario = sessionStorage.getItem('editingScenario');
     const isEditMode = !!editingScenario;
     
-    console.log('📝 Modo de edição:', isEditMode);
     
     // Validar campos obrigatórios
     const missingFields = validateRequiredFields();
@@ -2143,11 +2023,9 @@ function nextStep() {
     
     if (isEditMode) {
         // Modo edição: salvar diretamente sem pedir nome
-        console.log('💾 Modo edição detectado - atualizando cenário...');
         updateExistingScenario(); // Usar a nova função específica para edição
     } else {
         // Modo criação: mostrar modal para nome do cenário
-        console.log('📝 Modo criação: solicitando nome do cenário...');
         showScenarioNameModal();
     }
 }
@@ -2194,8 +2072,8 @@ async function saveScenarioAndProceed() {
             sessionStorage.setItem('currentInputData', JSON.stringify(currentData));
             sessionStorage.setItem('currentScenarioName', name);
             sessionStorage.setItem('currentScenarioId', savedScenario._id || savedScenario.id);
-            
-            console.log('💾 Dados salvos no sessionStorage para resultados:', {
+
+            console.log('Dados salvos no sessionStorage para resultados:', {
                 currentInputData: !!currentData,
                 currentScenarioName: name,
                 currentScenarioId: savedScenario._id || savedScenario.id
@@ -2214,7 +2092,6 @@ async function saveScenarioAndProceed() {
         }
         
     } catch (error) {
-        console.error('Erro ao salvar cenário:', error);
         showError('Erro ao salvar o cenário. Tente novamente.');
     }
 }

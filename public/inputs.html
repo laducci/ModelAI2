@@ -7,67 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/sidebar-mobile.css">
     <script src="js/api.js"></script>
     <style>
-        /* CSS específico para mobile - apenas para inputs.html */
-        @media (max-width: 1023px) {
-            body {
-                margin: 0 !important;
-                padding: 0 !important;
-                overflow-x: hidden !important;
-            }
-            
-            html {
-                overflow-x: hidden !important;
-            }
-            
-            .modern-sidebar {
-                width: 280px !important;
-            }
-            
-            .modern-sidebar .sidebar-text {
-                display: block !important;
-                opacity: 1 !important;
-                transform: none !important;
-                pointer-events: auto !important;
-            }
-            
-            .modern-sidebar.collapsed {
-                width: 280px !important;
-            }
-            
-            .modern-sidebar.collapsed .sidebar-text {
-                display: block !important;
-                opacity: 1 !important;
-                transform: none !important;
-            }
-            
-            .main-content {
-                margin-left: 0 !important;
-                margin-top: 0 !important;
-                overflow-x: hidden !important;
-            }
-            
-            .main-content.expanded {
-                margin-left: 0 !important;
-            }
-            
-            #mainContent {
-                padding-top: 0 !important;
-                margin-top: 0 !important;
-                overflow-x: hidden !important;
-            }
-            
-            #mainContent > div {
-                overflow-x: hidden !important;
-            }
-            
-            .main-content > div > div:first-child {
-                margin-top: 0 !important;
-                padding-top: 24px !important;
-            }
-        }
-        
         /* Estilos para as abas/subtabs */
         .subtab-btn {
             position: relative;
@@ -109,7 +51,7 @@
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
 
     <!-- Modern Sidebar -->
-    <div id="sidebar" class="modern-sidebar fixed left-0 top-0 w-72 h-full z-50 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+    <div id="sidebar" class="modern-sidebar fixed left-0 top-0 w-72 h-full z-50 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-[2500ms]">
         <!-- Logo Section -->
         <div class="p-6 border-b border-teal-700/50 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -700,116 +642,7 @@
     <script src="js/auth-guard.js"></script>
     <script src="js/admin-menu.js"></script>
     <script src="js/inputs.js"></script>
-    
-    <script>
-        // Mobile menu toggle - versão corrigida para inputs
-        document.addEventListener('DOMContentLoaded', function() {
-            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-            const toggleSidebar = document.getElementById('toggleSidebar');
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('mobileOverlay');
-
-            function toggleMobileMenu() {
-                const isOpen = !sidebar.classList.contains('-translate-x-full');
-                
-                if (isOpen) {
-                    // Fechar menu
-                    sidebar.classList.add('-translate-x-full');
-                    overlay.classList.add('hidden');
-                    document.body.classList.remove('overflow-hidden');
-                } else {
-                    // Abrir menu completo
-                    sidebar.classList.remove('-translate-x-full');
-                    sidebar.classList.remove('collapsed');
-                    overlay.classList.remove('hidden');
-                    document.body.classList.add('overflow-hidden');
-                }
-            }
-
-            // Event listeners para mobile
-            if (mobileMenuToggle) {
-                mobileMenuToggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleMobileMenu();
-                });
-            }
-
-            // Event listener para o botão dentro da sidebar (mobile e desktop)
-            if (toggleSidebar) {
-                toggleSidebar.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    if (window.innerWidth < 1024) {
-                        // No mobile: usar a mesma função de toggle
-                        toggleMobileMenu();
-                    } else {
-                        // No desktop: usar comportamento collapse original
-                        sidebar.classList.toggle('collapsed');
-                        const mainContent = document.getElementById('mainContent');
-                        if (mainContent) {
-                            mainContent.classList.toggle('expanded');
-                        }
-                        
-                        const toggleIcon = toggleSidebar.querySelector('i');
-                        if (toggleIcon) {
-                            if (sidebar.classList.contains('collapsed')) {
-                                toggleIcon.style.transform = 'rotate(180deg)';
-                            } else {
-                                toggleIcon.style.transform = 'rotate(0deg)';
-                            }
-                        }
-                    }
-                });
-            }
-
-            // Overlay para fechar
-            if (overlay) {
-                overlay.addEventListener('click', function() {
-                    sidebar.classList.add('-translate-x-full');
-                    overlay.classList.add('hidden');
-                    document.body.classList.remove('overflow-hidden');
-                });
-            }
-
-            // Fechar menu ao clicar em links no mobile
-            const sidebarLinks = sidebar.querySelectorAll('a');
-            sidebarLinks.forEach(link => {
-                link.addEventListener('click', function() {
-                    if (window.innerWidth < 1024) {
-                        sidebar.classList.add('-translate-x-full');
-                        overlay.classList.add('hidden');
-                        document.body.classList.remove('overflow-hidden');
-                    }
-                });
-            });
-
-            // Handle window resize
-            window.addEventListener('resize', function() {
-                if (window.innerWidth >= 1024) {
-                    // Desktop: manter comportamento original
-                    sidebar.classList.remove('-translate-x-full');
-                    overlay.classList.add('hidden');
-                    document.body.classList.remove('overflow-hidden');
-                } else {
-                    // Mobile: garantir que está fechado inicialmente
-                    sidebar.classList.add('-translate-x-full');
-                    sidebar.classList.remove('collapsed');
-                    overlay.classList.add('hidden');
-                    document.body.classList.remove('overflow-hidden');
-                }
-            });
-
-            // Inicialização para mobile
-            if (window.innerWidth < 1024) {
-                sidebar.classList.add('-translate-x-full');
-                sidebar.classList.remove('collapsed');
-                overlay.classList.add('hidden');
-                document.body.classList.remove('overflow-hidden');
-            }
-            
-        });
-    </script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/sidebar-mobile.js"></script>
 </body>
 </html>

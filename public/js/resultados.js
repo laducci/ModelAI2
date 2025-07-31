@@ -26,17 +26,14 @@ let currentScenarioData = null;
 
 // Inicialização da página
 function initializeResultsPage() {
-    console.log('🔄 === INICIALIZANDO PÁGINA DE RESULTADOS ===');
     
     // Verificar se há parâmetros na URL que podem estar causando problemas
     const urlParams = new URLSearchParams(window.location.search);
     const scenarioParam = urlParams.get('scenario');
     const idParam = urlParams.get('id');
     
-    console.log('🔍 Parâmetros da URL:', { scenarioParam, idParam });
     
     if (scenarioParam && scenarioParam !== 'undefined') {
-        console.log('📋 Parâmetro de cenário encontrado na URL:', scenarioParam);
         // Pode implementar carregamento automático aqui se necessário
     }
     
@@ -71,11 +68,9 @@ function checkAuthentication() {
 
 // Configurar event listeners
 function setupEventListeners() {
-    console.log('🔗 === CONFIGURANDO EVENT LISTENERS ===');
     
     const scenarioFilter = document.getElementById('scenarioFilter');
     if (scenarioFilter) {
-        console.log('✅ scenarioFilter encontrado, configurando listener...');
         
         // Limpar listeners anteriores
         scenarioFilter.removeEventListener('change', handleScenarioSelection);
@@ -111,7 +106,6 @@ function setupEventListeners() {
 // Carregar cenários para o filtro
 async function loadScenariosForFilter() {
     try {
-        console.log('📂 === CARREGANDO CENÁRIOS PARA FILTRO ===');
         
         const response = await fetch('/api/scenarios', {
             headers: {
@@ -140,8 +134,6 @@ async function loadScenariosForFilter() {
 
 // Popular filtro de cenários
 function populateScenarioFilter(scenarios) {
-    console.log('🎨 === POPULANDO FILTRO DE CENÁRIOS ===');
-    console.log('📊 Cenários recebidos:', scenarios.length);
     
     const scenarioFilter = document.getElementById('scenarioFilter');
     
@@ -226,10 +218,8 @@ async function handleScenarioSelection(scenarioIdOrEvent) {
         await loadScenarioData(scenarioId);
         
         if (currentScenarioData) {
-            console.log('✅ Cenário carregado com sucesso, exibindo resultados');
             displayResults();
         } else {
-            console.log('⚠️ Cenário não foi carregado, mantendo cards zerados');
             // Mantém cards zerados se não conseguir carregar
             renderDefaultCards();
             renderDefaultFluxoCaixa();
@@ -323,7 +313,6 @@ function showResultsState() {
 
 // Exibir resultados calculados
 function displayResults() {
-    console.log('🎯 Exibindo resultados calculados...');
     
     showResultsState();
     
