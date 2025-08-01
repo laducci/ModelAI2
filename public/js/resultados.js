@@ -990,8 +990,315 @@ function showAlert(message, type = 'info') {
     // Aqui você pode implementar um sistema de alertas visual se necessário
 }
 
+// Função para exportar relatório em PDF
+function exportToPDF() {
+    console.log('🔍 Iniciando exportação PDF');
+    
+    // Verificar se há dados para exportar
+    const scenarioName = document.getElementById('scenarioName').textContent || 'Nome do Cenário';
+    if (scenarioName === 'Nome do Cenário') {
+        if (window.showAlert) {
+            showAlert('warning', 'Selecione um cenário antes de exportar o relatório.');
+        } else {
+            alert('Selecione um cenário antes de exportar o relatório.');
+        }
+        return;
+    }
+    
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        
+        // Configurações básicas
+        const pageWidth = doc.internal.pageSize.width;
+        const margin = 20;
+        let yPosition = margin;
+        
+        // Cabeçalho com logo centralizada
+        doc.setFillColor(20, 184, 166); // Cor teal
+        doc.rect(0, 0, pageWidth, 30, 'F');
+        
+        // Logo centralizada no cabeçalho (usando texto como fallback)
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(24);
+        doc.setFont('helvetica', 'bold');
+        const text = 'ModelAI';
+        const textWidth = doc.getTextWidth(text);
+        doc.text(text, (pageWidth - textWidth) / 2, 20);
+        
+        yPosition = 40;
+        doc.setTextColor(0, 0, 0);
+        
+        // Título do relatório
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Relatório de Análise Financeira', margin, yPosition);
+        yPosition += 10;
+        
+        // Data e hora do relatório
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        const agora = new Date();
+        const dataHora = `${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR')}`;
+        doc.text(`Relatório gerado em: ${dataHora}`, margin, yPosition);
+        yPosition += 15;
+        
+        // Informações do cenário
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Informações do Cenário', margin, yPosition);
+        yPosition += 8;
+        
+        const scenarioClient = document.getElementById('scenarioClient').textContent || 'Cliente';
+        const scenarioEmpreendimento = document.getElementById('scenarioEmpreendimento').textContent || 'Empreendimento';
+        const scenarioUnidade = document.getElementById('scenarioUnidade').textContent || 'Unidade';
+        const scenarioTMA = document.getElementById('scenarioTMA').textContent || '0%';
+        
+        const infoData = [
+            ['Nome do Cenário', scenarioName],
+            ['Cliente', scenarioClient],
+            ['Empreendimento', scenarioEmpreendimento],
+            ['Unidade', scenarioUnidade],
+            ['TMA Anual', scenarioTMA]
+        ];
+        
+        doc.autoTable({
+            startY: yPosition,
+            body: infoData,
+            theme: 'plain',
+            bodyStyles: {
+                fontSize: 10,
+                cellPadding: 2
+            },
+            columnStyles: {
+                0: { cellWidth: 50, fontStyle: 'bold' },
+                1: { cellWidth: 80 }
+            },
+            margin: { left: margin, right: margin }
+        });
+        
+        yPosition = doc.lastAutoTable.finalY + 15;
+        
+        // Indicadores financeiros principais
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Indicadores Financeiros Principais', margin, yPosition);
+        yPosition += 8;
+        
+        // Dados dos cards
+        const indicadores = [
+            ['Desconto Nominal %', document.getElementById('descontoNominalPercent').textContent, '(Valor Proposta/Valor Imóvel)-1'],
+            ['Desconto Nominal R$', document.getElementById('descontoNominalReais').textContent, 'Valor Imóvel - Valor Proposta'],
+            ['VPL Tabela', document.getElementById('vplTabela').textContent, 'VPL(TMA_mês;Fluxo_mês1:mês250)'],
+            ['VPL Proposta', document.getElementById('vplProposta').textContent, 'VPL(TMA_mês;Proposta_mês1:mês250)'],
+            ['Delta VPL', document.getElementById('deltaVPL').textContent, 'VPL Proposta - VPL Tabela'],
+            ['% Delta VPL', document.getElementById('percentDeltaVPL').textContent, 'SEERRO(Delta_VPL/VPL_Tabela;0)']
+        ];
+        
+        // Tabela de indicadores
+        doc.autoTable({
+            startY: yPosition,
+            head: [['Indicador', 'Valor', 'Fórmula']],
+            body: indicadores,
+            theme: 'striped',
+            headStyles: {
+                fillColor: [20, 184, 166],
+                textColor: 255,
+                fontSize: 11,
+                fontStyle: 'bold',
+                halign: 'center'
+            },
+            bodyStyles: {
+                fontSize: 9,
+                cellPadding: 4
+            },
+            alternateRowStyles: {
+                fillColor: [245, 245, 245]
+            },
+            columnStyles: {
+                0: { cellWidth: 45, fontStyle: 'bold' },
+                1: { cellWidth: 35, halign: 'right', fontStyle: 'bold' },
+                2: { cellWidth: 80, fontSize: 8 }
+            },
+            margin: { left: margin, right: margin }
+        });
+        
+        yPosition = doc.lastAutoTable.finalY + 15;
+        
+        // Resumo financeiro
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Resumo Financeiro', margin, yPosition);
+        yPosition += 8;
+        
+        const valorTotalImovel = document.getElementById('valorTotalImovel').textContent || 'R$ 0,00';
+        const valorTotalProposta = document.getElementById('valorTotalProposta').textContent || 'R$ 0,00';
+        const tmaMensal = document.getElementById('tmaMensal').textContent || '0%';
+        
+        const resumoFinanceiro = [
+            ['Valor Total Imóvel', valorTotalImovel],
+            ['Valor Total Proposta', valorTotalProposta],
+            ['TMA Mensal', tmaMensal]
+        ];
+        
+        doc.autoTable({
+            startY: yPosition,
+            body: resumoFinanceiro,
+            theme: 'grid',
+            bodyStyles: {
+                fontSize: 10,
+                cellPadding: 4
+            },
+            columnStyles: {
+                0: { cellWidth: 70, fontStyle: 'bold', fillColor: [240, 240, 240] },
+                1: { cellWidth: 50, halign: 'right', fontStyle: 'bold' }
+            },
+            margin: { left: margin, right: margin }
+        });
+        
+        // Nova página para o fluxo de caixa
+        doc.addPage();
+        yPosition = margin;
+        
+        // Cabeçalho da segunda página
+        doc.setFillColor(20, 184, 166);
+        doc.rect(0, 0, pageWidth, 30, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        const titulo = 'Fluxo de Caixa Detalhado';
+        const tituloWidth = doc.getTextWidth(titulo);
+        doc.text(titulo, (pageWidth - tituloWidth) / 2, 20);
+        
+        yPosition = 40;
+        doc.setTextColor(0, 0, 0);
+        
+        // Período de análise - USAR O FILTRO SELECIONADO
+        const periodoSelect = document.getElementById('periodoAnalise');
+        const periodoSelecionado = periodoSelect ? periodoSelect.value : '12';
+        const numPeriodos = parseInt(periodoSelecionado);
+        
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Período de Análise: ${periodoSelecionado} meses`, margin, yPosition);
+        yPosition += 10;
+        
+        // Coletar dados da tabela de fluxo de caixa
+        const fluxoTable = document.getElementById('fluxoCaixaDetalhado');
+        const fluxoData = [];
+        
+        if (fluxoTable) {
+            const rows = fluxoTable.querySelectorAll('tr');
+            
+            // USAR O PERÍODO SELECIONADO PELO USUÁRIO
+            const maxRows = Math.min(rows.length, numPeriodos);
+            
+            console.log(`📊 Exportando ${maxRows} linhas de fluxo de caixa (período selecionado: ${periodoSelecionado})`);
+            
+            for (let i = 0; i < maxRows; i++) {
+                const cells = rows[i].querySelectorAll('td');
+                if (cells.length > 0) {
+                    const rowData = [];
+                    // Pegar as primeiras 6 colunas principais
+                    for (let j = 0; j < Math.min(cells.length, 6); j++) {
+                        rowData.push(cells[j].textContent.trim());
+                    }
+                    fluxoData.push(rowData);
+                }
+            }
+        }
+        
+        if (fluxoData.length > 0) {
+            doc.autoTable({
+                startY: yPosition,
+                head: [['Mês', 'Tabela Inc', 'Entrada', 'Parcelas', 'Reforços', 'Nas Chaves']],
+                body: fluxoData,
+                theme: 'striped',
+                headStyles: {
+                    fillColor: [20, 184, 166],
+                    textColor: 255,
+                    fontSize: 9,
+                    fontStyle: 'bold',
+                    halign: 'center'
+                },
+                bodyStyles: {
+                    fontSize: 8,
+                    cellPadding: 2
+                },
+                alternateRowStyles: {
+                    fillColor: [248, 250, 252]
+                },
+                columnStyles: {
+                    0: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
+                    1: { cellWidth: 28, halign: 'right' },
+                    2: { cellWidth: 28, halign: 'right' },
+                    3: { cellWidth: 28, halign: 'right' },
+                    4: { cellWidth: 28, halign: 'right' },
+                    5: { cellWidth: 28, halign: 'right' }
+                },
+                margin: { left: margin, right: margin }
+            });
+        } else {
+            doc.setFontSize(10);
+            doc.text('Nenhum dado de fluxo de caixa disponível para exibição.', margin, yPosition);
+        }
+        
+        // Rodapé em todas as páginas
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            
+            // Linha do rodapé
+            doc.setDrawColor(200, 200, 200);
+            doc.line(margin, doc.internal.pageSize.height - 20, pageWidth - margin, doc.internal.pageSize.height - 20);
+            
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100, 100, 100);
+            
+            // Texto esquerdo
+            doc.text('ModelAI - Sistema de Análise Financeira', margin, doc.internal.pageSize.height - 12);
+            
+            // Número da página (direita)
+            doc.text(`Página ${i} de ${pageCount}`, pageWidth - margin - 20, doc.internal.pageSize.height - 12);
+            
+            // Data/hora (centro)
+            const footerText = `Gerado em ${dataHora}`;
+            const textWidth = doc.getTextWidth(footerText);
+            doc.text(footerText, (pageWidth - textWidth) / 2, doc.internal.pageSize.height - 12);
+        }
+        
+        // Gerar nome do arquivo
+        const fileName = `ModelAI_Analise_${scenarioName.replace(/[^a-zA-Z0-9]/g, '_')}_${agora.toISOString().slice(0,10)}.pdf`;
+        
+        // Fazer download
+        doc.save(fileName);
+        
+        console.log('✅ PDF exportado com sucesso:', fileName);
+        console.log(`📊 Total de linhas exportadas: ${fluxoData.length} (período: ${periodoSelecionado} meses)`);
+        
+        // Mostrar mensagem de sucesso
+        if (window.showAlert) {
+            showAlert('success', `PDF "${fileName}" exportado com sucesso! (${fluxoData.length} meses de dados)`);
+        } else {
+            alert(`PDF "${fileName}" exportado com sucesso! (${fluxoData.length} meses de dados)`);
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao exportar PDF:', error);
+        
+        // Mostrar mensagem de erro
+        if (window.showAlert) {
+            showAlert('error', 'Erro ao exportar PDF. Verifique se os dados estão carregados e tente novamente.');
+        } else {
+            alert('Erro ao exportar PDF. Verifique se os dados estão carregados e tente novamente.');
+        }
+    }
+}
+
 // Exportar funções para uso global
 window.initializeResultsPage = initializeResultsPage;
+window.exportToPDF = exportToPDF;
 
 // Inicializar quando a página carregar
 document.addEventListener('DOMContentLoaded', initializeResultsPage);

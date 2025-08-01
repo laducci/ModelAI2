@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/sidebar.css">
     <link rel="stylesheet" href="css/sidebar-mobile.css">
+    
+    <!-- jsPDF para exportação de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <style>
         /* Estilos para os cards de métricas */
         .metric-card {
@@ -121,8 +125,8 @@
                                 <option value="">Selecione um cenário</option>
                             </select>
                         </div>
-                        <button class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors">
-                            <i class="fas fa-download mr-2"></i>Exportar
+                        <button onclick="exportToPDF()" class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors">
+                            <i class="fas fa-download mr-2"></i>Exportar PDF
                         </button>
                     </div>
                 </div>
@@ -342,6 +346,7 @@
     <script src="js/auth-guard.js"></script>
     <script src="js/admin-menu.js"></script>
     <script src="js/resultados.js"></script>
+    <script src="js/pdf-export.js"></script>
     <script src="js/sidebar.js"></script>
     <script src="js/sidebar-mobile.js"></script>
     
