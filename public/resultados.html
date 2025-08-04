@@ -12,6 +12,9 @@
     <!-- jsPDF para exportação de PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    
+    <!-- SheetJS para exportação de Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         /* Estilos para os cards de métricas */
         .metric-card {
@@ -260,6 +263,9 @@
                                 <option value="120">120 meses</option>
                                 <option value="250">250 meses (completo)</option>
                             </select>
+                            <button onclick="exportTableToExcel()" class="px-3 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm">
+                                <i class="fas fa-file-excel mr-2"></i>Exportar Tabela
+                            </button>
                         </div>
                     </div>
                     

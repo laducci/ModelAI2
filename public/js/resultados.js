@@ -1352,9 +1352,123 @@ function exportToPDF() {
     }
 }
 
+// Função para exportar tabela de fluxo de caixa para Excel
+function exportTableToExcel() {
+    try {
+        // Verificar se a biblioteca XLSX está disponível
+        if (typeof XLSX === 'undefined') {
+            alert('Biblioteca de exportação Excel não carregada. Recarregue a página e tente novamente.');
+            return;
+        }
+        
+        // Obter informações do cenário
+        const scenarioName = document.getElementById('scenarioName').textContent || 'Cenario';
+        const scenarioClient = document.getElementById('scenarioClient').textContent || 'Cliente';
+        const scenarioEmpreendimento = document.getElementById('scenarioEmpreendimento').textContent || 'Empreendimento';
+        const periodoSelecionado = document.getElementById('periodoAnalise').value || '12';
+        
+        // Obter dados da tabela
+        const table = document.querySelector('#fluxoCaixaDetalhado').closest('table');
+        const rows = table.querySelectorAll('tbody tr');
+        
+        if (rows.length === 0) {
+            alert('Nenhum dado disponível para exportar. Carregue um cenário primeiro.');
+            return;
+        }
+        
+        // Criar dados do Excel
+        const excelData = [];
+        
+        // Adicionar informações do cenário no topo
+        excelData.push(['MODELAI - ANÁLISE FINANCEIRA']);
+        excelData.push(['Cenário:', scenarioName]);
+        excelData.push(['Cliente:', scenarioClient]);
+        excelData.push(['Empreendimento:', scenarioEmpreendimento]);
+        excelData.push(['Período de Análise:', `${periodoSelecionado} meses`]);
+        excelData.push(['Data de Exportação:', new Date().toLocaleDateString('pt-BR')]);
+        excelData.push([]); // Linha em branco
+        
+        // Adicionar cabeçalhos
+        const headers = [
+            'MÊS', 'TABELA INC', 'ENTRADA', 'PARCELAS', 'REFORÇOS', 'NAS CHAVES',
+            'PROPOSTA CLIENTE', 'ENTRADA', 'PARCELAS', 'REFORÇOS', 'BENS MÓVEIS/IMÓVEIS'
+        ];
+        excelData.push(headers);
+        
+        // Determinar quantas linhas exportar baseado no período selecionado
+        const maxRows = Math.min(parseInt(periodoSelecionado), rows.length);
+        
+        // Adicionar dados das linhas
+        for (let i = 0; i < maxRows; i++) {
+            const cells = rows[i].querySelectorAll('td');
+            const rowData = [];
+            
+            for (let j = 0; j < cells.length; j++) {
+                let cellValue = cells[j].textContent.trim();
+                
+                // Manter a formatação original com R$ para melhor apresentação
+                // Apenas limpar espaços extras se houver
+                cellValue = cellValue.replace(/\s+/g, ' ').trim();
+                
+                rowData.push(cellValue);
+            }
+            excelData.push(rowData);
+        }
+        
+        // Criar workbook e worksheet
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(excelData);
+        
+        // Configurar larguras das colunas
+        const colWidths = [
+            { wch: 8 },  // MÊS
+            { wch: 18 }, // TABELA INC
+            { wch: 18 }, // ENTRADA
+            { wch: 18 }, // PARCELAS
+            { wch: 18 }, // REFORÇOS
+            { wch: 18 }, // NAS CHAVES
+            { wch: 20 }, // PROPOSTA CLIENTE
+            { wch: 18 }, // ENTRADA
+            { wch: 18 }, // PARCELAS
+            { wch: 18 }, // REFORÇOS
+            { wch: 22 }  // BENS MÓVEIS/IMÓVEIS
+        ];
+        ws['!cols'] = colWidths;
+        
+        // Adicionar worksheet ao workbook
+        XLSX.utils.book_append_sheet(wb, ws, 'Fluxo de Caixa');
+        
+        // Gerar nome do arquivo
+        const agora = new Date();
+        const dataFormatada = agora.toISOString().slice(0, 10);
+        const fileName = `ModelAI_FluxoCaixa_${scenarioName.replace(/[^a-zA-Z0-9]/g, '_')}_${periodoSelecionado}meses_${dataFormatada}.xlsx`;
+        
+        // Salvar arquivo
+        XLSX.writeFile(wb, fileName);
+        
+        console.log('✅ Tabela exportada para Excel:', fileName);
+        console.log(`📊 Total de linhas exportadas: ${maxRows} (período: ${periodoSelecionado} meses)`);
+        
+        if (window.showAlert) {
+            showAlert('success', `Tabela exportada com sucesso! Arquivo: "${fileName}" (${maxRows} meses de dados)`);
+        } else {
+            alert(`Tabela exportada com sucesso! Arquivo: "${fileName}" (${maxRows} meses de dados)`);
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao exportar tabela para Excel:', error);
+        if (window.showAlert) {
+            showAlert('error', 'Erro ao exportar tabela. Verifique se os dados estão carregados e tente novamente.');
+        } else {
+            alert('Erro ao exportar tabela. Verifique se os dados estão carregados e tente novamente.');
+        }
+    }
+}
+
 // Exportar funções para uso global
 window.initializeResultsPage = initializeResultsPage;
 window.exportToPDF = exportToPDF;
+window.exportTableToExcel = exportTableToExcel;
 
 // Inicializar quando a página carregar
 document.addEventListener('DOMContentLoaded', initializeResultsPage);
