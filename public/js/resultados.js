@@ -774,10 +774,16 @@ function displayCalculatedValues(values) {
     }
     formatValueWithNegativeStyle('percentDeltaVPL', percentDelta, true);
     
-    // Resumo Financeiro (sem formatação negativa, pois são valores absolutos)
+    // Cards principais - Valor Total Imóvel e Valor Total Proposta
     document.getElementById('valorTotalImovel').textContent =
         values ? formatCurrency(values.valorTotalImovel) : 'R$ 0,00';
     document.getElementById('valorTotalProposta').textContent =
+        values ? formatCurrency(values.valorTotalProposta) : 'R$ 0,00';
+    
+    // Resumo Financeiro (sem formatação negativa, pois são valores absolutos)
+    document.getElementById('valorTotalImovelResumo').textContent =
+        values ? formatCurrency(values.valorTotalImovel) : 'R$ 0,00';
+    document.getElementById('valorTotalPropostaResumo').textContent =
         values ? formatCurrency(values.valorTotalProposta) : 'R$ 0,00';
     
     // Desconto Nominal % no resumo (com formatação negativa)
