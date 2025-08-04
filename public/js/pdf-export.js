@@ -159,17 +159,22 @@ async function continuarGeracaoPDF(doc, pageWidth, margin) {
     yPosition += 8;
     
     const indicadores = [
-        ['Desconto Nominal %', document.getElementById('descontoNominalPercent').textContent, '(Valor Proposta/Valor Imóvel)-1'],
-        ['Desconto Nominal R$', document.getElementById('descontoNominalReais').textContent, 'Valor Imóvel - Valor Proposta'],
-        ['VPL Tabela', document.getElementById('vplTabela').textContent, 'VPL(TMA_mês;Fluxo_mês1:mês250)'],
-        ['VPL Proposta', document.getElementById('vplProposta').textContent, 'VPL(TMA_mês;Proposta_mês1:mês250)'],
-        ['Delta VPL', document.getElementById('deltaVPL').textContent, 'VPL Proposta - VPL Tabela'],
-        ['% Delta VPL', document.getElementById('percentDeltaVPL').textContent, 'SEERRO(Delta_VPL/VPL_Tabela;0)']
+        ['Desconto Nominal %', document.getElementById('descontoNominalPercent').textContent],
+        ['Desconto Nominal R$', document.getElementById('descontoNominalReais').textContent],
+        ['VPL Tabela', document.getElementById('vplTabela').textContent],
+        ['VPL Proposta', document.getElementById('vplProposta').textContent],
+        ['Delta VPL', document.getElementById('deltaVPL').textContent],
+        ['% Delta VPL', document.getElementById('percentDeltaVPL').textContent]
     ];
+    
+    // Função para verificar se um valor é negativo (contém parênteses)
+    const isNegativeValue = (value) => {
+        return value && value.includes('(') && value.includes(')');
+    };
     
     doc.autoTable({
         startY: yPosition,
-        head: [['Indicador', 'Valor', 'Fórmula']],
+        head: [['Indicador', 'Valor']],
         body: indicadores,
         theme: 'striped',
         headStyles: {
@@ -187,9 +192,18 @@ async function continuarGeracaoPDF(doc, pageWidth, margin) {
             fillColor: [245, 245, 245]
         },
         columnStyles: {
-            0: { cellWidth: 45, fontStyle: 'bold' },
-            1: { cellWidth: 35, halign: 'right', fontStyle: 'bold' },
-            2: { cellWidth: 80, fontSize: 8 }
+            0: { cellWidth: 60, fontStyle: 'bold' },
+            1: { cellWidth: 50, halign: 'right', fontStyle: 'bold' }
+        },
+        didParseCell: function(data) {
+            // Aplicar cor vermelha para valores negativos na coluna de valores (índice 1)
+            if (data.column.index === 1 && data.section === 'body') {
+                const cellValue = data.cell.text[0];
+                if (isNegativeValue(cellValue)) {
+                    data.cell.styles.textColor = [220, 38, 38]; // Vermelho (equivalente ao #dc2626)
+                    data.cell.styles.fontStyle = 'bold';
+                }
+            }
         },
         margin: { left: margin, right: margin }
     });
@@ -204,12 +218,12 @@ async function continuarGeracaoPDF(doc, pageWidth, margin) {
     
     const valorTotalImovel = document.getElementById('valorTotalImovel').textContent || 'R$ 0,00';
     const valorTotalProposta = document.getElementById('valorTotalProposta').textContent || 'R$ 0,00';
-    const tmaMensal = document.getElementById('tmaMensal').textContent || '0%';
+    const descontoNominalResumo = document.getElementById('descontoNominalResumo').textContent || '0,00%';
     
     const resumoFinanceiro = [
         ['Valor Total Imóvel', valorTotalImovel],
         ['Valor Total Proposta', valorTotalProposta],
-        ['TMA Mensal', tmaMensal]
+        ['Desconto Nominal', descontoNominalResumo]
     ];
     
     doc.autoTable({
@@ -223,6 +237,16 @@ async function continuarGeracaoPDF(doc, pageWidth, margin) {
         columnStyles: {
             0: { cellWidth: 70, fontStyle: 'bold', fillColor: [240, 240, 240] },
             1: { cellWidth: 50, halign: 'right', fontStyle: 'bold' }
+        },
+        didParseCell: function(data) {
+            // Aplicar cor vermelha para valores negativos na coluna de valores (índice 1)
+            if (data.column.index === 1 && data.section === 'body') {
+                const cellValue = data.cell.text[0];
+                if (isNegativeValue(cellValue)) {
+                    data.cell.styles.textColor = [220, 38, 38]; // Vermelho (equivalente ao #dc2626)
+                    data.cell.styles.fontStyle = 'bold';
+                }
+            }
         },
         margin: { left: margin, right: margin }
     });

@@ -753,23 +753,39 @@ function displayCalculatedValues(values) {
         percent = values.descontoNominalPercent * 100;
     }
     console.log('📊 Atualizando Card 1 - Desconto Nominal %:', percent.toFixed(2) + '%');
-    document.getElementById('descontoNominalPercent').textContent = `${percent.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%`;
-    document.getElementById('descontoNominalReais').textContent =
-        values ? formatCurrency(values.descontoNominalReais) : 'R$ 0,00';
-    document.getElementById('vplTabela').textContent =
-        values ? formatCurrency(values.vplTabela) : 'R$ 0,00';
-    document.getElementById('vplProposta').textContent =
-        values ? formatCurrency(values.vplProposta) : 'R$ 0,00';
-    document.getElementById('deltaVPL').textContent =
-        values ? formatCurrency(values.deltaVPL) : 'R$ 0,00';
-    document.getElementById('percentDeltaVPL').textContent =
-        values && !isNaN(values.percentDeltaVPL) ? `${(values.percentDeltaVPL * 100).toFixed(2)}%` : '0,00%';
+    formatValueWithNegativeStyle('descontoNominalPercent', percent, true);
+    
+    // Card 2: Desconto Nominal R$
+    formatValueWithNegativeStyle('descontoNominalReais', values ? values.descontoNominalReais : 0);
+    
+    // Card 3: VPL Tabela
+    formatValueWithNegativeStyle('vplTabela', values ? values.vplTabela : 0);
+    
+    // Card 4: VPL Proposta
+    formatValueWithNegativeStyle('vplProposta', values ? values.vplProposta : 0);
+    
+    // Card 5: Delta VPL
+    formatValueWithNegativeStyle('deltaVPL', values ? values.deltaVPL : 0);
+    
+    // Card 6: % Delta VPL
+    let percentDelta = 0;
+    if (values && !isNaN(values.percentDeltaVPL)) {
+        percentDelta = values.percentDeltaVPL * 100;
+    }
+    formatValueWithNegativeStyle('percentDeltaVPL', percentDelta, true);
+    
+    // Resumo Financeiro (sem formatação negativa, pois são valores absolutos)
     document.getElementById('valorTotalImovel').textContent =
         values ? formatCurrency(values.valorTotalImovel) : 'R$ 0,00';
     document.getElementById('valorTotalProposta').textContent =
         values ? formatCurrency(values.valorTotalProposta) : 'R$ 0,00';
-    document.getElementById('tmaMensal').textContent =
-        values && !isNaN(values.tmaMes) ? `${(values.tmaMes * 100).toFixed(4)}%` : '0%';
+    
+    // Desconto Nominal % no resumo (com formatação negativa)
+    let descontoResumo = 0;
+    if (values && !isNaN(values.descontoNominalPercent)) {
+        descontoResumo = values.descontoNominalPercent * 100;
+    }
+    formatValueWithNegativeStyle('descontoNominalResumo', descontoResumo, true);
 }
 
 // Atualizar resumo financeiro
@@ -985,6 +1001,46 @@ function formatCurrency(value) {
     }).format(value);
 }
 
+// Função para formatar valor com estilo negativo (parênteses e vermelho)
+function formatValueWithNegativeStyle(elementId, value, isPercentage = false) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    let formattedValue;
+    let isNegative = false;
+    
+    if (value === null || value === undefined || isNaN(value)) {
+        formattedValue = isPercentage ? '0,00%' : 'R$ 0,00';
+    } else {
+        isNegative = value < 0;
+        const absValue = Math.abs(value);
+        
+        if (isPercentage) {
+            formattedValue = `${absValue.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%`;
+        } else {
+            formattedValue = new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(absValue);
+        }
+        
+        if (isNegative) {
+            formattedValue = `(${formattedValue})`;
+        }
+    }
+    
+    element.textContent = formattedValue;
+    
+    // Aplicar ou remover classe de estilo negativo
+    if (isNegative) {
+        element.classList.add('negative-value');
+    } else {
+        element.classList.remove('negative-value');
+    }
+}
+
 function showAlert(message, type = 'info') {
     console.log(`${type.toUpperCase()}: ${message}`);
     // Aqui você pode implementar um sistema de alertas visual se necessário
@@ -1133,12 +1189,12 @@ function exportToPDF() {
         
         const valorTotalImovel = document.getElementById('valorTotalImovel').textContent || 'R$ 0,00';
         const valorTotalProposta = document.getElementById('valorTotalProposta').textContent || 'R$ 0,00';
-        const tmaMensal = document.getElementById('tmaMensal').textContent || '0%';
+        const descontoNominalResumo = document.getElementById('descontoNominalResumo').textContent || '0,00%';
         
         const resumoFinanceiro = [
             ['Valor Total Imóvel', valorTotalImovel],
             ['Valor Total Proposta', valorTotalProposta],
-            ['TMA Mensal', tmaMensal]
+            ['Desconto Nominal %', descontoNominalResumo]
         ];
         
         doc.autoTable({
