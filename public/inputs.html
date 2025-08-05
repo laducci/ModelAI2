@@ -195,21 +195,21 @@
                                 <div class="space-y-6">
                                     <div class="input-group">
                                         <label class="block font-semibold text-gray-700 mb-3 text-sm uppercase tracking-wide">Cliente</label>
-                                        <input type="text" id="cliente" class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white shadow-sm transition-all hover:border-gray-300" placeholder="Ex: João da Silva">
+                                        <input type="text" id="cliente" class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white shadow-sm transition-all hover:border-gray-300" placeholder="Ex: João da Silva" required>
                                     </div>
                                     <div class="input-group">
                                         <label class="block font-semibold text-gray-700 mb-3 text-sm uppercase tracking-wide">Imobiliária</label>
-                                        <input type="text" id="imobiliaria" class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white shadow-sm transition-all hover:border-gray-300" placeholder="Ex: Imobiliária ABC">
+                                        <input type="text" id="imobiliaria" class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white shadow-sm transition-all hover:border-gray-300" placeholder="Ex: Imobiliária ABC" required>
                                     </div>
                                 </div>
                                 <div class="space-y-6">
                                     <div class="input-group">
                                         <label class="block font-semibold text-gray-700 mb-3 text-sm uppercase tracking-wide">Incorporadora</label>
-                                        <input type="text" id="incorporadora" class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white shadow-sm transition-all hover:border-gray-300" placeholder="Ex: Incorporadora XYZ">
+                                        <input type="text" id="incorporadora" class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white shadow-sm transition-all hover:border-gray-300" placeholder="Ex: Incorporadora XYZ" required>
                                     </div>
                                     <div class="input-group">
                                         <label class="block font-semibold text-gray-700 mb-3 text-sm uppercase tracking-wide">Empreendimento</label>
-                                        <input type="text" id="empreendimento" class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white shadow-sm transition-all hover:border-gray-300" placeholder="Ex: Residencial Bosque Verde">
+                                        <input type="text" id="empreendimento" class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white shadow-sm transition-all hover:border-gray-300" placeholder="Ex: Residencial Bosque Verde" required>
                                     </div>
                                 </div>
                             </div>
@@ -224,11 +224,11 @@
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 <div class="input-group">
                                     <label class="block font-semibold text-blue-700 mb-3 text-sm uppercase tracking-wide">Unidade</label>
-                                    <input type="text" id="unidade" class="w-full p-4 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm transition-all hover:border-blue-300" placeholder="Ex: Apto 201">
+                                    <input type="text" id="unidade" class="w-full p-4 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm transition-all hover:border-blue-300" placeholder="Ex: Apto 201" required>
                                 </div>
                                 <div class="input-group">
                                     <label class="block font-semibold text-blue-700 mb-3 text-sm uppercase tracking-wide">Área Privativa (m²)</label>
-                                    <input type="number" step="0.01" id="areaPrivativa" class="w-full p-4 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm transition-all hover:border-blue-300" placeholder="Ex: 89.50">
+                                    <input type="number" step="0.01" id="areaPrivativa" class="w-full p-4 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm transition-all hover:border-blue-300" placeholder="Ex: 89.50" required>
                                 </div>
                             </div>
                         </div>
@@ -242,13 +242,12 @@
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 <div class="input-group">
                                     <label class="block font-semibold text-green-700 mb-3 text-sm uppercase tracking-wide">TMA Ano (%)</label>
-                                    <input type="number" step="0.01" id="tmaAno" class="w-full p-4 border-2 border-green-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white shadow-sm transition-all hover:border-green-300" placeholder="Ex: 12.00">
+                                    <input type="number" step="0.01" id="tmaAno" class="w-full p-4 border-2 border-green-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white shadow-sm transition-all hover:border-green-300" placeholder="Ex: 12.00" required>
                                     <small class="text-xs text-green-600 mt-2 block">Taxa anual esperada de retorno</small>
                                 </div>
                                 <div class="input-group">
                                     <label class="block font-semibold text-green-700 mb-3 text-sm uppercase tracking-wide">TMA Mês (%)</label>
                                     <input type="number" step="0.01" id="tmaMes" class="w-full p-4 border-2 border-gray-300 rounded-xl bg-gray-100 cursor-not-allowed" placeholder="Calculado automaticamente" readonly>
-                                    <small class="text-xs text-gray-500 mt-2 block">Calculado automaticamente: (1+TMA Ano)^(1/12)-1</small>
                                 </div>
                             </div>
                         </div>
@@ -300,7 +299,7 @@
                                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                                     <div class="input-group">
                                         <label class="compact-label block font-medium text-green-700 mb-2">Valor (R$)</label>
-                                        <input type="text" id="vendaEntradaValor" class="currency-input w-full p-3 border-2 border-green-300 rounded-lg focus:ring-green-500 focus:border-green-500 bg-green-50" placeholder="R$ 150.000,00">
+                                        <input type="text" id="vendaEntradaValor" class="currency-input w-full p-3 border-2 border-green-300 rounded-lg focus:ring-green-500 focus:border-green-500 bg-green-50" placeholder="R$ 150.000,00" required>
                                     </div>
                                     <div class="input-group">
                                         <label class="compact-label block font-medium text-green-700 mb-2">Percentual (%)</label>
@@ -309,7 +308,7 @@
                                     </div>
                                     <div class="input-group">
                                         <label class="compact-label block font-medium text-green-700 mb-2">Parcelas</label>
-                                        <input type="number" id="vendaEntradaParcelas" class="w-full p-3 border-2 border-green-300 rounded-lg focus:ring-green-500 focus:border-green-500 bg-green-50" placeholder="1" min="1" max="120">
+                                        <input type="number" id="vendaEntradaParcelas" class="w-full p-3 border-2 border-green-300 rounded-lg focus:ring-green-500 focus:border-green-500 bg-green-50" placeholder="1" min="1" max="120" required>
                                     </div>
                                     <div class="input-group">
                                         <label class="compact-label block font-medium text-green-700 mb-2">Valor por Parcela (R$)</label>
@@ -330,7 +329,7 @@
                                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                                     <div class="input-group">
                                         <label class="compact-label block font-medium text-orange-700 mb-2">Valor (R$)</label>
-                                        <input type="text" id="vendaParcelasValor" class="currency-input w-full p-3 border-2 border-orange-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 bg-orange-50" placeholder="R$ 350.000,00">
+                                        <input type="text" id="vendaParcelasValor" class="currency-input w-full p-3 border-2 border-orange-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 bg-orange-50" placeholder="R$ 350.000,00" required>
                                     </div>
                                     <div class="input-group">
                                         <label class="compact-label block font-medium text-orange-700 mb-2">Percentual (%)</label>
@@ -339,7 +338,7 @@
                                     </div>
                                     <div class="input-group">
                                         <label class="compact-label block font-medium text-orange-700 mb-2">Parcelas</label>
-                                        <input type="number" id="vendaParcelasQtd" class="w-full p-3 border-2 border-orange-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 bg-orange-50" placeholder="60" min="1" max="240">
+                                        <input type="number" id="vendaParcelasQtd" class="w-full p-3 border-2 border-orange-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 bg-orange-50" placeholder="60" min="1" max="240" required>
                                     </div>
                                     <div class="input-group">
                                         <label class="compact-label block font-medium text-orange-700 mb-2">Valor por Parcela (R$)</label>
@@ -360,7 +359,7 @@
                                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                                     <div class="input-group">
                                         <label class="compact-label block font-medium text-purple-700 mb-2">Valor (R$)</label>
-                                        <input type="text" id="vendaReforcoValor" class="currency-input w-full p-3 border-2 border-purple-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 bg-purple-50" placeholder="R$ 80.000,00">
+                                        <input type="text" id="vendaReforcoValor" class="currency-input w-full p-3 border-2 border-purple-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 bg-purple-50" placeholder="R$ 80.000,00" required>
                                     </div>
                                     <div class="input-group">
                                         <label class="compact-label block font-medium text-purple-700 mb-2">Percentual (%)</label>
@@ -369,7 +368,7 @@
                                     </div>
                                     <div class="input-group">
                                         <label class="compact-label block font-medium text-purple-700 mb-2">Parcelas</label>
-                                        <input type="number" id="vendaReforcoQtd" class="w-full p-3 border-2 border-purple-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 bg-purple-50" placeholder="12" min="1" max="120">
+                                        <input type="number" id="vendaReforcoQtd" class="w-full p-3 border-2 border-purple-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 bg-purple-50" placeholder="12" min="1" max="120" required>
                                     </div>
                                     <div class="input-group">
                                         <label class="compact-label block font-medium text-purple-700 mb-2">Frequência</label>

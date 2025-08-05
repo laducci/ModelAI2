@@ -1368,6 +1368,8 @@ function exportTableToExcel() {
         const scenarioName = document.getElementById('scenarioName').textContent || 'Cenario';
         const scenarioClient = document.getElementById('scenarioClient').textContent || 'Cliente';
         const scenarioEmpreendimento = document.getElementById('scenarioEmpreendimento').textContent || 'Empreendimento';
+        const scenarioUnidade = document.getElementById('scenarioUnidade').textContent || 'Unidade';
+        const scenarioArea = document.getElementById('scenarioArea').textContent || '- m²';
         const periodoSelecionado = document.getElementById('periodoAnalise').value || '12';
         
         // Obter dados da tabela
@@ -1387,6 +1389,8 @@ function exportTableToExcel() {
         excelData.push(['Cenário:', scenarioName]);
         excelData.push(['Cliente:', scenarioClient]);
         excelData.push(['Empreendimento:', scenarioEmpreendimento]);
+        excelData.push(['Unidade:', scenarioUnidade]);
+        excelData.push(['Área Privativa:', scenarioArea]);
         excelData.push(['Período de Análise:', `${periodoSelecionado} meses`]);
         excelData.push(['Data de Exportação:', new Date().toLocaleDateString('pt-BR')]);
         excelData.push([]); // Linha em branco

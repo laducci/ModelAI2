@@ -1934,37 +1934,90 @@ function goToNextTab() {
 // Validação de campos obrigatórios
 function validateRequiredFields() {
     const requiredFields = [
-        // Vendas
-        'valorGVV', 'percentualVenda', 'mesInicioVenda', 'mesTerminoVenda', 'tmaAno',
-        
-        // Proposta Cliente
-        'valorProposta', 'valorEntrada', 'mesEntrada', 'quantidadeParcelas', 'valorParcelas',
-        'mesInicioParcelas', 'quantidadeReforco', 'valorReforco', 'frecuenciaReforco', 'mesInicioReforco',
-        
-        // Custo de Obra
-        'valorCustoObra', 'mesInicioCusto', 'duracaoMesesCusto',
-        
-        // Terreno
-        'valorTerreno', 'mesAquisicaoTerreno', 'duracaoMesesTerreno',
-        
-        // Marketing
-        'valorMarketing', 'mesInicioMarketing', 'duracaoMesesMarketing',
-        
-        // Impostos
-        'valorImpostos', 'mesInicioImpostos', 'duracaoMesesImpostos'
+        // Dados Gerais
+        'cliente', 'imobiliaria', 'incorporadora', 'empreendimento', 'unidade', 'areaPrivativa', 'tmaAno'
+    ];
+    
+    // Campos da Tabela de Vendas (sempre obrigatórios se a aba estiver sendo usada)
+    const tabelaVendasFields = [
+        'vendaEntradaValor', 'vendaEntradaParcelas', 'vendaParcelasValor', 'vendaParcelasQtd', 
+        'vendaReforcoValor', 'vendaReforcoQtd'
+    ];
+    
+    // Campos da Proposta Cliente (obrigatórios se a aba estiver sendo usada)
+    const propostaClienteFields = [
+        'propostaEntradaValor', 'propostaEntradaParcelas', 'propostaParcelasValor', 'propostaParcelasQtd',
+        'propostaReforcoValor', 'propostaReforcoQtd'
     ];
     
     const missingFields = [];
     
+    // Função helper para verificar se um valor está vazio
+    function isEmpty(value) {
+        if (!value) return true;
+        const trimmed = value.toString().trim();
+        return trimmed === '' || 
+               trimmed === '0' || 
+               trimmed === '0,00' || 
+               trimmed === 'R$ 0,00' ||
+               trimmed === 'R$0,00' ||
+               trimmed === '0.00';
+    }
+    
+    // Validar campos gerais (sempre obrigatórios)
     for (const fieldId of requiredFields) {
         const field = document.getElementById(fieldId);
         if (!field) continue;
         
-        const value = field.value?.trim();
-        if (!value || value === '0' || value === '0,00') {
+        if (isEmpty(field.value)) {
             const label = getFieldLabel(fieldId);
             missingFields.push(label);
         }
+    }
+    
+    // Verificar se há dados na Tabela de Vendas
+    const hasVendasData = tabelaVendasFields.some(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (!field) return false;
+        return !isEmpty(field.value);
+    });
+    
+    // Verificar se há dados na Proposta Cliente
+    const hasPropostaData = propostaClienteFields.some(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (!field) return false;
+        return !isEmpty(field.value);
+    });
+    
+    // Se há dados na Tabela de Vendas, validar todos os campos obrigatórios da Tabela
+    if (hasVendasData) {
+        for (const fieldId of tabelaVendasFields) {
+            const field = document.getElementById(fieldId);
+            if (!field) continue;
+            
+            if (isEmpty(field.value)) {
+                const label = getFieldLabel(fieldId);
+                missingFields.push(label);
+            }
+        }
+    }
+    
+    // Se há dados na Proposta Cliente, validar todos os campos obrigatórios da Proposta
+    if (hasPropostaData) {
+        for (const fieldId of propostaClienteFields) {
+            const field = document.getElementById(fieldId);
+            if (!field) continue;
+            
+            if (isEmpty(field.value)) {
+                const label = getFieldLabel(fieldId);
+                missingFields.push(label);
+            }
+        }
+    }
+    
+    // Verificar se pelo menos uma das abas tem dados
+    if (!hasVendasData && !hasPropostaData) {
+        missingFields.push('Preencha pelo menos uma aba: Tabela de Vendas ou Proposta Cliente');
     }
     
     return missingFields;
@@ -1972,33 +2025,30 @@ function validateRequiredFields() {
 
 function getFieldLabel(fieldId) {
     const labels = {
-        'valorGVV': 'Valor do GVV',
-        'percentualVenda': 'Percentual de Venda',
-        'mesInicioVenda': 'Mês de Início de Venda',
-        'mesTerminoVenda': 'Mês de Término de Venda',
-        'tmaAno': 'TMA Ano',
-        'valorProposta': 'Valor da Proposta',
-        'valorEntrada': 'Valor da Entrada',
-        'mesEntrada': 'Mês da Entrada',
-        'quantidadeParcelas': 'Quantidade de Parcelas',
-        'valorParcelas': 'Valor das Parcelas',
-        'mesInicioParcelas': 'Mês de Início das Parcelas',
-        'quantidadeReforco': 'Quantidade de Reforço',
-        'valorReforco': 'Valor do Reforço',
-        'frecuenciaReforco': 'Frequência do Reforço',
-        'mesInicioReforco': 'Mês de Início do Reforço',
-        'valorCustoObra': 'Valor do Custo de Obra',
-        'mesInicioCusto': 'Mês de Início do Custo',
-        'duracaoMesesCusto': 'Duração em Meses do Custo',
-        'valorTerreno': 'Valor do Terreno',
-        'mesAquisicaoTerreno': 'Mês de Aquisição do Terreno',
-        'duracaoMesesTerreno': 'Duração em Meses do Terreno',
-        'valorMarketing': 'Valor do Marketing',
-        'mesInicioMarketing': 'Mês de Início do Marketing',
-        'duracaoMesesMarketing': 'Duração em Meses do Marketing',
-        'valorImpostos': 'Valor dos Impostos',
-        'mesInicioImpostos': 'Mês de Início dos Impostos',
-        'duracaoMesesImpostos': 'Duração em Meses dos Impostos'
+        // Dados Gerais
+        'cliente': 'Cliente',
+        'imobiliaria': 'Imobiliária',
+        'incorporadora': 'Incorporadora',
+        'empreendimento': 'Empreendimento', 
+        'unidade': 'Unidade',
+        'areaPrivativa': 'Área Privativa (m²)',
+        'tmaAno': 'TMA Ano (%)',
+        
+        // Tabela de Vendas
+        'vendaEntradaValor': 'Valor da Entrada (Tabela)',
+        'vendaEntradaParcelas': 'Parcelas da Entrada (Tabela)',
+        'vendaParcelasValor': 'Valor das Parcelas (Tabela)',
+        'vendaParcelasQtd': 'Quantidade de Parcelas (Tabela)',
+        'vendaReforcoValor': 'Valor do Reforço (Tabela)',
+        'vendaReforcoQtd': 'Quantidade de Parcelas do Reforço (Tabela)',
+        
+        // Proposta Cliente
+        'propostaEntradaValor': 'Valor da Entrada (Proposta)',
+        'propostaEntradaParcelas': 'Parcelas da Entrada (Proposta)',
+        'propostaParcelasValor': 'Valor das Parcelas (Proposta)',
+        'propostaParcelasQtd': 'Quantidade de Parcelas (Proposta)',
+        'propostaReforcoValor': 'Valor do Reforço (Proposta)',
+        'propostaReforcoQtd': 'Quantidade de Parcelas do Reforço (Proposta)'
     };
     
     return labels[fieldId] || fieldId;

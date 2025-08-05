@@ -129,12 +129,9 @@ async function continuarGeracaoPDF(doc, pageWidth, margin) {
     yPosition += 8;
     
     const infoData = [
-        ['Nome do Cenário', scenarioName],
-        ['Cliente', scenarioClient],
-        ['Empreendimento', scenarioEmpreendimento],
-        ['Unidade', scenarioUnidade],
-        ['Área Privativa', scenarioArea],
-        ['TMA Anual', scenarioTMA]
+        ['Nome do Cenário', scenarioName, 'Unidade', scenarioUnidade],
+        ['Cliente', scenarioClient, 'Área Privativa', scenarioArea],
+        ['Empreendimento', scenarioEmpreendimento, 'TMA Anual', scenarioTMA]
     ];
     
     doc.autoTable({
@@ -146,8 +143,10 @@ async function continuarGeracaoPDF(doc, pageWidth, margin) {
             cellPadding: 2
         },
         columnStyles: {
-            0: { cellWidth: 50, fontStyle: 'bold' },
-            1: { cellWidth: 80 }
+            0: { cellWidth: 35, fontStyle: 'bold' },
+            1: { cellWidth: 55 },
+            2: { cellWidth: 35, fontStyle: 'bold' },
+            3: { cellWidth: 45 }
         },
         margin: { left: margin, right: margin }
     });
@@ -377,18 +376,32 @@ async function gerarSegundaPaginaPDF(doc, pageWidth, margin, dataHora, agora) {
             },
             // Personalizar cores do cabeçalho por coluna
             didDrawCell: function (data) {
-                if (data.section === 'head' && data.column.index >= 6) {
-                    // Colunas da Proposta Cliente (6-10) com cor laranja sólida
-                    doc.setFillColor(249, 115, 22); // Laranja sólido
-                    doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
-                    
-                    // Reescrever o texto em branco
-                    doc.setTextColor(255, 255, 255);
-                    doc.setFontSize(7);
-                    doc.setFont('helvetica', 'bold');
-                    const textX = data.cell.x + data.cell.width / 2;
-                    const textY = data.cell.y + data.cell.height / 2 + 1;
-                    doc.text(data.cell.text[0], textX, textY, { align: 'center' });
+                if (data.section === 'head') {
+                    if (data.column.index >= 6) {
+                        // Colunas da Proposta Cliente (6-10) com cor laranja sólida
+                        doc.setFillColor(249, 115, 22); // Laranja sólido
+                        doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+                        
+                        // Reescrever o texto em branco
+                        doc.setTextColor(255, 255, 255);
+                        doc.setFontSize(7);
+                        doc.setFont('helvetica', 'bold');
+                        const textX = data.cell.x + data.cell.width / 2;
+                        const textY = data.cell.y + data.cell.height / 2 + 1;
+                        doc.text(data.cell.text[0], textX, textY, { align: 'center' });
+                    } else {
+                        // Colunas da Tabela (0-5) com cor teal sólida
+                        doc.setFillColor(20, 184, 166); // Teal sólido
+                        doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+                        
+                        // Reescrever o texto em branco
+                        doc.setTextColor(255, 255, 255);
+                        doc.setFontSize(7);
+                        doc.setFont('helvetica', 'bold');
+                        const textX = data.cell.x + data.cell.width / 2;
+                        const textY = data.cell.y + data.cell.height / 2 + 1;
+                        doc.text(data.cell.text[0], textX, textY, { align: 'center' });
+                    }
                 }
                 
                 // Formatação especial para valores monetários no corpo da tabela
