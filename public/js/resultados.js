@@ -40,6 +40,7 @@ function initializeResultsPage() {
     checkAuthentication();
     renderDefaultCards(); // Mostra os 6 cards zerados e fórmulas
     renderDefaultFluxoCaixa(); // Mostra a tabela zerada
+    createDefaultChart(); // Cria gráfico vazio
     loadScenariosForFilter();
     setupEventListeners();
 }
@@ -100,6 +101,35 @@ function setupEventListeners() {
         console.log('✅ Event listener configurado com sucesso');
     } else {
         console.error('❌ scenarioFilter não encontrado!');
+    }
+    
+    // Configurar event listener para mudança de período quando não há dados carregados
+    const periodoSelect = document.getElementById('periodoAnalise');
+    if (periodoSelect) {
+        periodoSelect.addEventListener('change', function() {
+            if (!currentScenarioData) {
+                // Se não há dados carregados, atualizar apenas o gráfico vazio
+                const periodoSelecionado = parseInt(this.value) || 12;
+                createDefaultChart(periodoSelecionado);
+            }
+        });
+        console.log('✅ Event listener do período da tabela configurado');
+    }
+    
+    // Configurar event listener específico para o filtro do gráfico
+    const periodoGraficoSelect = document.getElementById('periodoGrafico');
+    if (periodoGraficoSelect) {
+        periodoGraficoSelect.addEventListener('change', function() {
+            const periodoSelecionado = parseInt(this.value) || 24;
+            if (currentScenarioData) {
+                // Se há dados carregados, atualizar o gráfico com os dados
+                createFluxoComparativoChart(periodoSelecionado);
+            } else {
+                // Se não há dados, atualizar o gráfico vazio
+                createDefaultChart(periodoSelecionado);
+            }
+        });
+        console.log('✅ Event listener do período do gráfico configurado');
     }
 }
 
@@ -324,6 +354,12 @@ function displayResults() {
     
     // Atualizar preview do fluxo de caixa
     updateCashFlowPreview();
+    
+    // Criar/atualizar gráfico comparativo
+    createFluxoComparativoChart();
+    
+    // Atualizar filtros com o máximo de meses do cenário
+    updateFiltersWithScenarioData();
 }
 
 // Atualizar informações do cenário
@@ -1484,6 +1520,451 @@ function exportTableToExcel() {
         } else {
             alert('Erro ao exportar tabela. Verifique se os dados estão carregados e tente novamente.');
         }
+    }
+}
+
+// Variável global para armazenar a instância do gráfico
+let fluxoChart = null;
+
+// Criar gráfico comparativo de fluxos
+function createFluxoComparativoChart(periodoMeses = null) {
+    if (!currentScenarioData) {
+        console.log('🚫 Não há dados de cenário para criar o gráfico');
+        return;
+    }
+    
+    const data = currentScenarioData.data;
+    const valorTotalImovel = calculateValorTotalImovel(data);
+    const valorTotalProposta = calculateValorTotalProposta(data);
+    
+    const fluxoTabela = generateFluxoTabela(data, valorTotalImovel);
+    const fluxoProposta = generateFluxoProposta(data, valorTotalProposta);
+    
+    // Usar o período selecionado ou pegar do seletor do gráfico
+    let meses = periodoMeses;
+    if (!meses) {
+        meses = parseInt(document.getElementById('periodoGrafico')?.value) || 24;
+    }
+    
+    // Preparar dados para o gráfico
+    const labels = [];
+    const dadosTabela = [];
+    const dadosProposta = [];
+    
+    // Primeiro, coletar todos os dados até o período máximo
+    for (let i = 0; i < meses; i++) {
+        labels.push(`Mês ${i + 1}`);
+        dadosTabela.push(fluxoTabela[i] || 0);
+        dadosProposta.push(fluxoProposta[i] || 0);
+    }
+    
+    // Encontrar o último mês com dados reais (não zero) para ambas as séries
+    let ultimoMesComDados = 0;
+    for (let i = meses - 1; i >= 0; i--) {
+        if (dadosTabela[i] > 0 || dadosProposta[i] > 0) {
+            ultimoMesComDados = i + 1; // +1 porque queremos incluir este mês
+            break;
+        }
+    }
+    
+    // Se encontrou dados, truncar as arrays no último mês com dados
+    // Mas garantir pelo menos 12 meses para visualização
+    const mesesParaExibir = Math.max(ultimoMesComDados, 12);
+    
+    // Truncar os dados se necessário
+    if (mesesParaExibir < meses) {
+        labels.splice(mesesParaExibir);
+        dadosTabela.splice(mesesParaExibir);
+        dadosProposta.splice(mesesParaExibir);
+    }
+    
+    const ctx = document.getElementById('fluxoComparativoChart');
+    if (!ctx) {
+        console.error('❌ Canvas do gráfico não encontrado');
+        return;
+    }
+    
+    // Destruir gráfico anterior se existir
+    if (fluxoChart) {
+        fluxoChart.destroy();
+    }
+    
+    // Criar novo gráfico
+    fluxoChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Tabela Incorporadora',
+                    data: dadosTabela,
+                    borderColor: 'rgb(20, 184, 166)', // Teal
+                    backgroundColor: 'rgba(20, 184, 166, 0.1)',
+                    borderWidth: 3,
+                    fill: false,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: 'rgb(20, 184, 166)',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2
+                },
+                {
+                    label: 'Proposta Cliente',
+                    data: dadosProposta,
+                    borderColor: 'rgb(249, 115, 22)', // Laranja
+                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                    borderWidth: 3,
+                    fill: false,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: 'rgb(249, 115, 22)',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: `Comparação de Fluxos de Caixa - ${labels.length} Meses`,
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    },
+                    color: '#374151'
+                },
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: {
+                            size: 12,
+                            weight: '500'
+                        },
+                        color: '#374151'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    titleColor: '#374151',
+                    bodyColor: '#374151',
+                    borderColor: '#e5e7eb',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: true,
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.parsed.y;
+                            const label = context.dataset.label;
+                            return `${label}: ${formatCurrency(value)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ticks: {
+                        color: '#6b7280',
+                        font: {
+                            size: 11
+                        },
+                        maxTicksLimit: Math.min(labels.length, 20) // Limitar número de ticks no eixo X
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        display: true,
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ticks: {
+                        color: '#6b7280',
+                        font: {
+                            size: 11
+                        },
+                        callback: function(value) {
+                            return formatCurrency(value);
+                        }
+                    }
+                }
+            },
+            elements: {
+                point: {
+                    hoverBorderWidth: 3
+                }
+            }
+        }
+    });
+    
+    console.log(`📊 Gráfico comparativo criado com ${labels.length} meses (últimos dados no mês ${ultimoMesComDados})`);
+}
+
+// Criar gráfico padrão vazio
+function createDefaultChart(periodoMeses = 12) {
+    const ctx = document.getElementById('fluxoComparativoChart');
+    if (!ctx) {
+        console.error('❌ Canvas do gráfico não encontrado');
+        return;
+    }
+    
+    // Dados vazios para o período especificado
+    const labels = [];
+    for (let i = 1; i <= periodoMeses; i++) {
+        labels.push(`Mês ${i}`);
+    }
+    
+    const dadosVazios = new Array(periodoMeses).fill(0);
+    
+    // Destruir gráfico anterior se existir
+    if (fluxoChart) {
+        fluxoChart.destroy();
+    }
+    
+    // Criar gráfico vazio
+    fluxoChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Tabela Incorporadora',
+                    data: dadosVazios,
+                    borderColor: 'rgb(20, 184, 166)',
+                    backgroundColor: 'rgba(20, 184, 166, 0.1)',
+                    borderWidth: 3,
+                    fill: false,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: 'rgb(20, 184, 166)',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2
+                },
+                {
+                    label: 'Proposta Cliente',
+                    data: dadosVazios,
+                    borderColor: 'rgb(249, 115, 22)',
+                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                    borderWidth: 3,
+                    fill: false,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: 'rgb(249, 115, 22)',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Selecione um cenário para visualizar a comparação',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    },
+                    color: '#9CA3AF'
+                },
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: {
+                            size: 12,
+                            weight: '500'
+                        },
+                        color: '#6B7280'
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ticks: {
+                        color: '#9CA3AF',
+                        font: {
+                            size: 11
+                        }
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        display: true,
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ticks: {
+                        color: '#9CA3AF',
+                        font: {
+                            size: 11
+                        },
+                        callback: function(value) {
+                            return formatCurrency(value);
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    console.log('📊 Gráfico padrão vazio criado');
+}
+
+// Atualizar filtros com dados do cenário atual
+function updateFiltersWithScenarioData() {
+    if (!currentScenarioData) {
+        console.log('🚫 Sem dados de cenário para atualizar filtros');
+        return;
+    }
+    
+    const data = currentScenarioData.data;
+    const valorTotalImovel = calculateValorTotalImovel(data);
+    const valorTotalProposta = calculateValorTotalProposta(data);
+    
+    const fluxoTabela = generateFluxoTabela(data, valorTotalImovel);
+    const fluxoProposta = generateFluxoProposta(data, valorTotalProposta);
+    
+    // Encontrar o último mês com dados reais
+    let maxMesesComDados = 0;
+    for (let i = 249; i >= 0; i--) { // 250 meses máximo, índice 0-249
+        if ((fluxoTabela[i] && fluxoTabela[i] > 0) || (fluxoProposta[i] && fluxoProposta[i] > 0)) {
+            maxMesesComDados = i + 1; // +1 porque array é 0-indexed
+            break;
+        }
+    }
+    
+    if (maxMesesComDados > 0) {
+        console.log(`📅 Máximo de meses com dados encontrado: ${maxMesesComDados}`);
+        
+        // Atualizar filtro do gráfico
+        updateSelectWithMaxOption('periodoGrafico', maxMesesComDados);
+        
+        // Atualizar filtro da tabela
+        updateSelectWithMaxOption('periodoAnalise', maxMesesComDados);
+    }
+}
+
+// Limpar resultados quando nenhum cenário está selecionado
+function clearResults() {
+    console.log('🧹 Limpando resultados');
+    
+    // Limpar dados do cenário atual
+    currentScenarioData = null;
+    
+    // Restaurar cards padrão
+    renderDefaultCards();
+    
+    // Restaurar tabela padrão
+    renderDefaultFluxoCaixa();
+    
+    // Restaurar gráfico padrão
+    createDefaultChart();
+    
+    // Limpar opções do cenário nos filtros
+    clearScenarioOptionsFromFilters();
+    
+    // Restaurar informações do cenário
+    document.getElementById('scenarioName').textContent = 'Nome do Cenário';
+    document.getElementById('scenarioClient').textContent = 'Cliente';
+    document.getElementById('scenarioEmpreendimento').textContent = 'Empreendimento';
+    document.getElementById('scenarioUnidade').textContent = 'Unidade';
+    document.getElementById('scenarioArea').textContent = '- m²';
+    document.getElementById('scenarioTMA').textContent = '0%';
+}
+
+// Limpar opções do cenário dos filtros
+function clearScenarioOptionsFromFilters() {
+    // Limpar do filtro do gráfico
+    const periodoGrafico = document.getElementById('periodoGrafico');
+    if (periodoGrafico) {
+        const scenarioOption = periodoGrafico.querySelector('option[data-scenario-max]');
+        if (scenarioOption) {
+            scenarioOption.remove();
+            console.log('🧹 Removida opção do cenário do filtro do gráfico');
+        }
+    }
+    
+    // Limpar do filtro da tabela
+    const periodoAnalise = document.getElementById('periodoAnalise');
+    if (periodoAnalise) {
+        const scenarioOption = periodoAnalise.querySelector('option[data-scenario-max]');
+        if (scenarioOption) {
+            scenarioOption.remove();
+            console.log('🧹 Removida opção do cenário do filtro da tabela');
+        }
+    }
+}
+
+// Atualizar um select adicionando opção com máximo de meses
+function updateSelectWithMaxOption(selectId, maxMeses) {
+    const select = document.getElementById(selectId);
+    if (!select) {
+        console.error(`❌ Select ${selectId} não encontrado`);
+        return;
+    }
+    
+    // Remover opção anterior do cenário se existir
+    const existingOption = select.querySelector('option[data-scenario-max]');
+    if (existingOption) {
+        existingOption.remove();
+    }
+    
+    // Verificar se já existe uma opção padrão com esse valor
+    const existingStandardOption = Array.from(select.options).find(option => 
+        parseInt(option.value) === maxMeses && !option.hasAttribute('data-scenario-max')
+    );
+    
+    if (!existingStandardOption) {
+        // Criar nova opção
+        const newOption = document.createElement('option');
+        newOption.value = maxMeses;
+        newOption.textContent = `${maxMeses} meses (máximo do cenário)`;
+        newOption.setAttribute('data-scenario-max', 'true');
+        
+        // Encontrar a posição correta para inserir (em ordem crescente)
+        let insertIndex = select.options.length;
+        for (let i = 0; i < select.options.length; i++) {
+            const optionValue = parseInt(select.options[i].value);
+            if (optionValue > maxMeses) {
+                insertIndex = i;
+                break;
+            }
+        }
+        
+        // Inserir na posição correta
+        if (insertIndex < select.options.length) {
+            select.insertBefore(newOption, select.options[insertIndex]);
+        } else {
+            select.appendChild(newOption);
+        }
+        
+        console.log(`✅ Adicionada opção '${maxMeses} meses (máximo do cenário)' ao select ${selectId}`);
+    } else {
+        console.log(`ℹ️ Opção ${maxMeses} meses já existe no select ${selectId}`);
     }
 }
 

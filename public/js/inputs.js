@@ -1,27 +1,40 @@
 // Inputs Page JavaScript - Model AI
 
-// Tab functionality
-document.querySelectorAll('.subtab-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        // Remove active class from all buttons and contents
-        document.querySelectorAll('.subtab-btn').forEach(btn => {
-            btn.classList.remove('active');
-            btn.classList.add('text-gray-600');
-        });
-        document.querySelectorAll('.subtab-content').forEach(content => {
-            content.classList.remove('active');
-        });
+// Tab functionality - Aguardar DOM estar pronto
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab functionality
+    document.querySelectorAll('.subtab-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active class from all buttons and contents
+            document.querySelectorAll('.subtab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('text-gray-600');
+            });
+            document.querySelectorAll('.subtab-content').forEach(content => {
+                content.classList.remove('active');
+            });
 
-        // Add active class to clicked button and corresponding content
-        this.classList.add('active');
-        this.classList.remove('text-gray-600');
-        
-        const tabId = this.getAttribute('data-tab');
-        document.getElementById(tabId).classList.add('active');
-        
-        // Atualizar o botão de ação baseado na aba ativa
-        updateActionButton(tabId);
+            // Add active class to clicked button and corresponding content
+            this.classList.add('active');
+            this.classList.remove('text-gray-600');
+            
+            const tabId = this.getAttribute('data-tab');
+            const targetContent = document.getElementById(tabId);
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+            
+            // Atualizar botão de ação baseado na aba ativa
+            updateActionButton(tabId);
+        });
     });
+    
+    // Configurar botão inicial na primeira aba
+    const activeTab = document.querySelector('.subtab-btn.active');
+    if (activeTab) {
+        const tabId = activeTab.getAttribute('data-tab');
+        updateActionButton(tabId);
+    }
 });
 
 // Sales calculations
@@ -2015,9 +2028,12 @@ function validateRequiredFields() {
         }
     }
     
-    // Verificar se pelo menos uma das abas tem dados
-    if (!hasVendasData && !hasPropostaData) {
-        missingFields.push('Preencha pelo menos uma aba: Tabela de Vendas ou Proposta Cliente');
+    // Verificar se AMBAS as abas têm dados (obrigatório preencher as duas)
+    if (!hasVendasData) {
+        missingFields.push('Preencha todos os campos da aba: Tabela de Vendas');
+    }
+    if (!hasPropostaData) {
+        missingFields.push('Preencha todos os campos da aba: Proposta Cliente');
     }
     
     return missingFields;

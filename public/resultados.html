@@ -17,6 +17,9 @@
     
     <!-- SheetJS para exportação de Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Estilos para os cards de métricas */
         .metric-card {
@@ -331,6 +334,44 @@
                             <span class="text-gray-600">R$/m² Proposta:</span>
                             <span id="valorPorMetroQuadradoProposta" class="font-semibold text-orange-600">R$ 0,00</span>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Tabela Completa de Fluxo de Caixa (como no Excel) -->
+                <div class="metric-card p-6 rounded-2xl mb-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                            <i class="fas fa-chart-line text-teal-600 mr-3 text-lg"></i>
+                            Comparação de Fluxos
+                        </h3>
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-sm text-gray-600">Período do Gráfico:</span>
+                                <select id="periodoGrafico" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                                    <option value="12">12 meses</option>
+                                    <option value="24" selected>24 meses</option>
+                                    <option value="36">36 meses</option>
+                                    <option value="60">60 meses</option>
+                                    <option value="120">120 meses</option>
+                                    <option value="250">250 meses</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-4 h-4 bg-teal-500 rounded"></div>
+                                    <span class="text-sm text-gray-600">Tabela Incorporadora</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-4 h-4 bg-orange-500 rounded"></div>
+                                    <span class="text-sm text-gray-600">Proposta Cliente</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Canvas para o gráfico -->
+                    <div class="bg-white p-4 rounded-xl border border-gray-200">
+                        <canvas id="fluxoComparativoChart" width="800" height="400"></canvas>
                     </div>
                 </div>
 
