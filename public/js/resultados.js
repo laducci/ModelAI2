@@ -5,17 +5,17 @@ function renderDefaultFluxoCaixa(periodos = 12) {
     let html = '';
     for (let i = 1; i <= periodos; i++) {
         html += `<tr>
-            <td class="text-center">${i}</td>
-            <td class="text-center">R$ 0,00</td>
-            <td class="text-center">R$ 0,00</td>
-            <td class="text-center">R$ 0,00</td>
-            <td class="text-center">R$ 0,00</td>
-            <td class="text-center">R$ 0,00</td>
-            <td class="text-center">R$ 0,00</td>
-            <td class="text-center">R$ 0,00</td>
-            <td class="text-center">R$ 0,00</td>
-            <td class="text-center">R$ 0,00</td>
-            <td class="text-center">R$ 0,00</td>
+            <td class="text-center tabela-incorporadora">${i}</td>
+            <td class="text-center tabela-incorporadora">R$ 0,00</td>
+            <td class="text-center tabela-incorporadora">R$ 0,00</td>
+            <td class="text-center tabela-incorporadora">R$ 0,00</td>
+            <td class="text-center tabela-incorporadora">R$ 0,00</td>
+            <td class="text-center tabela-incorporadora">R$ 0,00</td>
+            <td class="text-center proposta-cliente">R$ 0,00</td>
+            <td class="text-center proposta-cliente">R$ 0,00</td>
+            <td class="text-center proposta-cliente">R$ 0,00</td>
+            <td class="text-center proposta-cliente">R$ 0,00</td>
+            <td class="text-center proposta-cliente">R$ 0,00</td>
         </tr>`;
     }
     tbody.innerHTML = html;
@@ -322,9 +322,6 @@ function displayResults() {
     // Calcular e exibir indicadores financeiros
     calculateAndDisplayIndicators();
     
-    // Atualizar resumo financeiro
-    updateFinancialSummary();
-    
     // Atualizar preview do fluxo de caixa
     updateCashFlowPreview();
 }
@@ -357,6 +354,10 @@ function updateScenarioInfo() {
         document.getElementById('scenarioEmpreendimento').textContent = data.dadosGerais.empreendimento || 'Não informado';
         document.getElementById('scenarioUnidade').textContent = data.dadosGerais.unidade || 'Não informada';
         
+        // Área privativa
+        const areaPrivativa = parseFloat(data.dadosGerais.areaPrivativa) || 0;
+        document.getElementById('scenarioArea').textContent = areaPrivativa > 0 ? `${areaPrivativa} m²` : '- m²';
+        
         // TMA Anual
         const tmaAnual = parseFloat(data.dadosGerais.tmaAno) || 0;
         document.getElementById('scenarioTMA').textContent = `${tmaAnual.toFixed(2)}%`;
@@ -367,6 +368,7 @@ function updateScenarioInfo() {
         document.getElementById('scenarioClient').textContent = 'Não informado';
         document.getElementById('scenarioEmpreendimento').textContent = 'Não informado';
         document.getElementById('scenarioUnidade').textContent = 'Não informada';
+        document.getElementById('scenarioArea').textContent = '- m²';
         document.getElementById('scenarioTMA').textContent = '0%';
     }
 }
@@ -792,20 +794,11 @@ function displayCalculatedValues(values) {
         descontoResumo = values.descontoNominalPercent * 100;
     }
     formatValueWithNegativeStyle('descontoNominalResumo', descontoResumo, true);
-}
-
-// Atualizar resumo financeiro
-function updateFinancialSummary() {
-    const data = currentScenarioData.data;
     
-    
-    // Atualizar informações do cenário
-    document.getElementById('infoCliente').textContent = data.dadosGerais.cliente || '-';
-    document.getElementById('infoEmpreendimento').textContent = data.dadosGerais.empreendimento || '-';
-    document.getElementById('infoUnidade').textContent = data.dadosGerais.unidade || '-';
-    
-    const areaPrivativa = data.dadosGerais.areaPrivativa;
-    document.getElementById('infoArea').textContent = areaPrivativa ? `${areaPrivativa} m²` : '-';
+    // Calcular R$/m²
+    const areaPrivativa = parseFloat(currentScenarioData.data.dadosGerais.areaPrivativa) || 0;
+    const valorPorM2 = (values && areaPrivativa > 0) ? values.valorTotalImovel / areaPrivativa : 0;
+    document.getElementById('valorPorMetroQuadrado').textContent = formatCurrency(valorPorM2);
 }
 
 // Atualizar preview do fluxo de caixa (tabela detalhada como no Excel)
@@ -849,17 +842,17 @@ function updateCashFlowPreview() {
         const valorPropostaBens = componentesProposta.nasChaves[mes] || 0;
         
         row.innerHTML = `
-            <td class="px-3 py-2 text-center text-sm font-medium text-gray-900 border-r border-gray-200">${mes + 1}</td>
-            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-gray-200">${formatCurrency(valorTabelaTotal)}</td>
-            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-gray-200">${formatCurrency(valorTabelaEntrada)}</td>
-            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-gray-200">${formatCurrency(valorTabelaParcelas)}</td>
-            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-gray-200">${formatCurrency(valorTabelaReforcos)}</td>
-            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-gray-200">${formatCurrency(valorTabelaNasChaves)}</td>
-            <td class="px-3 py-2 text-right text-sm font-semibold text-gray-900 border-r border-gray-200">${formatCurrency(valorPropostaTotal)}</td>
-            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-gray-200">${formatCurrency(valorPropostaEntrada)}</td>
-            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-gray-200">${formatCurrency(valorPropostaParcelas)}</td>
-            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-gray-200">${formatCurrency(valorPropostaReforcos)}</td>
-            <td class="px-3 py-2 text-right text-sm text-gray-900">${formatCurrency(valorPropostaBens)}</td>
+            <td class="px-3 py-2 text-center text-sm font-medium text-gray-900 border-r border-gray-200 tabela-incorporadora">${mes + 1}</td>
+            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-gray-200 tabela-incorporadora">${formatCurrency(valorTabelaTotal)}</td>
+            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-gray-200 tabela-incorporadora">${formatCurrency(valorTabelaEntrada)}</td>
+            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-gray-200 tabela-incorporadora">${formatCurrency(valorTabelaParcelas)}</td>
+            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-gray-200 tabela-incorporadora">${formatCurrency(valorTabelaReforcos)}</td>
+            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-orange-200 tabela-incorporadora">${formatCurrency(valorTabelaNasChaves)}</td>
+            <td class="px-3 py-2 text-right text-sm font-semibold text-gray-900 border-r border-orange-200 proposta-cliente">${formatCurrency(valorPropostaTotal)}</td>
+            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-orange-200 proposta-cliente">${formatCurrency(valorPropostaEntrada)}</td>
+            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-orange-200 proposta-cliente">${formatCurrency(valorPropostaParcelas)}</td>
+            <td class="px-3 py-2 text-right text-sm text-gray-900 border-r border-orange-200 proposta-cliente">${formatCurrency(valorPropostaReforcos)}</td>
+            <td class="px-3 py-2 text-right text-sm text-gray-900 proposta-cliente">${formatCurrency(valorPropostaBens)}</td>
         `;
         
         tbody.appendChild(row);

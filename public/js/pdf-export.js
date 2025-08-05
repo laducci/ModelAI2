@@ -119,6 +119,7 @@ async function continuarGeracaoPDF(doc, pageWidth, margin) {
     const scenarioClient = document.getElementById('scenarioClient').textContent || 'Cliente';
     const scenarioEmpreendimento = document.getElementById('scenarioEmpreendimento').textContent || 'Empreendimento';
     const scenarioUnidade = document.getElementById('scenarioUnidade').textContent || 'Unidade';
+    const scenarioArea = document.getElementById('scenarioArea').textContent || '- m²';
     const scenarioTMA = document.getElementById('scenarioTMA').textContent || '0%';
     
     // Informações do cenário
@@ -132,6 +133,7 @@ async function continuarGeracaoPDF(doc, pageWidth, margin) {
         ['Cliente', scenarioClient],
         ['Empreendimento', scenarioEmpreendimento],
         ['Unidade', scenarioUnidade],
+        ['Área Privativa', scenarioArea],
         ['TMA Anual', scenarioTMA]
     ];
     
@@ -219,11 +221,13 @@ async function continuarGeracaoPDF(doc, pageWidth, margin) {
     const valorTotalImovel = document.getElementById('valorTotalImovel').textContent || 'R$ 0,00';
     const valorTotalProposta = document.getElementById('valorTotalProposta').textContent || 'R$ 0,00';
     const descontoNominalResumo = document.getElementById('descontoNominalResumo').textContent || '0,00%';
+    const valorPorMetroQuadrado = document.getElementById('valorPorMetroQuadrado').textContent || 'R$ 0,00';
     
     const resumoFinanceiro = [
         ['Valor Total Imóvel', valorTotalImovel],
         ['Valor Total Proposta', valorTotalProposta],
-        ['Desconto Nominal', descontoNominalResumo]
+        ['Desconto Nominal', descontoNominalResumo],
+        ['R$/m²', valorPorMetroQuadrado]
     ];
     
     doc.autoTable({
@@ -239,8 +243,13 @@ async function continuarGeracaoPDF(doc, pageWidth, margin) {
             1: { cellWidth: 50, halign: 'right', fontStyle: 'bold' }
         },
         didParseCell: function(data) {
+            // Aplicar cor laranja para o "Valor Total Proposta" (linha índice 1)
+            if (data.column.index === 1 && data.section === 'body' && data.row.index === 1) {
+                data.cell.styles.textColor = [249, 115, 22]; // Laranja (equivalente ao orange-600)
+                data.cell.styles.fontStyle = 'bold';
+            }
             // Aplicar cor vermelha para valores negativos na coluna de valores (índice 1)
-            if (data.column.index === 1 && data.section === 'body') {
+            else if (data.column.index === 1 && data.section === 'body') {
                 const cellValue = data.cell.text[0];
                 if (isNegativeValue(cellValue)) {
                     data.cell.styles.textColor = [220, 38, 38]; // Vermelho (equivalente ao #dc2626)
@@ -308,7 +317,8 @@ async function continuarGeracaoPDF(doc, pageWidth, margin) {
             const cells = rows[i].querySelectorAll('td');
             if (cells.length > 0) {
                 const rowData = [];
-                for (let j = 0; j < Math.min(cells.length, 6); j++) {
+                // Coletar todas as 11 colunas
+                for (let j = 0; j < Math.min(cells.length, 11); j++) {
                     rowData.push(cells[j].textContent.trim());
                 }
                 fluxoData.push(rowData);
@@ -319,32 +329,67 @@ async function continuarGeracaoPDF(doc, pageWidth, margin) {
     if (fluxoData.length > 0) {
         doc.autoTable({
             startY: yPosition,
-            head: [['Mês', 'Tabela Inc', 'Entrada', 'Parcelas', 'Reforços', 'Nas Chaves']],
+            head: [['Mês', 'Tabela Inc', 'Entrada', 'Parcelas', 'Reforços', 'Nas Chaves', 'Proposta Cliente', 'Entrada', 'Parcelas', 'Reforços', 'Bens Móveis/Imóveis']],
             body: fluxoData,
             theme: 'striped',
             headStyles: {
-                fillColor: [20, 184, 166],
+                fillColor: [20, 184, 166], // Cor padrão teal sólida
                 textColor: 255,
-                fontSize: 9,
+                fontSize: 7,
                 fontStyle: 'bold',
-                halign: 'center'
+                halign: 'center',
+                cellPadding: 1
             },
             bodyStyles: {
-                fontSize: 8,
-                cellPadding: 2
+                fontSize: 6,
+                cellPadding: 1,
+                overflow: 'linebreak',
+                cellWidth: 'wrap'
             },
             alternateRowStyles: {
                 fillColor: [248, 250, 252]
             },
             columnStyles: {
-                0: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
-                1: { cellWidth: 28, halign: 'right' },
-                2: { cellWidth: 28, halign: 'right' },
-                3: { cellWidth: 28, halign: 'right' },
-                4: { cellWidth: 28, halign: 'right' },
-                5: { cellWidth: 28, halign: 'right' }
+                0: { cellWidth: 12, halign: 'center', fontStyle: 'bold' }, // Mês
+                1: { cellWidth: 20, halign: 'right', fontSize: 6 }, // Tabela Inc
+                2: { cellWidth: 18, halign: 'right', fontSize: 6 }, // Entrada
+                3: { cellWidth: 18, halign: 'right', fontSize: 6 }, // Parcelas
+                4: { cellWidth: 18, halign: 'right', fontSize: 6 }, // Reforços
+                5: { cellWidth: 18, halign: 'right', fontSize: 6 }, // Nas Chaves
+                6: { cellWidth: 20, halign: 'right', fontSize: 6, fillColor: [255, 237, 213] }, // Proposta Cliente - laranja claro
+                7: { cellWidth: 18, halign: 'right', fontSize: 6, fillColor: [255, 237, 213] }, // Entrada
+                8: { cellWidth: 18, halign: 'right', fontSize: 6, fillColor: [255, 237, 213] }, // Parcelas
+                9: { cellWidth: 18, halign: 'right', fontSize: 6, fillColor: [255, 237, 213] }, // Reforços
+                10: { cellWidth: 20, halign: 'right', fontSize: 6, fillColor: [255, 237, 213] } // Bens Móveis
             },
-            margin: { left: margin, right: margin }
+            // Personalizar cores do cabeçalho por coluna
+            didDrawCell: function (data) {
+                if (data.section === 'head' && data.column.index >= 6) {
+                    // Colunas da Proposta Cliente (6-10) com cor laranja sólida
+                    doc.setFillColor(249, 115, 22); // Laranja sólido
+                    doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+                    
+                    // Reescrever o texto em branco
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(7);
+                    doc.setFont('helvetica', 'bold');
+                    const textX = data.cell.x + data.cell.width / 2;
+                    const textY = data.cell.y + data.cell.height / 2 + 1;
+                    doc.text(data.cell.text[0], textX, textY, { align: 'center' });
+                }
+                
+                // Formatação especial para valores monetários no corpo da tabela
+                if (data.section === 'body' && data.column.index > 0) {
+                    // Quebrar valores muito longos em múltiplas linhas se necessário
+                    const cellText = data.cell.text[0];
+                    if (cellText && cellText.length > 12) {
+                        doc.setFontSize(5); // Fonte ainda menor para valores grandes
+                    }
+                }
+            },
+            margin: { left: 5, right: 5 }, // Margens menores para mais espaço
+            pageBreak: 'auto',
+            tableWidth: 'auto'
         });
     } else {
         doc.setFontSize(10);

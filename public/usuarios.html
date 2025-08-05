@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/sidebar.css">
     <link rel="stylesheet" href="css/sidebar-mobile.css">
+    <link rel="stylesheet" href="css/sidebar-submenu.css">
     <style>
     </style>
 </head>
@@ -31,20 +32,39 @@
         <!-- Navigation -->
         <nav class="flex-1 p-4">
             <div class="space-y-2">
-                <a href="inputs.html" class="sidebar-item flex items-center p-3 text-teal-200 hover:text-white">
-                    <i class="fas fa-edit sidebar-icon mr-3 text-lg"></i>
-                    <span class="font-medium sidebar-text">Inputs</span>
-                </a>
+                <!-- Análise de VPL - Menu Principal -->
+                <div class="space-y-1">
+                    <button class="sidebar-item w-full flex items-center justify-between p-3 text-teal-200 hover:text-white rounded-lg" id="analiseVPLToggle">
+                        <div class="flex items-center">
+                            <i class="fas fa-chart-line sidebar-icon mr-3 text-lg"></i>
+                            <span class="font-medium sidebar-text">Análise de VPL</span>
+                        </div>
+                        <i class="fas fa-chevron-right transition-transform duration-200" id="analiseVPLChevron"></i>
+                    </button>
+                    
+                    <!-- Submenus da Análise de VPL (inicialmente fechado) -->
+                    <div class="ml-4 space-y-1 hidden" id="analiseVPLSubmenu">
+                        <a href="inputs.html" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg">
+                            <i class="fas fa-edit text-sm mr-3"></i>
+                            <span class="text-sm font-medium">Inputs</span>
+                        </a>
+                        <a href="cenarios.html" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg">
+                            <i class="fas fa-folder text-sm mr-3"></i>
+                            <span class="text-sm font-medium">Cenários</span>
+                        </a>
+                        <a href="resultados.html" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg">
+                            <i class="fas fa-chart-bar text-sm mr-3"></i>
+                            <span class="text-sm font-medium">Resultados</span>
+                        </a>
+                    </div>
+                </div>
                 
-                <a href="cenarios.html" class="sidebar-item flex items-center p-3 text-teal-200 hover:text-white">
-                    <i class="fas fa-folder sidebar-icon mr-3 text-lg"></i>
-                    <span class="font-medium sidebar-text">Cenários</span>
+                <a href="usuarios.html" id="adminUsersLink" class="sidebar-item active flex items-center p-3 text-white" style="display: none;">
+                    <i class="fas fa-users sidebar-icon mr-3 text-lg"></i>
+                    <span class="font-medium sidebar-text">Usuários</span>
                 </a>
-                
-                <a href="resultados.html" class="sidebar-item flex items-center p-3 text-teal-200 hover:text-white">
-                    <i class="fas fa-chart-line sidebar-icon mr-3 text-lg"></i>
-                    <span class="font-medium sidebar-text">Resultados</span>
-                </a>
+            </div>
+                </div>
                 
                 <a href="usuarios.html" id="adminUsersLink" class="sidebar-item active flex items-center p-3 text-white" style="display: none;">
                     <i class="fas fa-users sidebar-icon mr-3 text-lg"></i>
@@ -380,5 +400,6 @@
     <script src="js/usuarios-novo.js"></script>
     <script src="js/sidebar.js"></script>
     <script src="js/sidebar-mobile.js"></script>
+    <script src="js/sidebar-submenu.js"></script>
 </body>
 </html>

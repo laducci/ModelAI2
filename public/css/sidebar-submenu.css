@@ -1,0 +1,94 @@
+/* sidebar-submenu.css - Estilos para o comportamento dos submenus */
+
+/* Estilos para o botão principal do submenu */
+.sidebar-item {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+/* Hover específico para o botão VPL quando não está ativo */
+button.sidebar-item:not(.active):hover {
+    background-color: rgba(13, 148, 136, 0.1) !important;
+    color: white !important;
+}
+
+button.sidebar-item:not(.active):hover .sidebar-text,
+button.sidebar-item:not(.active):hover .sidebar-icon,
+button.sidebar-item:not(.active):hover i {
+    color: white !important;
+}
+
+/* Estilos para quando está ativo */
+.sidebar-item.active {
+    background-color: rgba(13, 148, 136, 0.2) !important;
+    color: white !important;
+}
+
+.sidebar-item.active .sidebar-text,
+.sidebar-item.active .sidebar-icon,
+.sidebar-item.active i {
+    color: white !important;
+}
+
+/* Estilos para os subitens */
+.sidebar-subitem {
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.sidebar-subitem:hover {
+    background-color: rgba(13, 148, 136, 0.3) !important;
+    color: white !important;
+}
+
+.sidebar-subitem.active {
+    background-color: rgba(13, 148, 136, 0.5) !important;
+    color: white !important;
+}
+
+.sidebar-subitem i {
+    width: 1rem;
+    text-align: center;
+}
+
+/* Animação da seta - sem transform adicional para evitar bugs */
+#analiseVPLChevron {
+    transition: all 0.2s ease;
+}
+
+/* Animação do submenu */
+#analiseVPLSubmenu {
+    transition: all 0.2s ease;
+    overflow: hidden;
+}
+
+#analiseVPLSubmenu.hidden {
+    max-height: 0;
+    opacity: 0;
+}
+
+#analiseVPLSubmenu:not(.hidden) {
+    max-height: 200px;
+    opacity: 1;
+}
+
+/* Melhorar o espaçamento dos ícones */
+.sidebar-icon {
+    width: 1.25rem;
+    text-align: center;
+}
+
+/* Estados de hover para links normais da sidebar */
+a.sidebar-item:hover {
+    background-color: rgba(13, 148, 136, 0.1);
+    color: white !important;
+}
+
+a.sidebar-item:hover .sidebar-text,
+a.sidebar-item:hover .sidebar-icon {
+    color: white !important;
+}
