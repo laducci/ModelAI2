@@ -222,12 +222,14 @@ async function continuarGeracaoPDF(doc, pageWidth, margin) {
     const valorTotalProposta = document.getElementById('valorTotalProposta').textContent || 'R$ 0,00';
     const descontoNominalResumo = document.getElementById('descontoNominalResumo').textContent || '0,00%';
     const valorPorMetroQuadrado = document.getElementById('valorPorMetroQuadrado').textContent || 'R$ 0,00';
+    const valorPorMetroQuadradoProposta = document.getElementById('valorPorMetroQuadradoProposta').textContent || 'R$ 0,00';
     
     const resumoFinanceiro = [
         ['Valor Total Imóvel', valorTotalImovel],
         ['Valor Total Proposta', valorTotalProposta],
         ['Desconto Nominal', descontoNominalResumo],
-        ['R$/m²', valorPorMetroQuadrado]
+        ['R$/m² Tabela', valorPorMetroQuadrado],
+        ['R$/m² Proposta', valorPorMetroQuadradoProposta]
     ];
     
     doc.autoTable({
@@ -248,6 +250,11 @@ async function continuarGeracaoPDF(doc, pageWidth, margin) {
                 data.cell.styles.textColor = [249, 115, 22]; // Laranja (equivalente ao orange-600)
                 data.cell.styles.fontStyle = 'bold';
             }
+            // Aplicar cor laranja para o "R$/m² Proposta" (linha índice 4)
+            else if (data.column.index === 1 && data.section === 'body' && data.row.index === 4) {
+                data.cell.styles.textColor = [249, 115, 22]; // Laranja (equivalente ao orange-600)
+                data.cell.styles.fontStyle = 'bold';
+            }
             // Aplicar cor vermelha para valores negativos na coluna de valores (índice 1)
             else if (data.column.index === 1 && data.section === 'body') {
                 const cellValue = data.cell.text[0];
@@ -259,10 +266,16 @@ async function continuarGeracaoPDF(doc, pageWidth, margin) {
         },
         margin: { left: margin, right: margin }
     });
-    
+
     // Segunda página - Fluxo de caixa
     doc.addPage();
-    yPosition = margin;
+    await gerarSegundaPaginaPDF(doc, pageWidth, margin, dataHora, agora);
+}
+
+// Função para gerar a segunda página com o fluxo de caixa
+async function gerarSegundaPaginaPDF(doc, pageWidth, margin, dataHora, agora) {
+    const scenarioName = document.getElementById('scenarioName').textContent || 'Nome do Cenário';
+    let yPosition = margin;
     
     // Cabeçalho da segunda página com logo (reduzido)
     doc.setFillColor(20, 184, 166);
@@ -396,7 +409,25 @@ async function continuarGeracaoPDF(doc, pageWidth, margin) {
         doc.text('Nenhum dado de fluxo de caixa disponível para exibição.', margin, yPosition);
     }
     
-    // Rodapé
+    // Finalizar PDF com rodapés e salvar
+    finalizarPDF(doc, pageWidth, margin, dataHora, agora, scenarioName);
+}
+
+// Função para finalizar o PDF com rodapés e salvar
+function finalizarPDF(doc, pageWidth, margin, dataHora, agora, scenarioName) {
+    // Coletar dados da tabela para mostrar no console
+    const fluxoTable = document.getElementById('fluxoCaixaDetalhado');
+    let fluxoDataLength = 0;
+    let periodoSelecionado = '12';
+    
+    if (fluxoTable) {
+        const rows = fluxoTable.querySelectorAll('tr');
+        const periodoSelect = document.getElementById('periodoAnalise');
+        periodoSelecionado = periodoSelect ? periodoSelect.value : '12';
+        const numPeriodos = parseInt(periodoSelecionado);
+        fluxoDataLength = Math.min(rows.length, numPeriodos);
+    }
+    
     const pageCount = doc.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
@@ -421,12 +452,12 @@ async function continuarGeracaoPDF(doc, pageWidth, margin) {
     doc.save(fileName);
     
     console.log('✅ PDF exportado com sucesso:', fileName);
-    console.log(`📊 Total de linhas exportadas: ${fluxoData.length} (período: ${periodoSelecionado} meses)`);
+    console.log(`📊 Total de linhas exportadas: ${fluxoDataLength} (período: ${periodoSelecionado} meses)`);
     
     if (window.showAlert) {
-        showAlert('success', `PDF "${fileName}" exportado com sucesso! (${fluxoData.length} meses de dados)`);
+        showAlert('success', `PDF "${fileName}" exportado com sucesso! (${fluxoDataLength} meses de dados)`);
     } else {
-        alert(`PDF "${fileName}" exportado com sucesso! (${fluxoData.length} meses de dados)`);
+        alert(`PDF "${fileName}" exportado com sucesso! (${fluxoDataLength} meses de dados)`);
     }
 }
 

@@ -795,10 +795,14 @@ function displayCalculatedValues(values) {
     }
     formatValueWithNegativeStyle('descontoNominalResumo', descontoResumo, true);
     
-    // Calcular R$/m²
+    // Calcular R$/m² da Tabela
     const areaPrivativa = parseFloat(currentScenarioData.data.dadosGerais.areaPrivativa) || 0;
     const valorPorM2 = (values && areaPrivativa > 0) ? values.valorTotalImovel / areaPrivativa : 0;
     document.getElementById('valorPorMetroQuadrado').textContent = formatCurrency(valorPorM2);
+    
+    // Calcular R$/m² da Proposta
+    const valorPorM2Proposta = (values && areaPrivativa > 0) ? values.valorTotalProposta / areaPrivativa : 0;
+    document.getElementById('valorPorMetroQuadradoProposta').textContent = formatCurrency(valorPorM2Proposta);
 }
 
 // Atualizar preview do fluxo de caixa (tabela detalhada como no Excel)
@@ -1385,6 +1389,21 @@ function exportTableToExcel() {
         excelData.push(['Empreendimento:', scenarioEmpreendimento]);
         excelData.push(['Período de Análise:', `${periodoSelecionado} meses`]);
         excelData.push(['Data de Exportação:', new Date().toLocaleDateString('pt-BR')]);
+        excelData.push([]); // Linha em branco
+        
+        // Adicionar resumo financeiro
+        const valorTotalImovel = document.getElementById('valorTotalImovel').textContent || 'R$ 0,00';
+        const valorTotalProposta = document.getElementById('valorTotalProposta').textContent || 'R$ 0,00';
+        const descontoNominalResumo = document.getElementById('descontoNominalResumo').textContent || '0,00%';
+        const valorPorMetroQuadrado = document.getElementById('valorPorMetroQuadrado').textContent || 'R$ 0,00';
+        const valorPorMetroQuadradoProposta = document.getElementById('valorPorMetroQuadradoProposta').textContent || 'R$ 0,00';
+        
+        excelData.push(['RESUMO FINANCEIRO']);
+        excelData.push(['Valor Total Imóvel:', valorTotalImovel]);
+        excelData.push(['Valor Total Proposta:', valorTotalProposta]);
+        excelData.push(['Desconto Nominal:', descontoNominalResumo]);
+        excelData.push(['R$/m² Tabela:', valorPorMetroQuadrado]);
+        excelData.push(['R$/m² Proposta:', valorPorMetroQuadradoProposta]);
         excelData.push([]); // Linha em branco
         
         // Adicionar cabeçalhos
