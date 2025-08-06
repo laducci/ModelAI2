@@ -3,23 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Model AI - Cenários</title>
+    <title>Model AI - Inadimplência</title>
     <link rel="icon" type="image/png" href="images/Logo-ModelAI - M.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/inputs.css">
     <link rel="stylesheet" href="css/sidebar.css">
     <link rel="stylesheet" href="css/sidebar-mobile.css">
     <link rel="stylesheet" href="css/sidebar-submenu.css">
-    <style>
-    </style>
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
     <!-- Mobile Overlay -->
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
 
     <!-- Modern Sidebar -->
-        <!-- Sidebar -->
     <div id="sidebar" class="modern-sidebar fixed left-0 top-0 w-72 h-full z-50 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-[2500ms]">
         <!-- Logo Section -->
         <div class="p-6 border-b border-teal-700/50 flex items-center justify-between">
@@ -36,21 +32,21 @@
             <div class="space-y-2">
                 <!-- Análise de VPL - Menu Principal -->
                 <div class="space-y-1">
-                    <button class="sidebar-item active w-full flex items-center justify-between p-3 text-white rounded-lg" id="analiseVPLToggle">
+                    <button class="sidebar-item w-full flex items-center justify-between p-3 text-teal-200 hover:text-white rounded-lg" id="analiseVPLToggle">
                         <div class="flex items-center">
                             <i class="fas fa-chart-line sidebar-icon mr-3 text-lg"></i>
                             <span class="font-medium sidebar-text">Análise de VPL</span>
                         </div>
-                        <i class="fas fa-chevron-down transition-transform duration-200" id="analiseVPLChevron"></i>
+                        <i class="fas fa-chevron-right transition-transform duration-200" id="analiseVPLChevron"></i>
                     </button>
                     
                     <!-- Submenus da Análise de VPL -->
-                    <div class="ml-4 space-y-1" id="analiseVPLSubmenu">
+                    <div class="ml-4 space-y-1 hidden" id="analiseVPLSubmenu">
                         <a href="inputs.html" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg">
                             <i class="fas fa-edit text-sm mr-3"></i>
                             <span class="text-sm font-medium">Inputs</span>
                         </a>
-                        <a href="cenarios.html" class="sidebar-subitem active flex items-center p-2 text-white bg-teal-700/50 rounded-lg">
+                        <a href="cenarios.html" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg">
                             <i class="fas fa-folder text-sm mr-3"></i>
                             <span class="text-sm font-medium">Cenários</span>
                         </a>
@@ -63,16 +59,16 @@
                 
                 <!-- Controladoria - Menu Principal -->
                 <div class="space-y-1">
-                    <button class="sidebar-item w-full flex items-center justify-between p-3 text-teal-200 hover:text-white rounded-lg" id="controladoriaToggle">
+                    <button class="sidebar-item active w-full flex items-center justify-between p-3 text-white rounded-lg" id="controladoriaToggle">
                         <div class="flex items-center">
                             <i class="fas fa-calculator sidebar-icon mr-3 text-lg"></i>
                             <span class="font-medium sidebar-text">Controladoria</span>
                         </div>
-                        <i class="fas fa-chevron-right transition-transform duration-200" id="controladoriaChevron"></i>
+                        <i class="fas fa-chevron-down transition-transform duration-200" id="controladoriaChevron"></i>
                     </button>
                     
                     <!-- Submenus da Controladoria -->
-                    <div class="ml-4 space-y-1 hidden" id="controladoriaSubmenu">
+                    <div class="ml-4 space-y-1" id="controladoriaSubmenu">
                         <a href="fluxo-caixa.html" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg">
                             <i class="fas fa-coins text-sm mr-3"></i>
                             <span class="text-sm font-medium">Fluxo de Caixa</span>
@@ -81,7 +77,7 @@
                             <i class="fas fa-chart-line text-sm mr-3"></i>
                             <span class="text-sm font-medium">Vendas</span>
                         </a>
-                        <a href="inadimplencia.html" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg">
+                        <a href="inadimplencia.html" class="sidebar-subitem active flex items-center p-2 text-white bg-teal-700/50 rounded-lg">
                             <i class="fas fa-exclamation-triangle text-sm mr-3"></i>
                             <span class="text-sm font-medium">Inadimplência</span>
                         </a>
@@ -130,117 +126,45 @@
     </div>
 
     <!-- Main Content -->
-    <div id="mainContent" class="main-content ml-0 lg:ml-72 min-h-screen transition-all duration-300 bg-gray-50">
+    <div id="mainContent" class="main-content ml-0 lg:ml-72 min-h-screen transition-all duration-300">
         <!-- Mobile Header -->
-        <div class="lg:hidden bg-gradient-to-r from-teal-600 to-teal-700 p-4 flex items-center justify-between shadow-lg">
-            <button id="mobileMenuToggle" class="text-white hover:text-teal-200 transition-colors">
+        <div class="lg:hidden bg-teal-600 p-4 flex items-center justify-between">
+            <button id="mobileMenuToggle" class="text-white">
                 <i class="fas fa-bars text-xl"></i>
             </button>
             <img src="images/Logo-ModelAI-positiva.png" alt="Model AI" class="h-8">
-            <button class="text-white logout-btn hover:text-teal-200 transition-colors">
+            <button class="text-white logout-btn">
                 <i class="fas fa-sign-out-alt text-xl"></i>
             </button>
         </div>
 
-        <div class="p-6 lg:p-8 max-w-7xl mx-auto">
+        <div class="p-4 md:p-6">
             <!-- Header Section -->
-            <div class="mb-8">
-                <div class="bg-white rounded-2xl p-6 lg:p-8 shadow-lg border border-gray-100">
-                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                        <div class="flex items-center gap-4">
-                            <div class="w-16 h-16 bg-gradient-to-r from-teal-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                <i class="fas fa-folder text-white text-2xl"></i>
-                            </div>
-                            <div>
-                                <h1 class="text-2xl lg:text-3xl font-bold text-gray-900">Cenários Salvos</h1>
-                                <p class="text-gray-600 mt-1">Gerencie e organize seus cenários de análise</p>
-                            </div>
-                        </div>
-                        <button onclick="createNewScenario()" class="px-6 py-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors shadow-lg hover:shadow-xl flex items-center gap-2 font-medium">
-                            <i class="fas fa-plus"></i>
-                            <span>Novo Cenário</span>
-                        </button>
+            <div class="mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 class="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">Inadimplência</h1>
+                        <p class="text-gray-600 mt-1 text-sm md:text-base">Gestão e controle de inadimplência</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Filter and Search -->
-            <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 mb-8">
-                <div class="flex flex-col lg:flex-row lg:items-center gap-4">
-                    <div class="flex-1">
-                        <div class="relative">
-                            <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                            <input type="text" id="searchScenarios" placeholder="Buscar cenários..." class="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
-                        </div>
-                    </div>
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        <select id="filterClient" class="px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
-                            <option value="">Todos os Clientes</option>
-                        </select>
-                        <select id="sortBy" class="px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
-                            <option value="date">Mais Recentes</option>
-                            <option value="name">Nome A-Z</option>
-                            <option value="client">Cliente A-Z</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Cenários Grid -->
-            <div id="scenariosGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                <!-- Cenários serão inseridos aqui via JavaScript -->
-            </div>
-
-            <!-- Empty State -->
-            <div id="emptyState" class="hidden">
-                <div class="bg-white rounded-2xl p-12 shadow-lg border border-gray-100 text-center">
+            <!-- Content Area -->
+            <div class="bg-white rounded-2xl p-6 shadow-lg">
+                <div class="text-center py-12">
                     <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <i class="fas fa-folder-open text-4xl text-gray-400"></i>
+                        <i class="fas fa-exclamation-triangle text-4xl text-gray-400"></i>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Nenhum cenário encontrado</h3>
-                    <p class="text-gray-600 mb-8 max-w-md mx-auto">Comece criando seu primeiro cenário de análise financeira para acompanhar seus empreendimentos.</p>
-                    <button onclick="createNewScenario()" class="px-8 py-4 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors shadow-lg hover:shadow-xl font-medium">
-                        <i class="fas fa-plus mr-2"></i>Criar Primeiro Cenário
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Enhanced Modal -->
-    <div id="scenarioModal" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl border border-gray-100">
-            <div class="flex items-center gap-3 mb-6">
-                <div class="w-12 h-12 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-save text-white"></i>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900">Salvar Cenário</h3>
-            </div>
-            
-            <div class="space-y-6">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-3">Nome do Cenário</label>
-                    <input type="text" id="scenarioNameInput" class="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Digite um nome descritivo para o cenário">
-                </div>
-                
-                <div class="flex gap-3">
-                    <button onclick="closeScenarioModal()" class="flex-1 px-6 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium">
-                        Cancelar
-                    </button>
-                    <button onclick="confirmSaveScenario()" class="flex-1 px-6 py-3 bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded-xl hover:from-teal-700 hover:to-teal-800 transition-all duration-200 font-medium">
-                        Salvar
-                    </button>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Inadimplência</h3>
+                    <p class="text-gray-600 max-w-md mx-auto">Esta página está em desenvolvimento. Em breve você poderá gerenciar e controlar a inadimplência da sua empresa.</p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- External JavaScript -->
-    <script src="js/api.js"></script>
-    <script src="js/alerts.js"></script>
     <script src="js/auth-guard.js"></script>
     <script src="js/admin-menu.js"></script>
-    <script src="js/cenarios-novo.js"></script>
     <script src="js/sidebar.js"></script>
     <script src="js/sidebar-mobile.js"></script>
     <script src="js/sidebar-submenu.js"></script>
