@@ -32,16 +32,16 @@ function initializeResultsPage() {
     const scenarioParam = urlParams.get('scenario');
     const idParam = urlParams.get('id');
     
-    
-    if (scenarioParam && scenarioParam !== 'undefined') {
-        // Pode implementar carregamento automático aqui se necessário
+    console.log('🎯 Inicializando página de resultados...');
+    if (scenarioParam) {
+        console.log('📋 Cenário detectado na URL:', scenarioParam);
     }
     
     checkAuthentication();
     renderDefaultCards(); // Mostra os 6 cards zerados e fórmulas
     renderDefaultFluxoCaixa(); // Mostra a tabela zerada
     createDefaultChart(); // Cria gráfico vazio
-    loadScenariosForFilter();
+    loadScenariosForFilter(); // Esta função agora cuidará da seleção automática
     setupEventListeners();
 }
 // Renderizar os 6 cards SEMPRE zerados e com fórmulas
@@ -185,6 +185,10 @@ function populateScenarioFilter(scenarios) {
         return;
     }
     
+    // Verificar se há um cenário na URL para seleção automática
+    const urlParams = new URLSearchParams(window.location.search);
+    const scenarioParam = urlParams.get('scenario');
+    
     scenarios.forEach((scenario, index) => {
         console.log(`📋 Cenário ${index + 1}:`, {
             id: scenario._id,
@@ -207,6 +211,47 @@ function populateScenarioFilter(scenarios) {
         
         console.log(`✅ Opção adicionada - ID: ${scenarioId}, Texto: ${option.textContent}`);
     });
+    
+    // Se há um cenário na URL, selecioná-lo automaticamente
+    if (scenarioParam && scenarioParam !== 'undefined') {
+        console.log('🎯 Cenário detectado na URL:', scenarioParam);
+        
+        // Verificar se o cenário existe nas opções
+        const scenarioExists = scenarios.some(scenario => 
+            (scenario._id === scenarioParam || scenario.id === scenarioParam)
+        );
+        
+        if (scenarioExists) {
+            console.log('✅ Cenário encontrado, configurando filtro e carregando automaticamente...');
+            
+            // Aguardar um pouco para garantir que o DOM está pronto
+            setTimeout(() => {
+                // Definir o valor no filtro
+                scenarioFilter.value = scenarioParam;
+                console.log('🎯 Filtro configurado para:', scenarioFilter.value);
+                console.log('🎯 Texto visível do filtro:', scenarioFilter.options[scenarioFilter.selectedIndex]?.text);
+                
+                // Forçar uma atualização visual do filtro
+                scenarioFilter.dispatchEvent(new Event('change', { bubbles: true }));
+                
+                // Carregar os dados automaticamente
+                setTimeout(() => {
+                    console.log('🚀 Executando carregamento automático do cenário:', scenarioParam);
+                    handleScenarioSelection(scenarioParam);
+                }, 500);
+                
+            }, 200); // Pequeno delay para garantir que o DOM está atualizado
+            
+        } else {
+            console.warn('⚠️ Cenário da URL não encontrado nas opções disponíveis:', scenarioParam);
+        }
+        
+        // Limpar a URL após um delay maior
+        setTimeout(() => {
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+        }, 2000);
+    }
     
     console.log('✅ Filtro de cenários populado com sucesso!');
 }
