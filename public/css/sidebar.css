@@ -169,6 +169,11 @@
     font-size: 1.1rem;
 }
 
+/* Esconder texto dos submenus quando sidebar colapsada */
+.modern-sidebar.collapsed .sidebar-subitem .text-sm {
+    display: none;
+}
+
 /* Responsivo */
 @media (max-width: 768px) {
     .modern-sidebar {
