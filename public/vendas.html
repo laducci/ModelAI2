@@ -7,6 +7,8 @@
     <link rel="icon" type="image/png" href="images/Logo-ModelAI - M.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
     <link rel="stylesheet" href="css/sidebar.css">
     <link rel="stylesheet" href="css/sidebar-mobile.css">
     <link rel="stylesheet" href="css/sidebar-submenu.css">
@@ -149,14 +151,200 @@
                 </div>
             </div>
 
+            <!-- Teste Microsoft Fabric -->
+            <div class="mb-8">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                                <i class="fas fa-link text-blue-600 mr-2"></i>
+                                Teste Microsoft Fabric
+                            </h2>
+                            <p class="text-gray-600 text-sm mt-1">
+                                Validação da integração com os modelos semânticos
+                            </p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="refreshFabricData" 
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center">
+                                <i class="fas fa-refresh mr-2"></i>
+                                Atualizar
+                            </button>
+                            <button id="testFabricConnection" 
+                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center">
+                                <i class="fas fa-plug mr-2"></i>
+                                Testar Conexão
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Status -->
+                    <div id="fabricTestStatus" class="hidden mb-4"></div>
+                    
+                    <!-- Loading Spinner -->
+                    <div id="fabricLoadingSpinner" class="hidden text-center py-8">
+                        <i class="fas fa-spinner fa-spin text-2xl text-blue-600"></i>
+                        <p class="text-gray-600 mt-2">Carregando dados...</p>
+                    </div>
+
+                    <!-- Tabela de Configurações -->
+                    <div id="fabricTestTable">
+                        <!-- Conteúdo será preenchido via JavaScript -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Content Area -->
             <div class="bg-white rounded-2xl p-6 shadow-lg">
-                <div class="text-center py-12">
-                    <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <i class="fas fa-chart-line text-4xl text-gray-400"></i>
+                <!-- Filtros -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- Filtro Período -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Período</label>
+                            <div class="flex space-x-2">
+                                <input type="date" id="periodoInicio" class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                <input type="date" id="periodoFim" class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            </div>
+                        </div>
+                        
+                        <!-- Filtro Empreendimento -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Empreendimento</label>
+                            <select id="filtroEmpreendimento" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Filtro Unidade -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Unidade</label>
+                            <select id="filtroUnidade" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Filtro Título -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Título</label>
+                            <select id="filtroTitulo" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Vendas</h3>
-                    <p class="text-gray-600 max-w-md mx-auto">Esta página está em desenvolvimento. Em breve você poderá gerenciar e analisar as vendas da sua empresa.</p>
+                    
+                    <div class="flex justify-end mt-4 space-x-3">
+                        <button id="limparFiltros" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">
+                            Limpar
+                        </button>
+                        <button id="aplicarFiltros" class="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700">
+                            Aplicar Filtros
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Cards de Resumo -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-blue-100 rounded-lg">
+                                <i class="fas fa-chart-line text-blue-600 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Total Vendas</p>
+                                <p id="totalVendas" class="text-2xl font-bold text-gray-900">0 Mi</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-green-100 rounded-lg">
+                                <i class="fas fa-expand-arrows-alt text-green-600 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Área Total</p>
+                                <p id="totalArea" class="text-2xl font-bold text-gray-900">0 m²</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-yellow-100 rounded-lg">
+                                <i class="fas fa-calculator text-yellow-600 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Valor m²</p>
+                                <p id="valorMedioM2" class="text-2xl font-bold text-gray-900">R$ 0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-purple-100 rounded-lg">
+                                <i class="fas fa-building text-purple-600 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Empreendimentos</p>
+                                <p id="totalEmpreendimentos" class="text-2xl font-bold text-gray-900">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráficos -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <!-- Gráfico de Variação por Projeto -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Variação Valor m² por Projeto</h3>
+                        <div class="h-80">
+                            <canvas id="graficoVariacao"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Gráfico de Vendas por Período -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Vendas Período por Empreendimento</h3>
+                        <div class="h-80">
+                            <canvas id="graficoVendasPeriodo"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela de Dados -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Dados Detalhados</h3>
+                        <div class="flex space-x-2">
+                            <button id="exportarPDF" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm">
+                                <i class="fas fa-file-pdf mr-2"></i>Exportar PDF
+                            </button>
+                            <button id="exportarExcel" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm">
+                                <i class="fas fa-file-excel mr-2"></i>Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table id="tabelaVendas" class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Projeto</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unidade</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Título</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendas</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor m²</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaVendasBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Dados serão carregados via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -164,9 +352,12 @@
 
     <!-- External JavaScript -->
     <script src="js/auth-guard.js"></script>
+    <script src="js/api.js"></script>
     <script src="js/admin-menu.js"></script>
     <script src="js/sidebar.js"></script>
     <script src="js/sidebar-mobile.js"></script>
     <script src="js/sidebar-submenu.js"></script>
+    <script src="js/vendas.js"></script>
+    <script src="js/vendas-fabric-test.js"></script>
 </body>
 </html>

@@ -123,11 +123,17 @@ function checkPageAccess() {
     
     const currentPage = window.location.pathname.split('/').pop();
     
-    if (currentUser.role === 'admin') {
-        return ['usuarios.html', 'inputs.html', 'cenarios.html', 'resultados.html'].includes(currentPage);
-    } else {
-        return ['inputs.html', 'cenarios.html', 'resultados.html'].includes(currentPage);
+    // Páginas que requerem privilégios de admin
+    const adminOnlyPages = ['usuarios.html', 'fabric-admin.html'];
+    
+    if (adminOnlyPages.includes(currentPage)) {
+        if (currentUser.role !== 'admin') {
+            return false;
+        }
     }
+    
+    // Demais páginas são acessíveis para usuários logados
+    return true;
 }
 
 // Logout

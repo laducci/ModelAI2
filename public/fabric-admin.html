@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model AI - Administração Fabric</title>
+    <link rel="icon" type="image/png" href="images/Logo-ModelAI - M.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/sidebar-mobile.css">
+    <link rel="stylesheet" href="css/sidebar-submenu.css">
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+    <!-- Mobile Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+
+    <!-- Modern Sidebar -->
+    <div id="sidebar" class="modern-sidebar fixed left-0 top-0 w-72 h-full z-50 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-[2500ms]">
+        <!-- Logo Section -->
+        <div class="p-6 border-b border-teal-700/50 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <img src="images/Logo-ModelAI-positiva.png" alt="Model AI" class="h-8">
+            </div>
+            <button id="toggleSidebar" class="text-white hover:text-teal-200 p-2">
+                <i class="fas fa-bars text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 p-4">
+            <div class="space-y-2">
+                <!-- Análise de VPL - Menu Principal -->
+                <div class="space-y-1">
+                    <button class="sidebar-item w-full flex items-center justify-between p-3 text-teal-200 hover:text-white rounded-lg" id="analiseVPLToggle">
+                        <div class="flex items-center">
+                            <i class="fas fa-chart-line sidebar-icon mr-3 text-lg"></i>
+                            <span class="font-medium sidebar-text">Análise de VPL</span>
+                        </div>
+                        <i class="fas fa-chevron-right transition-transform duration-200" id="analiseVPLChevron"></i>
+                    </button>
+                    
+                    <!-- Submenus da Análise de VPL -->
+                    <div class="ml-4 space-y-1 hidden" id="analiseVPLSubmenu">
+                        <a href="inputs.html" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg">
+                            <i class="fas fa-edit text-sm mr-3"></i>
+                            <span class="text-sm font-medium">Inputs</span>
+                        </a>
+                        <a href="cenarios.html" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg">
+                            <i class="fas fa-folder text-sm mr-3"></i>
+                            <span class="text-sm font-medium">Cenários</span>
+                        </a>
+                        <a href="resultados.html" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg">
+                            <i class="fas fa-chart-bar text-sm mr-3"></i>
+                            <span class="text-sm font-medium">Resultados</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Controladoria - Menu Principal -->
+                <div class="space-y-1">
+                    <button class="sidebar-item w-full flex items-center justify-between p-3 text-teal-200 hover:text-white rounded-lg" id="controladoriaToggle">
+                        <div class="flex items-center">
+                            <i class="fas fa-calculator sidebar-icon mr-3 text-lg"></i>
+                            <span class="font-medium sidebar-text">Controladoria</span>
+                        </div>
+                        <i class="fas fa-chevron-right transition-transform duration-200" id="controladoriaChevron"></i>
+                    </button>
+                    
+                    <!-- Submenus da Controladoria -->
+                    <div class="ml-4 space-y-1 hidden" id="controladoriaSubmenu">
+                        <a href="fluxo-caixa.html" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg">
+                            <i class="fas fa-coins text-sm mr-3"></i>
+                            <span class="text-sm font-medium">Fluxo de Caixa</span>
+                        </a>
+                        <a href="vendas.html" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg">
+                            <i class="fas fa-chart-line text-sm mr-3"></i>
+                            <span class="text-sm font-medium">Vendas</span>
+                        </a>
+                        <a href="inadimplencia.html" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg">
+                            <i class="fas fa-exclamation-triangle text-sm mr-3"></i>
+                            <span class="text-sm font-medium">Inadimplência</span>
+                        </a>
+                        <a href="orcamento.html" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg">
+                            <i class="fas fa-file-invoice-dollar text-sm mr-3"></i>
+                            <span class="text-sm font-medium">Orçamento</span>
+                        </a>
+                        <a href="obra.html" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg">
+                            <i class="fas fa-hard-hat text-sm mr-3"></i>
+                            <span class="text-sm font-medium">Obra</span>
+                        </a>
+                        <a href="despesas.html" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg">
+                            <i class="fas fa-receipt text-sm mr-3"></i>
+                            <span class="text-sm font-medium">Despesas</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Administração - Menu Principal -->
+                <div class="space-y-1">
+                    <button class="sidebar-item active w-full flex items-center justify-between p-3 text-white rounded-lg" id="adminToggle">
+                        <div class="flex items-center">
+                            <i class="fas fa-cogs sidebar-icon mr-3 text-lg"></i>
+                            <span class="font-medium sidebar-text">Administração</span>
+                        </div>
+                        <i class="fas fa-chevron-down transition-transform duration-200" id="adminChevron"></i>
+                    </button>
+                    
+                    <!-- Submenus da Administração -->
+                    <div class="ml-4 space-y-1" id="adminSubmenu">
+                        <a href="usuarios.html" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg">
+                            <i class="fas fa-users text-sm mr-3"></i>
+                            <span class="text-sm font-medium">Usuários</span>
+                        </a>
+                        <a href="fabric-admin.html" class="sidebar-subitem active flex items-center p-2 text-white bg-teal-700/50 rounded-lg">
+                            <i class="fas fa-database text-sm mr-3"></i>
+                            <span class="text-sm font-medium">Fabric Integration</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Divider -->
+            <div class="my-6 border-t border-teal-700/50"></div>
+        </nav>
+
+        <!-- User Profile -->
+        <div class="p-4 border-t border-teal-700/50 user-profile">
+            <div class="flex items-center space-x-3 p-3 rounded-xl bg-teal-800/50">
+                <div class="w-10 h-10 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full flex items-center justify-center user-avatar">
+                    <i id="user-icon" class="fas fa-user text-white"></i>
+                </div>
+                <div class="flex-1 min-w-0 user-info">
+                    <p class="text-white text-sm font-semibold truncate" id="user-name">Usuário</p>
+                    <p class="text-teal-200 text-xs truncate" id="userEmail">usuario@email.com</p>
+                </div>
+                <button onclick="logout()" class="text-teal-200 hover:text-white p-1 rounded transition-colors duration-200 logout-btn">
+                    <i class="fas fa-sign-out-alt text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:ml-72 min-h-screen p-4 lg:p-8">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+                <div class="mb-4 sm:mb-0">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <button id="mobileSidebarToggle" class="lg:hidden p-2 text-gray-600 hover:text-gray-900 bg-white rounded-lg shadow-sm">
+                            <i class="fas fa-bars text-lg"></i>
+                        </button>
+                        <h1 class="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">Administração Fabric</h1>
+                    </div>
+                    <p class="text-gray-600 mt-1 text-sm md:text-base">Gerenciar integração com Microsoft Fabric</p>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="bg-white rounded-2xl p-6 shadow-lg">
+                <!-- Status da Conexão -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas fa-cloud text-blue-600 text-2xl mr-3"></i>
+                            <div>
+                                <h3 class="text-lg font-semibold text-blue-900">Status da Conexão Fabric</h3>
+                                <p class="text-blue-700 text-sm">Status atual da integração com Microsoft Fabric</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span id="connectionStatus" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-sm">Desconectado</span>
+                            <button id="testConnection" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                                Testar Conexão
+                            </button>
+                            <button id="debugPowerBI" class="px-3 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm">
+                                Debug API
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configuração de Workspaces -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                    <!-- Workspaces (Primeiro) -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">1. Workspace Central</h3>
+                        <p class="text-xs text-gray-600 mb-4">Selecione "[ModelAI] Projetos" onde estão todos os datasets</p>
+                        <div class="space-y-3">
+                            <button id="loadWorkspaces" class="w-full px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700">
+                                <i class="fas fa-refresh mr-2"></i>Carregar Workspaces
+                            </button>
+                            <select id="workspaceSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <option value="">Selecione um workspace</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Datasets (Segundo) -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">2. Datasets Disponíveis</h3>
+                        <p class="text-xs text-gray-600 mb-4">Todos os datasets do workspace selecionado</p>
+                        <div class="space-y-3">
+                            <button id="loadDatasets" class="w-full px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700" disabled>
+                                <i class="fas fa-database mr-2"></i>Carregar Datasets
+                            </button>
+                            <select id="datasetSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <option value="">Selecione um dataset</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Incorporadora (Terceiro) -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">3. Incorporadora</h3>
+                        <p class="text-xs text-gray-600 mb-4">Associar dataset selecionado à incorporadora</p>
+                        <div class="space-y-3">
+                            <select id="incorporadoraSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <option value="">Selecione uma incorporadora</option>
+                            </select>
+                            <button id="loadUsers" class="w-full px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700">
+                                <i class="fas fa-users mr-2"></i>Carregar Usuários
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sincronização -->
+                <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Sincronização de Dados</h3>
+                    
+                    <!-- Módulos para sincronizar -->
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" value="vendas" class="sync-module" checked>
+                            <span class="text-sm">Vendas</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" value="fluxoCaixa" class="sync-module" checked>
+                            <span class="text-sm">Fluxo de Caixa</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" value="inadimplencia" class="sync-module" checked>
+                            <span class="text-sm">Inadimplência</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" value="orcamento" class="sync-module" checked>
+                            <span class="text-sm">Orçamento</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" value="obra" class="sync-module" checked>
+                            <span class="text-sm">Obra</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" value="despesas" class="sync-module" checked>
+                            <span class="text-sm">Despesas</span>
+                        </label>
+                    </div>
+
+                    <!-- Botões de configuração e sincronização -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <!-- Seção Configuração -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="text-md font-semibold text-gray-800 mb-3">Configuração</h4>
+                            <div class="space-y-2">
+                                <button id="saveConfiguration" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                                    <i class="fas fa-save mr-2"></i>Salvar Configuração
+                                </button>
+                                <p class="text-xs text-gray-600">Associa a incorporadora ao workspace e modelo semântico</p>
+                            </div>
+                        </div>
+
+                        <!-- Seção Sincronização -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="text-md font-semibold text-gray-800 mb-3">Sincronização</h4>
+                            <div class="space-y-2">
+                                <button id="syncCompany" class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 opacity-50 cursor-not-allowed" disabled>
+                                    <i class="fas fa-sync mr-2"></i>Sincronizar Incorporadora
+                                </button>
+                                <p class="text-xs text-gray-600">Envia todos os dados da incorporadora para o Fabric</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botões avançados (ocultos inicialmente) -->
+                    <div class="border-t pt-4">
+                        <details class="group">
+                            <summary class="cursor-pointer text-sm text-gray-600 hover:text-gray-800 mb-3">
+                                <i class="fas fa-chevron-right group-open:rotate-90 transition-transform mr-1"></i>
+                                Opções Avançadas
+                            </summary>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <button id="syncCurrentUser" class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700">
+                                    <i class="fas fa-user mr-2"></i>Sync Usuário Atual
+                                </button>
+                                <button id="syncAllUsers" class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700">
+                                    <i class="fas fa-users mr-2"></i>Sync Todos Usuários
+                                </button>
+                                <button id="scheduleSync" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">
+                                    <i class="fas fa-clock mr-2"></i>Agendar Sync
+                                </button>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- Log de Sincronização -->
+                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Log de Sincronização</h3>
+                        <button id="clearLog" class="px-3 py-1 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">
+                            Limpar Log
+                        </button>
+                    </div>
+                    <div id="syncLog" class="bg-gray-50 rounded-lg p-4 h-64 overflow-y-auto font-mono text-sm">
+                        <p class="text-gray-500">Aguardando sincronização...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- External JavaScript -->
+    <script src="js/api.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <script src="js/admin-menu.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/sidebar-mobile.js"></script>
+    <script src="js/sidebar-submenu.js"></script>
+    <script src="js/fabric-admin.js"></script>
+</body>
+</html>

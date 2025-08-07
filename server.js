@@ -179,6 +179,15 @@ app.post('/api/create-admin', async (req, res) => {
   }
 });
 
+// Rotas da API
+const salesRoutes = require('./backend/routes/sales');
+const cashflowRoutes = require('./backend/routes/cashflow');
+const fabricRoutes = require('./backend/routes/fabric');
+
+app.use('/api/sales', salesRoutes);
+app.use('/api/cashflow', cashflowRoutes);
+app.use('/api/fabric', fabricRoutes);
+
 // Middleware para rotas da API (direciona para o handler universal)
 app.use('/api', async (req, res, next) => {
     console.log('🔍 [SERVER DEBUG] Middleware API - req.path:', req.path);
@@ -187,7 +196,7 @@ app.use('/api', async (req, res, next) => {
     console.log('🔍 [SERVER DEBUG] Middleware API - req.headers:', req.headers);
     
     // Pular as rotas já definidas acima
-    if (req.path === '/auth/login' || req.path === '/auth/verify' || req.path === '/create-admin' || req.path === '/health') {
+    if (req.path === '/auth/login' || req.path === '/auth/verify' || req.path === '/create-admin' || req.path === '/health' || req.path.startsWith('/sales') || req.path.startsWith('/cashflow') || req.path.startsWith('/fabric')) {
         console.log('🔄 [SERVER DEBUG] Pulando para rota definida:', req.path);
         return next();
     }

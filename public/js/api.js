@@ -20,17 +20,47 @@ class ApiClient {
         return headers;
     }
 
-    // Fazer requisição HTTP
-    async request(endpoint, options = {}) {
+    // Fazer requisição HTTP - Suporta 2 ou 3 parâmetros
+    async request(endpoint, methodOrOptions = {}, data = null) {
         const url = `${this.baseURL}${endpoint}`;
-        const config = {
-            headers: this.getHeaders(),
-            ...options
-        };
+        
+        let config;
+        
+        // Se o segundo parâmetro é uma string, é o método HTTP (formato: endpoint, method, data)
+        if (typeof methodOrOptions === 'string') {
+            config = {
+                method: methodOrOptions,
+                headers: this.getHeaders()
+            };
+            
+            // Se há dados e o método não é GET, adicionar ao body
+            if (data && methodOrOptions !== 'GET') {
+                config.body = JSON.stringify(data);
+            }
+        } else {
+            // Formato tradicional (endpoint, options)
+            config = {
+                headers: this.getHeaders(),
+                ...methodOrOptions
+            };
+        }
 
         try {
+            console.log(`🔍 Fazendo requisição ${config.method || 'GET'} para ${url}`, data ? { data } : '');
+            
             const response = await fetch(url, config);
-            const data = await response.json();
+            const responseText = await response.text();
+            
+            console.log(`📡 Resposta recebida (${response.status}):`, responseText.substring(0, 200));
+            
+            let responseData;
+            try {
+                responseData = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('❌ Erro ao parsear resposta como JSON:', parseError);
+                console.error('📄 Resposta recebida:', responseText);
+                throw new Error(`Erro no servidor: resposta não é JSON válido (Status: ${response.status})`);
+            }
 
             // Se token expirou, redirecionar para login
             if (response.status === 401) {
@@ -40,10 +70,10 @@ class ApiClient {
             }
 
             if (!response.ok) {
-                throw new Error(data.message || data.error || `Erro HTTP: ${response.status}`);
+                throw new Error(responseData.message || responseData.error || `Erro HTTP: ${response.status}`);
             }
 
-            return data;
+            return responseData;
         } catch (error) {
             console.error(`❌ Erro na requisição ${endpoint}:`, error);
             throw error;
