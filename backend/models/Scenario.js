@@ -30,8 +30,11 @@ const scenarioSchema = new mongoose.Schema({
             tmaMes: Number
         },
         
-        // Tabela de Vendas - 16 campos  
+        // Tabela de Vendas - 17 campos  
         tabelaVendas: {
+            // Valor do Imóvel (1 campo)
+            valorImovel: Number,
+            
             // Entrada (4 campos)
             entradaValor: Number,
             entradaPercent: Number,
@@ -50,6 +53,10 @@ const scenarioSchema = new mongoose.Schema({
             reforcoQtd: Number,
             reforcoFrequencia: Number, // 3, 6 ou 12 meses
             reforcoValorParcela: Number,
+            
+            // Nas Chaves (2 campos)
+            nasChavesValor: Number,
+            nasChavesPercent: Number,
             
             // Outros (4 campos)
             bemMovelImovel: Number,

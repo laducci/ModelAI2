@@ -1,5 +1,9 @@
 // Inputs Page JavaScript - Model AI
 
+// Variáveis globais para controlar atualização de valores/percentuais
+let isUpdatingFromPercent = false;
+let isUpdatingFromValue = false;
+
 // Tab functionality - Aguardar DOM estar pronto
 document.addEventListener('DOMContentLoaded', function() {
     // Tab functionality
@@ -37,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Sales calculations
+// TMA calculations
 function calculateTMAMes() {
     const tmaAno = parseFloat(document.getElementById('tmaAno')?.value || 0);
     if (document.getElementById('tmaMes')) {
@@ -47,57 +51,148 @@ function calculateTMAMes() {
     }
 }
 
-// Proposta Cliente calculations
-function calculatePropostaPercentages() {
-    const valorProposta = parseBRNumber(document.getElementById('valorProposta')?.value || '0');
-    const valorEntrada = parseBRNumber(document.getElementById('valorEntrada')?.value || '0');
-    const valorParcelas = parseBRNumber(document.getElementById('valorParcelas')?.value || '0');
-    const valorReforco = parseBRNumber(document.getElementById('valorReforco')?.value || '0');
-    
-    if (valorProposta > 0) {
-        // Calcular percentuais
-        const percEntrada = (valorEntrada / valorProposta * 100).toFixed(0);
-        const percParcelas = (valorParcelas / valorProposta * 100).toFixed(0);
-        const percReforco = (valorReforco / valorProposta * 100).toFixed(0);
-        
-        // Atualizar campos de percentual
-        if (document.getElementById('percEntrada')) {
-            document.getElementById('percEntrada').value = percEntrada + '%';
-        }
-        if (document.getElementById('percParcelas')) {
-            document.getElementById('percParcelas').value = percParcelas + '%';
-        }
-        if (document.getElementById('percReforco')) {
-            document.getElementById('percReforco').value = percReforco + '%';
-        }
-    }
+// Utility functions
+function formatCurrency(value) {
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    }).format(value);
 }
 
-function calculateValorPorParcela() {
-    const valorParcelas = parseBRNumber(document.getElementById('valorParcelas')?.value || '0');
-    const numParcelas = parseInt(document.getElementById('numParcelas')?.value || 1);
-    
-    if (numParcelas > 0 && valorParcelas > 0) {
-        const valorPorParcela = valorParcelas / numParcelas;
-        if (document.getElementById('valorPorParcela')) {
-            document.getElementById('valorPorParcela').value = formatBRNumber(valorPorParcela);
-        }
-    }
+function formatNumber(value) {
+    return new Intl.NumberFormat('pt-BR').format(value);
 }
 
-function calculateValorPorParcelaReforco() {
-    const valorReforco = parseBRNumber(document.getElementById('valorReforco')?.value || '0');
-    const numParcelasReforco = parseInt(document.getElementById('numParcelasReforco')?.value || 1);
-    
-    if (numParcelasReforco > 0 && valorReforco > 0) {
-        const valorPorParcelaReforco = valorReforco / numParcelasReforco;
-        if (document.getElementById('valorPorParcelaReforco')) {
-            document.getElementById('valorPorParcelaReforco').value = formatBRNumber(valorPorParcelaReforco);
-        }
-    }
+function formatBRNumber(value) {
+    return new Intl.NumberFormat('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(value);
 }
 
-// Tabela de Vendas calculations
+function parseBRNumber(value) {
+    if (typeof value === 'string') {
+        // Remove todos os pontos (separadores de milhares) e substitui vírgula por ponto
+        const cleanValue = value.replace(/\./g, '').replace(',', '.');
+        const result = parseFloat(cleanValue) || 0;
+        return result;
+    }
+    const result = parseFloat(value) || 0;
+    return result;
+}
+
+function formatInputValue(input) {
+    const currentValue = input.value;
+    if (currentValue && currentValue.trim() !== '') {
+        const numValue = parseBRNumber(currentValue);
+        if (numValue > 0) {
+            input.value = formatNumber(numValue);
+        }
+        return numValue;
+    }
+    return 0;
+}
+
+// ==================== TABELA DE VENDAS ====================
+
+// Função principal de cálculos da tabela de vendas
+function calculateTabelaVendas() {
+    if (isUpdatingFromPercent || isUpdatingFromValue) return;
+    
+    // Obter valor do imóvel
+    const valorImovel = parseBRNumber(document.getElementById('valorImovelInput')?.value || '0');
+    
+    // Calcular valores baseados em percentuais
+    updateValoresFromPercentuais(valorImovel);
+    
+    // Atualizar valor por parcela
+    calculateVendaValorPorParcela();
+    
+    // Atualizar resumo
+    updateResumoCards();
+}
+
+function updateValoresFromPercentuais(valorImovel) {
+    if (valorImovel <= 0) return;
+    
+    isUpdatingFromPercent = true;
+    
+    // Entrada
+    const entradaPercent = parseFloat(document.getElementById('vendaEntradaPercent')?.value || 0);
+    const entradaValor = (valorImovel * entradaPercent) / 100;
+    const entradaValorEl = document.getElementById('vendaEntradaValor');
+    if (entradaValorEl) {
+        entradaValorEl.value = formatBRNumber(entradaValor);
+    }
+    
+    // Parcelas
+    const parcelasPercent = parseFloat(document.getElementById('vendaParcelasPercent')?.value || 0);
+    const parcelasValor = (valorImovel * parcelasPercent) / 100;
+    const parcelasValorEl = document.getElementById('vendaParcelasValor');
+    if (parcelasValorEl) {
+        parcelasValorEl.value = formatBRNumber(parcelasValor);
+    }
+    
+    // Reforço
+    const reforcoPercent = parseFloat(document.getElementById('vendaReforcoPercent')?.value || 0);
+    const reforcoValor = (valorImovel * reforcoPercent) / 100;
+    const reforcoValorEl = document.getElementById('vendaReforcoValor');
+    if (reforcoValorEl) {
+        reforcoValorEl.value = formatBRNumber(reforcoValor);
+    }
+    
+    // Nas Chaves (novo campo separado)
+    const nasChavesPercent = parseFloat(document.getElementById('vendaNasChavesPercent')?.value || 0);
+    const nasChavesValor = (valorImovel * nasChavesPercent) / 100;
+    const nasChavesValorEl = document.getElementById('vendaNasChavesValor');
+    if (nasChavesValorEl) {
+        nasChavesValorEl.value = formatBRNumber(nasChavesValor);
+    }
+    
+    isUpdatingFromPercent = false;
+}
+
+function updatePercentuaisFromValores() {
+    const valorImovel = parseBRNumber(document.getElementById('valorImovelInput')?.value || '0');
+    if (valorImovel <= 0) return;
+    
+    isUpdatingFromValue = true;
+    
+    // Entrada
+    const entradaValor = parseBRNumber(document.getElementById('vendaEntradaValor')?.value || '0');
+    const entradaPercent = (entradaValor / valorImovel) * 100;
+    const entradaPercentEl = document.getElementById('vendaEntradaPercent');
+    if (entradaPercentEl) {
+        entradaPercentEl.value = entradaPercent.toFixed(2);
+    }
+    
+    // Parcelas
+    const parcelasValor = parseBRNumber(document.getElementById('vendaParcelasValor')?.value || '0');
+    const parcelasPercent = (parcelasValor / valorImovel) * 100;
+    const parcelasPercentEl = document.getElementById('vendaParcelasPercent');
+    if (parcelasPercentEl) {
+        parcelasPercentEl.value = parcelasPercent.toFixed(2);
+    }
+    
+    // Reforço
+    const reforcoValor = parseBRNumber(document.getElementById('vendaReforcoValor')?.value || '0');
+    const reforcoPercent = (reforcoValor / valorImovel) * 100;
+    const reforcoPercentEl = document.getElementById('vendaReforcoPercent');
+    if (reforcoPercentEl) {
+        reforcoPercentEl.value = reforcoPercent.toFixed(2);
+    }
+    
+    // Nas Chaves
+    const nasChavesValor = parseBRNumber(document.getElementById('vendaNasChavesValor')?.value || '0');
+    const nasChavesPercent = (nasChavesValor / valorImovel) * 100;
+    const nasChavesPercentEl = document.getElementById('vendaNasChavesPercent');
+    if (nasChavesPercentEl) {
+        nasChavesPercentEl.value = nasChavesPercent.toFixed(2);
+    }
+    
+    isUpdatingFromValue = false;
+}
+
 function calculateVendaValorPorParcela() {
     // Entrada: Valor / Número de parcelas
     const entradaValor = parseBRNumber(document.getElementById('vendaEntradaValor')?.value || '0');
@@ -131,77 +226,6 @@ function calculateVendaValorPorParcela() {
             document.getElementById('vendaReforcoValorParcela').value = formatBRNumber(valorPorParcela);
         }
     }
-    
-    // Atualizar cards do resumo
-    updateResumoCards();
-}
-
-function calculateValorImovel() {
-    // Valor do Imóvel = Entrada + Parcelas + Reforços + Nas Chaves
-    const entradaValor = parseBRNumber(document.getElementById('vendaEntradaValor')?.value || '0');
-    const parcelasValor = parseBRNumber(document.getElementById('vendaParcelasValor')?.value || '0');
-    const reforcoValor = parseBRNumber(document.getElementById('vendaReforcoValor')?.value || '0');
-    const bemMovelValor = parseBRNumber(document.getElementById('vendaBemMovelImovel')?.value || '0');
-    
-    const valorTotal = entradaValor + parcelasValor + reforcoValor + bemMovelValor;
-    
-    // Atualizar valor total do imóvel
-    const valorImovelEl = document.getElementById('valorImovelCalculado');
-    if (valorImovelEl) {
-        valorImovelEl.textContent = formatCurrency(valorTotal);
-    }
-    
-    // Calcular percentuais: Valor da linha ÷ Valor Total do Imóvel
-    if (valorTotal > 0) {
-        // % Entrada = Valor da Entrada ÷ Valor Total do Imóvel
-        const percEntrada = (entradaValor / valorTotal * 100).toFixed(2);
-        const percEntradaEl = document.getElementById('vendaEntradaPercent');
-        if (percEntradaEl) {
-            percEntradaEl.value = percEntrada + '%';
-        }
-        
-        // % Parcelas = Valor das Parcelas ÷ Valor Total do Imóvel
-        const percParcelas = (parcelasValor / valorTotal * 100).toFixed(2);
-        const percParcelasEl = document.getElementById('vendaParcelasPercent');
-        if (percParcelasEl) {
-            percParcelasEl.value = percParcelas + '%';
-        }
-        
-        // % Reforço = Valor do Reforço ÷ Valor Total do Imóvel
-        const percReforco = (reforcoValor / valorTotal * 100).toFixed(2);
-        const percReforcoEl = document.getElementById('vendaReforcoPercent');
-        if (percReforcoEl) {
-            percReforcoEl.value = percReforco + '%';
-        }
-        
-        // % Nas Chaves = Valor Nas Chaves ÷ Valor Total do Imóvel
-        const percBemMovel = (bemMovelValor / valorTotal * 100).toFixed(2);
-        const percBemMovelEl = document.getElementById('vendaBemMovelImovelPercent');
-        if (percBemMovelEl) {
-            percBemMovelEl.value = percBemMovel + '%';
-        }
-    } else {
-        // Se valor total for 0, zerar os percentuais
-        const percEntradaEl = document.getElementById('vendaEntradaPercent');
-        if (percEntradaEl) {
-            percEntradaEl.value = '0,00%';
-        }
-        const percParcelasEl = document.getElementById('vendaParcelasPercent');
-        if (percParcelasEl) {
-            percParcelasEl.value = '0,00%';
-        }
-        const percReforcoEl = document.getElementById('vendaReforcoPercent');
-        if (percReforcoEl) {
-            percReforcoEl.value = '0,00%';
-        }
-        const percBemMovelEl = document.getElementById('vendaBemMovelImovelPercent');
-        if (percBemMovelEl) {
-            percBemMovelEl.value = '0,00%';
-        }
-    }
-    
-    // Atualizar cards do resumo
-    updateResumoCards();
 }
 
 function updateResumoCards() {
@@ -211,144 +235,143 @@ function updateResumoCards() {
     const reforcoQtd = parseInt(document.getElementById('vendaReforcoQtd')?.value || 0);
     
     // Obter percentuais dos campos
-    const percEntrada = document.getElementById('vendaEntradaPercent')?.value || '0%';
-    const percParcelas = document.getElementById('vendaParcelasPercent')?.value || '0%';
-    const percReforco = document.getElementById('vendaReforcoPercent')?.value || '0%';
-    const percBemMovel = document.getElementById('vendaBemMovelImovelPercent')?.value || '0%';
+    const percEntrada = parseFloat(document.getElementById('vendaEntradaPercent')?.value || 0);
+    const percParcelas = parseFloat(document.getElementById('vendaParcelasPercent')?.value || 0);
+    const percReforco = parseFloat(document.getElementById('vendaReforcoPercent')?.value || 0);
+    const percNasChaves = parseFloat(document.getElementById('vendaNasChavesPercent')?.value || 0);
     
     // Atualizar cards do resumo
     const resumoEntradaEl = document.getElementById('resumoEntrada');
     if (resumoEntradaEl) {
-        resumoEntradaEl.textContent = `${percEntrada} - ${entradaParcelas}x`;
+        resumoEntradaEl.textContent = `${percEntrada.toFixed(1)}% - ${entradaParcelas}x`;
     }
     
     const resumoParcelasEl = document.getElementById('resumoParcelas');
     if (resumoParcelasEl) {
-        resumoParcelasEl.textContent = `${percParcelas} - ${parcelasQtd}x`;
+        resumoParcelasEl.textContent = `${percParcelas.toFixed(1)}% - ${parcelasQtd}x`;
     }
     
     const resumoReforcoEl = document.getElementById('resumoReforco');
     if (resumoReforcoEl) {
-        resumoReforcoEl.textContent = `${percReforco} - ${reforcoQtd}x`;
+        resumoReforcoEl.textContent = `${percReforco.toFixed(1)}% - ${reforcoQtd}x`;
     }
     
-    const resumoBemMovelEl = document.getElementById('resumoBemMovel');
-    if (resumoBemMovelEl) {
-        resumoBemMovelEl.textContent = `${percBemMovel} - N/A`;
+    const resumoNasChavesEl = document.getElementById('resumoNasChaves');
+    if (resumoNasChavesEl) {
+        resumoNasChavesEl.textContent = `${percNasChaves.toFixed(1)}%`;
     }
 }
 
-function formatCurrency(value) {
-    return new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-    }).format(value);
-}
+// ============== PROPOSTA CLIENTE CALCULATIONS ==============
 
-function formatNumber(value) {
-    return new Intl.NumberFormat('pt-BR').format(value);
-}
-
-function formatBRNumber(value) {
-    return new Intl.NumberFormat('pt-BR', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    }).format(value);
-}
-
-function parseBRNumber(value) {
-    if (typeof value === 'string') {
-        // Remove todos os pontos (separadores de milhares) e substitui vírgula por ponto
-        const cleanValue = value.replace(/\./g, '').replace(',', '.');
-        const result = parseFloat(cleanValue) || 0;
-        return result;
+function calculatePropostaCliente() {
+    // Calcular totais da proposta do cliente
+    const entradaValor = parseBRNumber(document.getElementById('propostaEntradaValor')?.value || '0');
+    const parcelasValor = parseBRNumber(document.getElementById('propostaParcelasValor')?.value || '0');
+    const reforcoValor = parseBRNumber(document.getElementById('propostaReforcoValor')?.value || '0');
+    const bemMovelImovel = parseBRNumber(document.getElementById('bemMovelImovel')?.value || '0');
+    
+    const total = entradaValor + parcelasValor + reforcoValor + bemMovelImovel;
+    
+    // Atualizar campo de total calculado automaticamente
+    const valorPropostaCalculadoEl = document.getElementById('valorPropostaCalculado');
+    if (valorPropostaCalculadoEl) {
+        valorPropostaCalculadoEl.textContent = formatBRNumber(total);
     }
-    const result = parseFloat(value) || 0;
-    return result;
-}
-
-// FUNÇÃO DE TESTE PARA DEBUG
-window.testParseBRNumber = function() {
-    const testValues = ['100000', '100.000', '100.000,00', 'R$ 100.000,00', '500000'];
-    testValues.forEach(val => {
-        const result = parseBRNumber(val);
-        console.log(`🧪 Testando: "${val}" → Resultado: ${result}`);
-        console.log('---');
-    });
-};
-
-function formatInputValue(input) {
-    const currentValue = input.value;
-    if (currentValue && currentValue.trim() !== '') {
-        const numValue = parseBRNumber(currentValue);
-        if (numValue > 0) {
-            input.value = formatNumber(numValue);
+    
+    // Atualizar campo de total se existir
+    const totalEl = document.getElementById('propostaTotal');
+    if (totalEl) {
+        totalEl.value = formatBRNumber(total);
+    }
+    
+    // Calcular percentuais automaticamente baseado no total
+    if (total > 0) {
+        // Calcular e atualizar percentual da entrada
+        const entradaPercent = (entradaValor / total) * 100;
+        const entradaPercentEl = document.getElementById('propostaEntradaPercent');
+        if (entradaPercentEl) {
+            entradaPercentEl.value = entradaPercent.toFixed(2) + '%';
         }
-        return numValue;
+        
+        // Calcular e atualizar percentual das parcelas
+        const parcelasPercent = (parcelasValor / total) * 100;
+        const parcelasPercentEl = document.getElementById('propostaParcelasPercent');
+        if (parcelasPercentEl) {
+            parcelasPercentEl.value = parcelasPercent.toFixed(2) + '%';
+        }
+        
+        // Calcular e atualizar percentual do reforço
+        const reforcoPercent = (reforcoValor / total) * 100;
+        const reforcoPercentEl = document.getElementById('propostaReforcoPercent');
+        if (reforcoPercentEl) {
+            reforcoPercentEl.value = reforcoPercent.toFixed(2) + '%';
+        }
+        
+        // Calcular e atualizar percentual do bem móvel/imóvel
+        const bemMovelPercent = (bemMovelImovel / total) * 100;
+        const bemMovelPercentEl = document.getElementById('bemMovelImovelPercent');
+        if (bemMovelPercentEl) {
+            bemMovelPercentEl.value = bemMovelPercent.toFixed(2) + '%';
+        }
+    } else {
+        // Se total for zero, limpar percentuais
+        const percentElements = [
+            'propostaEntradaPercent',
+            'propostaParcelasPercent', 
+            'propostaReforcoPercent',
+            'bemMovelImovelPercent'
+        ];
+        
+        percentElements.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.value = '0,00%';
+            }
+        });
     }
-    return 0;
+    
+    // Calcular valores por parcela após calcular totais
+    calculatePropostaValorPorParcela();
 }
 
-function calculateParcelas() {
-    calculateTMAMes();
+function calculatePropostaValorPorParcela() {
+    // Entrada: Valor / Número de parcelas
+    const entradaValor = parseBRNumber(document.getElementById('propostaEntradaValor')?.value || '0');
+    const entradaParcelas = parseInt(document.getElementById('propostaEntradaParcelas')?.value || 1);
     
-    // Parse values
-    const valorImovel = parseBRNumber(document.getElementById('valorImovel')?.value || 0);
-    const entradaValor = parseBRNumber(document.getElementById('entradaValor')?.value || 0);
-    const entradaQtd = parseFloat(document.getElementById('entradaParcelas')?.value || 1);
-    const parcelasValor = parseBRNumber(document.getElementById('parcelasValor')?.value || 0);
-    const parcelasQtd = parseFloat(document.getElementById('parcelasQtd')?.value || 1);
-    const reforcoValor = parseBRNumber(document.getElementById('reforcoValor')?.value || 0);
-    const reforcoQtd = parseFloat(document.getElementById('reforcoQtd')?.value || 1);
-    
-    // Calculate per-installment values
-    if (document.getElementById('entradaValorParcela')) {
-        document.getElementById('entradaValorParcela').value = formatNumber(entradaValor / entradaQtd);
+    if (entradaParcelas > 0 && entradaValor > 0) {
+        const valorPorParcela = entradaValor / entradaParcelas;
+        if (document.getElementById('propostaEntradaValorParcela')) {
+            document.getElementById('propostaEntradaValorParcela').value = formatBRNumber(valorPorParcela);
+        }
     }
     
-    if (document.getElementById('parcelasValorParcela')) {
-        document.getElementById('parcelasValorParcela').value = formatNumber(parcelasValor / parcelasQtd);
+    // Parcelas: Valor / Número de parcelas
+    const parcelasValor = parseBRNumber(document.getElementById('propostaParcelasValor')?.value || '0');
+    const parcelasQtd = parseInt(document.getElementById('propostaParcelasQtd')?.value || 1);
+    
+    if (parcelasQtd > 0 && parcelasValor > 0) {
+        const valorPorParcela = parcelasValor / parcelasQtd;
+        if (document.getElementById('propostaParcelasValorParcela')) {
+            document.getElementById('propostaParcelasValorParcela').value = formatBRNumber(valorPorParcela);
+        }
     }
     
-    if (document.getElementById('reforcoValorParcela')) {
-        document.getElementById('reforcoValorParcela').value = formatNumber(reforcoValor / reforcoQtd);
-    }
-
-    // Update formatted displays
-    updateCurrencyDisplays();
-    updateResumo();
-}
-
-function updateCurrencyDisplays() {
-    const valorImovel = parseBRNumber(document.getElementById('valorImovel')?.value || 0);
+    // Reforço: Valor / Número de parcelas
+    const reforcoValor = parseBRNumber(document.getElementById('propostaReforcoValor')?.value || '0');
+    const reforcoQtd = parseInt(document.getElementById('propostaReforcoQtd')?.value || 1);
     
-    if (document.getElementById('valorImovelFormatado')) {
-        document.getElementById('valorImovelFormatado').textContent = formatCurrency(valorImovel);
+    if (reforcoQtd > 0 && reforcoValor > 0) {
+        const valorPorParcela = reforcoValor / reforcoQtd;
+        if (document.getElementById('propostaReforcoValorParcela')) {
+            document.getElementById('propostaReforcoValorParcela').value = formatBRNumber(valorPorParcela);
+        }
     }
 }
 
-function updateResumo() {
-    const entradaPercent = parseFloat(document.getElementById('entradaPercent')?.value || 0);
-    const entradaQtd = parseFloat(document.getElementById('entradaParcelas')?.value || 1);
-    const parcelasPercent = parseFloat(document.getElementById('parcelasPercent')?.value || 0);
-    const parcelasQtd = parseFloat(document.getElementById('parcelasQtd')?.value || 1);
-    const reforcoPercent = parseFloat(document.getElementById('reforcoPercent')?.value || 0);
-    const reforcoQtd = parseFloat(document.getElementById('reforcoQtd')?.value || 1);
+// ============== EVENT LISTENERS ==============
 
-    if (document.getElementById('resumoEntrada')) {
-        document.getElementById('resumoEntrada').textContent = `${entradaPercent}% - ${entradaQtd}x`;
-    }
-    
-    if (document.getElementById('resumoParcelas')) {
-        document.getElementById('resumoParcelas').textContent = `${parcelasPercent}% - ${parcelasQtd}x`;
-    }
-    
-    if (document.getElementById('resumoReforco')) {
-        document.getElementById('resumoReforco').textContent = `${reforcoPercent}% - ${reforcoQtd}x`;
-    }
-}
-
-// Add event listeners for automatic calculations
 document.addEventListener('DOMContentLoaded', function() {
     // TMA Ano listener
     const tmaAnoInput = document.getElementById('tmaAno');
@@ -357,1594 +380,305 @@ document.addEventListener('DOMContentLoaded', function() {
         tmaAnoInput.addEventListener('change', calculateTMAMes);
     }
 
-    // Currency input formatting
-    const currencyInputs = ['valorImovel', 'entradaValor', 'parcelasValor', 'reforcoValor'];
-    currencyInputs.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.addEventListener('blur', function() {
-                formatInputValue(this, this.value);
-                calculateParcelas();
-            });
-            element.addEventListener('input', calculateParcelas);
-        }
-    });
-
-    // Regular calculation inputs
-    const calcInputs = [
-        'entradaParcelas', 'entradaPercent',
-        'parcelasQtd', 'parcelasPercent',
-        'reforcoQtd', 'reforcoPercent'
-    ];
-
-    calcInputs.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.addEventListener('input', calculateParcelas);
-            element.addEventListener('change', calculateParcelas);
-        }
-    });
-
-    // Calculate initial values
-    calculateParcelas();
-});
-
-// Save scenario function
-function saveScenario() {
-    // Validar nome do cenário
-    const scenarioName = document.getElementById('scenarioName')?.value?.trim();
-    if (!scenarioName) {
-        alert('Por favor, digite um nome para o cenário.');
-        document.getElementById('scenarioName')?.focus();
-        return;
+    // ============== TABELA DE VENDAS EVENT LISTENERS ==============
+    
+    // Valor do Imóvel
+    const valorImovelInput = document.getElementById('valorImovelInput');
+    if (valorImovelInput) {
+        valorImovelInput.addEventListener('blur', function() {
+            formatInputValue(this);
+            calculateTabelaVendas();
+        });
+        valorImovelInput.addEventListener('input', function() {
+            calculateTabelaVendas();
+        });
     }
     
-    // Verificar se está editando um cenário existente
-    const editingScenarioId = sessionStorage.getItem('editingScenarioId');
-    
-    // Coletar dados gerais
-    const dadosGerais = {
-        cliente: document.getElementById('cliente')?.value || '',
-        imobiliaria: document.getElementById('imobiliaria')?.value || '',
-        incorporadora: document.getElementById('incorporadora')?.value || '',
-        empreendimento: document.getElementById('empreendimento')?.value || '',
-        unidade: document.getElementById('unidade')?.value || '',
-        areaPrivativa: document.getElementById('areaPrivativa')?.value || '',
-        tmaAno: document.getElementById('tmaAno')?.value || '',
-        tmaMes: document.getElementById('tmaMes')?.value || ''
-    };
-    
-    // Coletar tabela de vendas
-    const tabelaVendas = {
-        vendaEntradaValor: document.getElementById('vendaEntradaValor')?.value || '',
-        vendaEntradaParcelas: document.getElementById('vendaEntradaParcelas')?.value || '',
-        vendaParcelasValor: document.getElementById('vendaParcelasValor')?.value || '',
-        vendaParcelasQtd: document.getElementById('vendaParcelasQtd')?.value || '',
-        vendaReforcoValor: document.getElementById('vendaReforcoValor')?.value || '',
-        vendaReforcoQtd: document.getElementById('vendaReforcoQtd')?.value || '',
-        vendaBemMovelImovel: document.getElementById('vendaBemMovelImovel')?.value || '',
-        vendaDesagio: document.getElementById('vendaDesagio')?.value || ''
-    };
-    
-    // Coletar proposta cliente
-    const propostaCliente = {
-        mesVenda: document.getElementById('mesVenda')?.value || '',
-        propostaEntradaValor: document.getElementById('propostaEntradaValor')?.value || '',
-        propostaEntradaParcelas: document.getElementById('propostaEntradaParcelas')?.value || '',
-        propostaParcelasValor: document.getElementById('propostaParcelasValor')?.value || '',
-        propostaParcelasQtd: document.getElementById('propostaParcelasQtd')?.value || '',
-        propostaReforcoValor: document.getElementById('propostaReforcoValor')?.value || '',
-        propostaReforcoQtd: document.getElementById('propostaReforcoQtd')?.value || ''
-    };
-    
-    // Carregar cenários existentes
-    const scenarios = JSON.parse(localStorage.getItem('scenarios') || '[]');
-    
-    if (editingScenarioId) {
-        // Atualizar cenário existente
-        const scenarioIndex = scenarios.findIndex(s => s.id === editingScenarioId);
-        if (scenarioIndex !== -1) {
-            scenarios[scenarioIndex] = {
-                ...scenarios[scenarioIndex],
-                name: scenarioName,
-                updatedAt: new Date().toISOString(),
-                data: {
-                    dadosGerais,
-                    tabelaVendas,
-                    propostaCliente
-                }
-            };
-        }
-        // Limpar flag de edição
-        sessionStorage.removeItem('editingScenarioId');
-    } else {
-        // Criar novo cenário
-        const scenario = {
-            id: Date.now().toString(),
-            name: scenarioName,
-            createdAt: new Date().toISOString(),
-            data: {
-                dadosGerais,
-                tabelaVendas,
-                propostaCliente
-            }
-        };
-        scenarios.push(scenario);
-    }
-    
-    // Salvar no localStorage
-    localStorage.setItem('scenarios', JSON.stringify(scenarios));
-    
-    // Também salvar os dados para que os resultados possam ser calculados imediatamente
-    localStorage.setItem('dadosGerais', JSON.stringify(dadosGerais));
-    localStorage.setItem('tabelaVendas', JSON.stringify(tabelaVendas));
-    localStorage.setItem('propostaCliente', JSON.stringify(propostaCliente));
-    
-    // Feedback para o usuário
-    const goToResults = confirm('Cenário salvo com sucesso! Deseja visualizar os resultados agora?');
-    
-    if (goToResults) {
-        // Redirecionar para resultados
-        window.location.href = 'resultados.html';
-    } else {
-        // Redirecionar para cenários
-        window.location.href = 'cenarios.html';
-    }
-}
-
-// Save and analyze function
-function saveAndAnalyze() {
-    // Collect all form data
-    const scenarioData = {
-        name: document.getElementById('scenarioName').value,
-        // Dados Gerais
-        cliente: document.getElementById('cliente')?.value || '',
-        imobiliaria: document.getElementById('imobiliaria')?.value || '',
-        incorporadora: document.getElementById('incorporadora')?.value || '',
-        empreendimento: document.getElementById('empreendimento')?.value || '',
-        unidade: document.getElementById('unidade')?.value || '',
-        areaPrivativa: document.getElementById('areaPrivativa')?.value || '',
-        tmaAno: document.getElementById('tmaAno')?.value || '',
-        tmaMes: document.getElementById('tmaMes')?.value || '',
-        // Tabela de Vendas
-        valorImovel: document.getElementById('valorImovel')?.value || '',
-        // Entrada
-        entradaValor: document.getElementById('entradaValor')?.value || '',
-        entradaPercent: document.getElementById('entradaPercent')?.value || '',
-        entradaParcelas: document.getElementById('entradaParcelas')?.value || '',
-        // Parcelas
-        parcelasValor: document.getElementById('parcelasValor')?.value || '',
-        parcelasPercent: document.getElementById('parcelasPercent')?.value || '',
-        parcelasQtd: document.getElementById('parcelasQtd')?.value || '',
-        // Reforço
-        reforcoValor: document.getElementById('reforcoValor')?.value || '',
-        reforcoPercent: document.getElementById('reforcoPercent')?.value || '',
-        reforcoQtd: document.getElementById('reforcoQtd')?.value || '',
-        // Proposta Cliente
-        propostaValor: document.getElementById('propostaValor')?.value || '',
-        timestamp: new Date().toISOString()
-    };
-
-    // Save to localStorage
-    const scenarios = JSON.parse(localStorage.getItem('modelai_scenarios') || '[]');
-    scenarios.push(scenarioData);
-    localStorage.setItem('modelai_scenarios', JSON.stringify(scenarios));
-
-    // Show success message
-    alert('Cenário salvo com sucesso! Redirecionando para os resultados...');
-    
-    // Redirect to results
-    window.location.href = 'resultados.html';
-}
-
-// Load saved data if editing
-function loadSavedData() {
-    const editingScenarioId = sessionStorage.getItem('editingScenarioId');
-    
-    if (editingScenarioId) {
-        // Carregar dados gerais
-        const dadosGerais = JSON.parse(localStorage.getItem('dadosGerais') || '{}');
-        const tabelaVendas = JSON.parse(localStorage.getItem('tabelaVendas') || '{}');
-        const propostaCliente = JSON.parse(localStorage.getItem('propostaCliente') || '{}');
-        
-        // Preencher formulário com dados gerais
-        if (dadosGerais.cliente) document.getElementById('cliente').value = dadosGerais.cliente;
-        if (dadosGerais.imobiliaria) document.getElementById('imobiliaria').value = dadosGerais.imobiliaria;
-        if (dadosGerais.incorporadora) document.getElementById('incorporadora').value = dadosGerais.incorporadora;
-        if (dadosGerais.empreendimento) document.getElementById('empreendimento').value = dadosGerais.empreendimento;
-        if (dadosGerais.unidade) document.getElementById('unidade').value = dadosGerais.unidade;
-        if (dadosGerais.areaPrivativa) document.getElementById('areaPrivativa').value = dadosGerais.areaPrivativa;
-        if (dadosGerais.tmaAno) document.getElementById('tmaAno').value = dadosGerais.tmaAno;
-        
-        // Preencher tabela de vendas
-        if (tabelaVendas.vendaEntradaValor) document.getElementById('vendaEntradaValor').value = tabelaVendas.vendaEntradaValor;
-        if (tabelaVendas.vendaEntradaParcelas) document.getElementById('vendaEntradaParcelas').value = tabelaVendas.vendaEntradaParcelas;
-        if (tabelaVendas.vendaParcelasValor) document.getElementById('vendaParcelasValor').value = tabelaVendas.vendaParcelasValor;
-        if (tabelaVendas.vendaParcelasQtd) document.getElementById('vendaParcelasQtd').value = tabelaVendas.vendaParcelasQtd;
-        if (tabelaVendas.vendaReforcoValor) document.getElementById('vendaReforcoValor').value = tabelaVendas.vendaReforcoValor;
-        if (tabelaVendas.vendaReforcoQtd) document.getElementById('vendaReforcoQtd').value = tabelaVendas.vendaReforcoQtd;
-        if (tabelaVendas.vendaBemMovelImovel) document.getElementById('vendaBemMovelImovel').value = tabelaVendas.vendaBemMovelImovel;
-        if (tabelaVendas.vendaDesagio) document.getElementById('vendaDesagio').value = tabelaVendas.vendaDesagio;
-        
-        // Preencher proposta cliente
-        if (propostaCliente.mesVenda) document.getElementById('mesVenda').value = propostaCliente.mesVenda;
-        if (propostaCliente.propostaEntradaValor) document.getElementById('propostaEntradaValor').value = propostaCliente.propostaEntradaValor;
-        if (propostaCliente.propostaEntradaParcelas) document.getElementById('propostaEntradaParcelas').value = propostaCliente.propostaEntradaParcelas;
-        if (propostaCliente.propostaParcelasValor) document.getElementById('propostaParcelasValor').value = propostaCliente.propostaParcelasValor;
-        if (propostaCliente.propostaParcelasQtd) document.getElementById('propostaParcelasQtd').value = propostaCliente.propostaParcelasQtd;
-        if (propostaCliente.propostaReforcoValor) document.getElementById('propostaReforcoValor').value = propostaCliente.propostaReforcoValor;
-        if (propostaCliente.propostaReforcoQtd) document.getElementById('propostaReforcoQtd').value = propostaCliente.propostaReforcoQtd;
-        
-        // Carregar nome do cenário apenas se estiver editando
-        const scenarios = JSON.parse(localStorage.getItem('scenarios') || '[]');
-        const scenario = scenarios.find(s => s.id === editingScenarioId);
-        if (scenario && document.getElementById('scenarioName')) {
-            document.getElementById('scenarioName').value = scenario.name;
-        }
-        
-        // NÃO limpar a flag aqui - será limpa ao salvar
-    } else {
-        // Se não está editando, garantir que todos os campos estejam limpos
-        clearAllFields();
-    }
-}
-
-// Função para limpar todos os campos quando não está editando
-function clearAllFields() {
-    // Limpar dados gerais
-    const generalFields = ['cliente', 'imobiliaria', 'incorporadora', 'empreendimento', 'unidade', 'areaPrivativa', 'tmaAno', 'tmaMes'];
-    generalFields.forEach(fieldId => {
-        const field = document.getElementById(fieldId);
-        if (field) field.value = '';
-    });
-    
-    // Limpar tabela de vendas
-    const vendaFields = ['vendaEntradaValor', 'vendaEntradaParcelas', 'vendaParcelasValor', 'vendaParcelasQtd', 
-                        'vendaReforcoValor', 'vendaReforcoQtd', 'vendaBemMovelImovel', 'vendaDesagio'];
-    vendaFields.forEach(fieldId => {
-        const field = document.getElementById(fieldId);
-        if (field) field.value = '';
-    });
-    
-    // Limpar proposta cliente
-    const propostaFields = ['mesVenda', 'propostaEntradaValor', 'propostaEntradaParcelas', 'propostaParcelasValor', 
-                           'propostaParcelasQtd', 'propostaReforcoValor', 'propostaReforcoQtd'];
-    propostaFields.forEach(fieldId => {
-        const field = document.getElementById(fieldId);
-        if (field) field.value = '';
-    });
-    
-    // Limpar nome do cenário
-    const scenarioNameField = document.getElementById('scenarioName');
-    if (scenarioNameField) scenarioNameField.value = '';
-    
-    // Limpar dados do localStorage que não devem estar quando não editando
-    localStorage.removeItem('dadosGerais');
-    localStorage.removeItem('tabelaVendas');
-    localStorage.removeItem('propostaCliente');
-    sessionStorage.removeItem('currentScenarioId');
-}
-// Initialize page
-document.addEventListener('DOMContentLoaded', function() {
-    loadSavedData();
-    
-    // Executar cálculos iniciais após um pequeno delay para garantir que DOM está pronto
-    setTimeout(() => {
-        calculateTMAMes();
-        calculateVendaValorPorParcela();
-        calculateValorImovel();
-        calculatePropostaEntradaValorPorParcela();
-        calculatePropostaParcelasValorPorParcela();
-        calculatePropostaReforcoValorPorParcela();
-        calculatePropostaTotal();
-        updateResumos();
-    }, 100);
-    
-    // Event listeners para TMA
-    const tmaAnoInput = document.getElementById('tmaAno');
-    if (tmaAnoInput) {
-        tmaAnoInput.addEventListener('input', calculateTMAMes);
-        tmaAnoInput.addEventListener('change', calculateTMAMes);
-    }
-    
-    // Tabela de Vendas event listeners
+    // Entrada - Valor
     const vendaEntradaValorEl = document.getElementById('vendaEntradaValor');
-    const vendaEntradaParcelasEl = document.getElementById('vendaEntradaParcelas');
-    const vendaParcelasValorEl = document.getElementById('vendaParcelasValor');
-    const vendaParcelasQtdEl = document.getElementById('vendaParcelasQtd');
-    const vendaReforcoValorEl = document.getElementById('vendaReforcoValor');
-    const vendaReforcoQtdEl = document.getElementById('vendaReforcoQtd');
-    
     if (vendaEntradaValorEl) {
         vendaEntradaValorEl.addEventListener('blur', function() {
             formatInputValue(this);
+            updatePercentuaisFromValores();
             calculateVendaValorPorParcela();
-            calculateValorImovel();
+            updateResumoCards();
         });
         vendaEntradaValorEl.addEventListener('input', function() {
-            calculateVendaValorPorParcela();
-            calculateValorImovel();
+            updatePercentuaisFromValores();
+            updateResumoCards();
         });
     }
     
+    // Entrada - Percentual
+    const vendaEntradaPercentEl = document.getElementById('vendaEntradaPercent');
+    if (vendaEntradaPercentEl) {
+        vendaEntradaPercentEl.addEventListener('input', function() {
+            const valorImovel = parseBRNumber(document.getElementById('valorImovelInput')?.value || '0');
+            updateValoresFromPercentuais(valorImovel);
+            calculateVendaValorPorParcela();
+            updateResumoCards();
+        });
+    }
+    
+    // Entrada - Parcelas
+    const vendaEntradaParcelasEl = document.getElementById('vendaEntradaParcelas');
     if (vendaEntradaParcelasEl) {
         vendaEntradaParcelasEl.addEventListener('input', function() {
             calculateVendaValorPorParcela();
+            updateResumoCards();
         });
     }
     
+    // Parcelas - Valor
+    const vendaParcelasValorEl = document.getElementById('vendaParcelasValor');
     if (vendaParcelasValorEl) {
         vendaParcelasValorEl.addEventListener('blur', function() {
             formatInputValue(this);
+            updatePercentuaisFromValores();
             calculateVendaValorPorParcela();
-            calculateValorImovel();
+            updateResumoCards();
         });
         vendaParcelasValorEl.addEventListener('input', function() {
-            calculateVendaValorPorParcela();
-            calculateValorImovel();
+            updatePercentuaisFromValores();
+            updateResumoCards();
         });
     }
     
+    // Parcelas - Percentual
+    const vendaParcelasPercentEl = document.getElementById('vendaParcelasPercent');
+    if (vendaParcelasPercentEl) {
+        vendaParcelasPercentEl.addEventListener('input', function() {
+            const valorImovel = parseBRNumber(document.getElementById('valorImovelInput')?.value || '0');
+            updateValoresFromPercentuais(valorImovel);
+            calculateVendaValorPorParcela();
+            updateResumoCards();
+        });
+    }
+    
+    // Parcelas - Quantidade
+    const vendaParcelasQtdEl = document.getElementById('vendaParcelasQtd');
     if (vendaParcelasQtdEl) {
         vendaParcelasQtdEl.addEventListener('input', function() {
             calculateVendaValorPorParcela();
+            updateResumoCards();
         });
     }
     
+    // Reforço - Valor
+    const vendaReforcoValorEl = document.getElementById('vendaReforcoValor');
     if (vendaReforcoValorEl) {
         vendaReforcoValorEl.addEventListener('blur', function() {
             formatInputValue(this);
+            updatePercentuaisFromValores();
             calculateVendaValorPorParcela();
-            calculateValorImovel();
+            updateResumoCards();
         });
         vendaReforcoValorEl.addEventListener('input', function() {
-            calculateVendaValorPorParcela();
-            calculateValorImovel();
+            updatePercentuaisFromValores();
+            updateResumoCards();
         });
     }
     
+    // Reforço - Percentual
+    const vendaReforcoPercentEl = document.getElementById('vendaReforcoPercent');
+    if (vendaReforcoPercentEl) {
+        vendaReforcoPercentEl.addEventListener('input', function() {
+            const valorImovel = parseBRNumber(document.getElementById('valorImovelInput')?.value || '0');
+            updateValoresFromPercentuais(valorImovel);
+            calculateVendaValorPorParcela();
+            updateResumoCards();
+        });
+    }
+    
+    // Reforço - Quantidade
+    const vendaReforcoQtdEl = document.getElementById('vendaReforcoQtd');
     if (vendaReforcoQtdEl) {
         vendaReforcoQtdEl.addEventListener('input', function() {
             calculateVendaValorPorParcela();
+            updateResumoCards();
         });
     }
     
-    // Nas Chaves event listeners for Tabela de Vendas
-    const vendaBemMovelImovelEl = document.getElementById('vendaBemMovelImovel');
-    if (vendaBemMovelImovelEl) {
-        vendaBemMovelImovelEl.addEventListener('blur', function() {
+    // Nas Chaves - Valor
+    const vendaNasChavesValorEl = document.getElementById('vendaNasChavesValor');
+    if (vendaNasChavesValorEl) {
+        vendaNasChavesValorEl.addEventListener('blur', function() {
             formatInputValue(this);
-            calculateValorImovel();
+            updatePercentuaisFromValores();
+            updateResumoCards();
         });
-        vendaBemMovelImovelEl.addEventListener('input', function() {
-            calculateValorImovel();
+        vendaNasChavesValorEl.addEventListener('input', function() {
+            updatePercentuaisFromValores();
+            updateResumoCards();
         });
     }
     
-    // Function to calculate Proposta Cliente total value and percentages
-    function calculatePropostaTotal() {
-        const entradaValorEl = document.getElementById('propostaEntradaValor');
-        const parcelasValorEl = document.getElementById('propostaParcelasValor');
-        const reforcoValorEl = document.getElementById('propostaReforcoValor');
-        const bemMovelValorEl = document.getElementById('bemMovelImovel');
-        const totalEl = document.getElementById('valorPropostaCalculado');
-        
-        if (!entradaValorEl || !parcelasValorEl || !reforcoValorEl || !bemMovelValorEl || !totalEl) return;
-        
-        const entradaValor = parseBRNumber(entradaValorEl.value);
-        const parcelasValor = parseBRNumber(parcelasValorEl.value);
-        const reforcoValor = parseBRNumber(reforcoValorEl.value);
-        const bemMovelValor = parseBRNumber(bemMovelValorEl.value);
-        
-        const total = entradaValor + parcelasValor + reforcoValor + bemMovelValor;
-        totalEl.textContent = formatCurrency(total);
-        
-        // Calculate percentages
-        calculatePropostaPercentages(total);
+    // Nas Chaves - Percentual
+    const vendaNasChavesPercentEl = document.getElementById('vendaNasChavesPercent');
+    if (vendaNasChavesPercentEl) {
+        vendaNasChavesPercentEl.addEventListener('input', function() {
+            const valorImovel = parseBRNumber(document.getElementById('valorImovelInput')?.value || '0');
+            updateValoresFromPercentuais(valorImovel);
+            updateResumoCards();
+        });
     }
+
+    // ============== PROPOSTA CLIENTE EVENT LISTENERS ==============
     
-    // Function to calculate Proposta Cliente percentages
-    function calculatePropostaPercentages(total) {
-        const entradaValorEl = document.getElementById('propostaEntradaValor');
-        const parcelasValorEl = document.getElementById('propostaParcelasValor');
-        const reforcoValorEl = document.getElementById('propostaReforcoValor');
-        const bemMovelValorEl = document.getElementById('bemMovelImovel');
-        
-        const entradaPercentEl = document.getElementById('propostaEntradaPercent');
-        const parcelasPercentEl = document.getElementById('propostaParcelasPercent');
-        const reforcoPercentEl = document.getElementById('propostaReforcoPercent');
-        const bemMovelPercentEl = document.getElementById('bemMovelImovelPercent');
-        
-        if (!entradaValorEl || !parcelasValorEl || !reforcoValorEl || !bemMovelValorEl) return;
-        if (!entradaPercentEl || !parcelasPercentEl || !reforcoPercentEl || !bemMovelPercentEl) return;
-        
-        // Calculate total if not provided
-        if (!total) {
-            const entradaValor = parseBRNumber(entradaValorEl.value);
-            const parcelasValor = parseBRNumber(parcelasValorEl.value);
-            const reforcoValor = parseBRNumber(reforcoValorEl.value);
-            const bemMovelValor = parseBRNumber(bemMovelValorEl.value);
-            total = entradaValor + parcelasValor + reforcoValor + bemMovelValor;
-        }
-        
-        if (total > 0) {
-            const entradaValor = parseBRNumber(entradaValorEl.value);
-            const parcelasValor = parseBRNumber(parcelasValorEl.value);
-            const reforcoValor = parseBRNumber(reforcoValorEl.value);
-            const bemMovelValor = parseBRNumber(bemMovelValorEl.value);
-            
-            const entradaPercent = (entradaValor / total) * 100;
-            const parcelasPercent = (parcelasValor / total) * 100;
-            const reforcoPercent = (reforcoValor / total) * 100;
-            const bemMovelPercent = (bemMovelValor / total) * 100;
-            
-            entradaPercentEl.value = entradaPercent.toFixed(1) + '%';
-            parcelasPercentEl.value = parcelasPercent.toFixed(1) + '%';
-            reforcoPercentEl.value = reforcoPercent.toFixed(1) + '%';
-            bemMovelPercentEl.value = bemMovelPercent.toFixed(1) + '%';
-        } else {
-            entradaPercentEl.value = '0%';
-            parcelasPercentEl.value = '0%';
-            reforcoPercentEl.value = '0%';
-            bemMovelPercentEl.value = '0%';
-        }
-        
-        // Update the total display
-        const totalEl = document.getElementById('valorPropostaCalculado');
-        if (totalEl) {
-            totalEl.textContent = formatCurrency(total);
-        }
-    }
-    
-    // Function to calculate valor por parcela for entrada
-    function calculatePropostaEntradaValorPorParcela() {
-        const valorEl = document.getElementById('propostaEntradaValor');
-        const parcelasEl = document.getElementById('propostaEntradaParcelas');
-        const valorPorParcelaEl = document.getElementById('propostaEntradaValorParcela');
-        
-        if (!valorEl || !parcelasEl || !valorPorParcelaEl) return;
-        
-        const valor = parseBRNumber(valorEl.value);
-        const parcelas = parseInt(parcelasEl.value) || 1;
-        
-        if (valor > 0 && parcelas > 0) {
-            const valorPorParcela = valor / parcelas;
-            valorPorParcelaEl.value = formatBRNumber(valorPorParcela);
-        } else {
-            valorPorParcelaEl.value = formatBRNumber(0);
-        }
-    }
-    
-    // Function to calculate valor por parcela for parcelas
-    function calculatePropostaParcelasValorPorParcela() {
-        const valorEl = document.getElementById('propostaParcelasValor');
-        const parcelasEl = document.getElementById('propostaParcelasQtd');
-        const valorPorParcelaEl = document.getElementById('propostaParcelasValorParcela');
-        
-        if (!valorEl || !parcelasEl || !valorPorParcelaEl) return;
-        
-        const valor = parseBRNumber(valorEl.value);
-        const parcelas = parseInt(parcelasEl.value) || 1;
-        
-        if (valor > 0 && parcelas > 0) {
-            const valorPorParcela = valor / parcelas;
-            valorPorParcelaEl.value = formatBRNumber(valorPorParcela);
-        } else {
-            valorPorParcelaEl.value = formatBRNumber(0);
-        }
-    }
-    
-    // Function to calculate valor por parcela for reforco
-    function calculatePropostaReforcoValorPorParcela() {
-        const valorEl = document.getElementById('propostaReforcoValor');
-        const parcelasEl = document.getElementById('propostaReforcoQtd');
-        const valorPorParcelaEl = document.getElementById('propostaReforcoValorParcela');
-        
-        if (!valorEl || !parcelasEl || !valorPorParcelaEl) return;
-        
-        const valor = parseBRNumber(valorEl.value);
-        const parcelas = parseInt(parcelasEl.value) || 1;
-        
-        if (valor > 0 && parcelas > 0) {
-            const valorPorParcela = valor / parcelas;
-            valorPorParcelaEl.value = formatBRNumber(valorPorParcela);
-        } else {
-            valorPorParcelaEl.value = formatBRNumber(0);
-        }
-    }
-    
-    // Calculate initial values for Tabela de Vendas
-    calculateVendaValorPorParcela();
-    calculateValorImovel();
-    
-    // Proposta Cliente event listeners
+    // Entrada - Valor
     const propostaEntradaValorEl = document.getElementById('propostaEntradaValor');
-    const propostaEntradaParcelasEl = document.getElementById('propostaEntradaParcelas');
-    const propostaParcelasValorEl = document.getElementById('propostaParcelasValor');
-    const propostaParcelasQtdEl = document.getElementById('propostaParcelasQtd');
-    const propostaReforcoValorEl = document.getElementById('propostaReforcoValor');
-    const propostaReforcoQtdEl = document.getElementById('propostaReforcoQtd');
-    const bemMovelImovelEl = document.getElementById('bemMovelImovel');
-    
-    // Entrada event listeners
     if (propostaEntradaValorEl) {
         propostaEntradaValorEl.addEventListener('blur', function() {
             formatInputValue(this);
-            calculatePropostaTotal();
-            calculatePropostaEntradaValorPorParcela();
+            calculatePropostaCliente();
         });
         propostaEntradaValorEl.addEventListener('input', function() {
-            calculatePropostaTotal();
-            calculatePropostaEntradaValorPorParcela();
+            calculatePropostaCliente();
         });
     }
     
+    // Entrada - Parcelas
+    const propostaEntradaParcelasEl = document.getElementById('propostaEntradaParcelas');
     if (propostaEntradaParcelasEl) {
         propostaEntradaParcelasEl.addEventListener('input', function() {
-            calculatePropostaEntradaValorPorParcela();
+            calculatePropostaValorPorParcela();
         });
     }
     
-    // Parcelas event listeners
+    // Parcelas - Valor
+    const propostaParcelasValorEl = document.getElementById('propostaParcelasValor');
     if (propostaParcelasValorEl) {
         propostaParcelasValorEl.addEventListener('blur', function() {
             formatInputValue(this);
-            calculatePropostaTotal();
-            calculatePropostaParcelasValorPorParcela();
+            calculatePropostaCliente();
         });
         propostaParcelasValorEl.addEventListener('input', function() {
-            calculatePropostaTotal();
-            calculatePropostaParcelasValorPorParcela();
+            calculatePropostaCliente();
         });
     }
     
+    // Parcelas - Quantidade
+    const propostaParcelasQtdEl = document.getElementById('propostaParcelasQtd');
     if (propostaParcelasQtdEl) {
         propostaParcelasQtdEl.addEventListener('input', function() {
-            calculatePropostaParcelasValorPorParcela();
+            calculatePropostaValorPorParcela();
         });
     }
     
-    // Reforco event listeners
+    // Reforço - Valor
+    const propostaReforcoValorEl = document.getElementById('propostaReforcoValor');
     if (propostaReforcoValorEl) {
         propostaReforcoValorEl.addEventListener('blur', function() {
             formatInputValue(this);
-            calculatePropostaTotal();
-            calculatePropostaReforcoValorPorParcela();
+            calculatePropostaCliente();
         });
         propostaReforcoValorEl.addEventListener('input', function() {
-            calculatePropostaTotal();
-            calculatePropostaReforcoValorPorParcela();
+            calculatePropostaCliente();
         });
     }
     
+    // Reforço - Quantidade
+    const propostaReforcoQtdEl = document.getElementById('propostaReforcoQtd');
     if (propostaReforcoQtdEl) {
         propostaReforcoQtdEl.addEventListener('input', function() {
-            calculatePropostaReforcoValorPorParcela();
+            calculatePropostaValorPorParcela();
         });
     }
     
+    // Bem Móvel/Imóvel
+    const bemMovelImovelEl = document.getElementById('bemMovelImovel');
     if (bemMovelImovelEl) {
         bemMovelImovelEl.addEventListener('blur', function() {
             formatInputValue(this);
-            calculatePropostaTotal();
+            calculatePropostaCliente();
         });
         bemMovelImovelEl.addEventListener('input', function() {
-            calculatePropostaTotal();
+            calculatePropostaCliente();
         });
     }
     
-    // Calculate initial values for Proposta Cliente
-    calculatePropostaTotal();
-    calculatePropostaEntradaValorPorParcela();
-    calculatePropostaParcelasValorPorParcela();
-    calculatePropostaReforcoValorPorParcela();
+    // ============== CALCULATE INITIAL VALUES ==============
     
-    // Não carregar dados automaticamente - apenas quando explicitamente editando
+    // Primeiro, limpar dados antigos se não estiver editando
+    checkAndClearOldData();
+    
+    // Calculate initial values
+    setTimeout(() => {
+        calculateTMAMes();
+        calculateTabelaVendas();
+        calculatePropostaCliente();
+    }, 100);
+    
+    // Carregar dados salvos se estiver editando
+    loadSavedData();
 });
 
-// ==================== FUNÇÕES DE CENÁRIO ====================
+// ==================== ACTION BUTTON FUNCTIONALITY ====================
 
-// Função para atualizar cenário existente (modo edição)
-async function updateExistingScenario() {
-    console.log('🔄 Atualizando cenário existente...');
-    
-    const editingScenario = sessionStorage.getItem('editingScenario');
-    if (!editingScenario) {
-        console.error('❌ Cenário em edição não encontrado');
-        showError('Erro: dados do cenário não encontrados');
+function updateActionButton(tabId) {
+    const actionBtn = document.getElementById('actionBtn');
+    if (!actionBtn) {
+        console.error('Botão actionBtn não encontrado!');
         return;
     }
     
-    try {
-        const scenario = JSON.parse(editingScenario);
-        console.log('📋 Cenário sendo editado:', scenario);
-        
-        // 1. Coletar dados dos inputs atuais
-        const data = collectAllInputData();
-        console.log('📊 Novos dados coletados:', data);
-        
-        // 2. Calcular todos os indicadores com os novos dados
-        let results = null;
-        try {
-            results = calculateAllIndicators(data);
-            console.log('✅ Novos indicadores calculados:', results);
-        } catch (calcError) {
-            console.warn('⚠️ Erro no cálculo dos indicadores:', calcError.message);
-            showError('Aviso: Cenário atualizado, mas alguns cálculos podem estar incompletos: ' + calcError.message);
-        }
-        
-        // 3. Preparar payload para atualização
-        const payload = {
-            name: scenario.name, // Manter nome original
-            description: scenario.description || `Cenário atualizado em ${new Date().toLocaleDateString('pt-BR')}`,
-            data: data,
-            results: results,
-            lastModified: new Date().toISOString()
-        };
-        
-        console.log('📤 Enviando atualização para API:', payload);
-        
-        // Verificar se temos um ID válido
-        if (!scenario._id) {
-            console.error('❌ ID do cenário não encontrado:', scenario);
-            showError('Erro: ID do cenário não encontrado. Criando novo cenário...');
-            // Fallback: criar novo cenário
-            await saveScenarioWithName(scenario.name || 'Cenário Editado');
-            return;
-        }
-        
-        console.log('🔄 Atualizando cenário ID:', scenario._id);
-        
-        // 4. Enviar atualização para o backend
-        const response = await fetch(`/api/scenarios/${scenario._id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify(payload)
-        });
-        
-        if (response.ok) {
-            const result = await response.json();
-            console.log('✅ Cenário atualizado:', result);
-            
-            // Salvar dados necessários para exibição dos resultados
-            sessionStorage.setItem('currentInputData', JSON.stringify(data));
-            sessionStorage.setItem('currentScenarioName', scenario.name);
-            sessionStorage.setItem('currentScenarioId', scenario._id);
-            
-            // Também salvar no formato antigo para compatibilidade
-            const updatedScenario = {
-                ...result,
-                data: data,
-                results: results
+    // Limpar onclick anterior
+    actionBtn.onclick = null;
+    
+    console.log('Atualizando botão para aba:', tabId);
+    
+    switch(tabId) {
+        case 'generalData':
+            actionBtn.innerHTML = '<i class="fas fa-arrow-right"></i> <span>Próximo: Tabela de Vendas</span>';
+            actionBtn.onclick = () => {
+                console.log('Clicou para ir para salesData');
+                switchToTab('salesData');
             };
-            
-            sessionStorage.setItem('resultadosData', JSON.stringify(updatedScenario));
-            sessionStorage.setItem('lastScenarioData', JSON.stringify(updatedScenario));
-            
-            console.log('💾 Dados salvos no sessionStorage após atualização:', {
-                currentInputData: !!data,
-                currentScenarioName: scenario.name,
-                currentScenarioId: scenario._id
-            });
-            
-            // Limpar dados de edição
-            sessionStorage.removeItem('editingScenario');
-            
-            showSuccess('Cenário atualizado com sucesso!');
-            
-            // Redirecionar para resultados
-            setTimeout(() => {
-                window.location.href = 'resultados.html';
-            }, 1500);
-            
-        } else {
-            const error = await response.text();
-            console.error('❌ Erro na atualização:', error);
-            showError('Erro ao atualizar cenário: ' + error);
-        }
-        
-    } catch (error) {
-        console.error('❌ Erro ao processar atualização:', error);
-        showError('Erro ao processar atualização: ' + error.message);
-    }
-}
-
-function saveScenario() {
-    console.log('💾 Salvando NOVO cenário...');
-    
-    try {
-        // Limpar modo de edição se existir (garante que é um novo cenário)
-        sessionStorage.removeItem('editingScenario');
-        console.log('🗑️ Removido editingScenario - criando novo cenário');
-        
-        // Coletar todos os dados dos inputs
-        const scenarioData = collectAllInputData();
-        
-        if (!scenarioData) {
-            showError('Erro ao coletar dados dos inputs');
-            return;
-        }
-        
-        // Salvar no sessionStorage
-        sessionStorage.setItem('currentInputData', JSON.stringify(scenarioData));
-        
-        // Abrir modal para nome do cenário
-        openScenarioModal();
-        
-    } catch (error) {
-        console.error('Erro ao salvar cenário:', error);
-        showError('Erro ao preparar dados para salvamento');
-    }
-}
-
-
-// ==================== FUNÇÕES DE CENÁRIO ====================
-
-function openScenarioModal() {
-    // Verificar se estamos na página de inputs
-    const modal = document.getElementById('scenarioModal');
-    if (modal) {
-        modal.classList.remove('hidden');
-        const input = document.getElementById('scenarioNameInput');
-        if (input) {
-            input.value = '';
-            input.focus();
-        }
-    } else {
-        // Se não há modal na página, criar um simples
-        const name = prompt('Digite o nome do cenário:');
-        if (name && name.trim()) {
-            saveScenarioWithName(name.trim());
-        }
-    }
-}
-
-function closeScenarioModal() {
-    const modal = document.getElementById('scenarioModal');
-    if (modal) {
-        modal.classList.add('hidden');
-    }
-}
-
-async function confirmSaveScenarioFromInputs() {
-    const nameInput = document.getElementById('scenarioNameInput');
-    const name = nameInput?.value?.trim();
-    
-    if (!name) {
-        showError('Digite um nome para o cenário');
-        return;
-    }
-    
-    closeScenarioModal();
-    await saveScenarioWithName(name);
-}
-
-async function saveScenarioWithName(name) {
-    try {
-        console.log('💾 === SALVANDO CENÁRIO COM CÁLCULOS ===');
-        
-        // 1. Coletar dados dos inputs
-        const data = collectAllInputData();
-        console.log('📊 Dados coletados:', data);
-        
-        // 2. Calcular todos os indicadores
-        let results = null;
-        try {
-            results = calculateAllIndicators(data);
-            console.log('✅ Indicadores calculados:', results);
-        } catch (calcError) {
-            console.warn('⚠️ Erro no cálculo dos indicadores:', calcError.message);
-            showError('Aviso: Cenário salvo, mas alguns cálculos podem estar incompletos: ' + calcError.message);
-        }
-        
-        // 3. Preparar payload para o backend
-        const payload = {
-            name: name,
-            description: `Cenário criado em ${new Date().toLocaleDateString('pt-BR')}`,
-            data: data,
-            results: results
-        };
-        
-        console.log('📤 Enviando para API:', payload);
-        
-        // 4. Enviar para o backend
-        const response = await fetch('/api/scenarios', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify(payload)
-        });
-        
-        if (response.ok) {
-            const result = await response.json();
-            console.log('✅ Cenário salvo:', result);
-            showSuccess('Cenário salvo com sucesso! Cálculos realizados.');
-            
-            // Retornar o resultado para uso posterior
-            return result.scenario || result;
-        } else {
-            const error = await response.json();
-            console.error('❌ Erro da API:', error);
-            showError(error.message || 'Erro ao salvar cenário');
-            throw new Error(error.message || 'Erro ao salvar cenário');
-        }
-        
-    } catch (error) {
-        console.error('❌ Erro ao salvar cenário:', error);
-        showError('Erro ao salvar cenário. Tente novamente.');
-    }
-}
-
-// ==================== INTEGRAÇÃO COM CENÁRIOS ====================
-
-// Initialize page with scenario data ONLY if editing
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // Verificar se veio através de navegação direta (novo cenário) ou de edição
-    const referrer = document.referrer;
-    const cameFromScenarios = referrer.includes('cenarios.html');
-    
-    
-    // Verificar todas as chaves do sessionStorage
-    console.log('🔍 Conteúdo completo do sessionStorage:');
-    for (let i = 0; i < sessionStorage.length; i++) {
-        const key = sessionStorage.key(i);
-        const value = sessionStorage.getItem(key);
-        console.log(`  ${key}: ${value}`);
-    }
-    
-    // ONLY load scenario data if explicitly editing AND came from scenarios page
-    const editingScenario = sessionStorage.getItem('editingScenario');
-    
-    if (editingScenario && cameFromScenarios) {
-        try {
-            const scenario = JSON.parse(editingScenario);
-            console.log('📝 SUCESSO - Cenário parseado:', scenario);
-            console.log('📝 Nome do cenário:', scenario.name);
-            console.log('📊 Dados do cenário:', scenario.data);
-            
-            // ✅ MODO EDIÇÃO - Cenário existe e veio de cenarios.html
-            console.log('🔄 MODO EDIÇÃO ATIVADO');
-            
-            loadScenarioData(scenario.data);
-            showInfo(`Editando cenário: ${scenario.name}`);
-            
-            // Atualizar texto do botão para "Atualizar Cenário"
-            const saveButton = document.querySelector('button[onclick="saveScenario()"]');
-            if (saveButton) {
-                const span = saveButton.querySelector('span');
-                if (span) {
-                    span.textContent = 'Atualizar Cenário';
-                }
-                saveButton.setAttribute('onclick', 'updateScenario()');
-                console.log('✅ Botão alterado para updateScenario');
-            } else {
-                console.log('⚠️ Botão de salvar não encontrado');
-            }
-            
-            // NÃO remover o editingScenario aqui - manter até salvar/cancelar
-            console.log('✅ Modo de edição ativado com sucesso');
-        } catch (error) {
-            console.error('❌ ERRO ao carregar cenário para edição:', error);
-            console.error('❌ Dados que causaram erro:', editingScenario);
-            sessionStorage.removeItem('editingScenario');
-            setupCreateMode();
-        }
-    } else {
-        console.log('📝 MODO CRIAÇÃO ATIVADO');
-        // Se não veio de cenarios.html, limpar dados de edição e configurar modo criação
-        if (!cameFromScenarios && editingScenario) {
-            console.log('🧹 Limpando editingScenario - acesso direto à página');
-            sessionStorage.removeItem('editingScenario');
-        }
-        setupCreateMode();
-    }
-});
-
-function setupCreateMode() {
-    
-    // Garantir que o botão esteja configurado para salvar novo cenário
-    const saveButton = document.querySelector('button[onclick="saveScenario()"], button[onclick="updateScenario()"]');
-    if (saveButton) {
-        // Atualizar o span interno e o onclick
-        const span = saveButton.querySelector('span');
-        if (span) {
-            span.textContent = 'Salvar Cenário';
-        }
-        saveButton.setAttribute('onclick', 'saveScenario()');
-        console.log('✅ Botão configurado para saveScenario (novo cenário)');
-    } else {
-        console.log('⚠️ Botão de salvar não encontrado');
-    }
-    
-    // Limpar qualquer dado residual
-    sessionStorage.removeItem('editingScenario');
-    
-    // Inicializar o botão para a aba ativa
-    const activeTab = document.querySelector('.subtab-btn.active');
-    if (activeTab) {
-        const tabId = activeTab.getAttribute('data-tab');
-        updateActionButton(tabId);
-    }
-    
-    console.log('✅ Modo de criação configurado');
-}
-
-// Função para resetar para modo de criação (pode ser chamada manualmente)
-function resetToCreateMode() {
-    console.log('🔄 Resetando para modo de criação...');
-    sessionStorage.removeItem('editingScenario');
-    setupCreateMode();
-    showInfo('Modo de criação ativado - agora você pode criar um novo cenário');
-}
-
-// Function to collect all input data
-function collectAllInputData() {
-    console.log('🔍 === COLETANDO DADOS DE TODOS OS INPUTS ===');
-    
-    // Função auxiliar para debugar cada campo
-    function getFieldValue(id, parser = (v) => v || '') {
-        const element = document.getElementById(id);
-        const exists = !!element;
-        const value = element?.value;
-        
-        console.log(`🔍 Campo ${id}:`);
-        console.log(`  📍 Elemento existe: ${exists}`);
-        console.log(`  📝 Valor bruto: "${value}" (tipo: ${typeof value})`);
-        
-        if (!exists) {
-            console.log(`  ❌ ELEMENTO ${id} NÃO ENCONTRADO!`);
-            return '';
-        }
-        
-        if (value === undefined || value === null || value === '') {
-            console.log(`  ⚠️ Valor vazio - retornando valor padrão`);
-            return parser('') || 0;
-        }
-        
-        try {
-            const parsed = parser(value);
-            console.log(`  ✅ Valor parseado: ${parsed} (tipo: ${typeof parsed})`);
-            return parsed;
-        } catch (error) {
-            console.log(`  ❌ Erro no parser: ${error.message}`);
-            return '';
-        }
-    }
-
-    // Parser universal para números
-    function parseNumberUniversal(value) {
-        if (!value && value !== 0) return 0;
-        
-        let str = String(value);
-        
-        // Remove R$ e espaços
-        str = str.replace(/R\$\s*/g, '');
-        
-        // Remove pontos dos milhares mas preserva vírgula decimal
-        str = str.replace(/\.(?=\d{3})/g, '');
-        
-        // Substitui vírgula por ponto
-        str = str.replace(',', '.');
-        
-        // Remove qualquer caractere não numérico exceto ponto e sinal negativo
-        str = str.replace(/[^\d.-]/g, '');
-        
-        return parseFloat(str) || 0;
-    }
-
-    const data = {
-        // DADOS GERAIS (8 campos)
-        dadosGerais: {
-            cliente: getFieldValue('cliente', (v) => v || ''),
-            imobiliaria: getFieldValue('imobiliaria', (v) => v || ''),
-            incorporadora: getFieldValue('incorporadora', (v) => v || ''),
-            empreendimento: getFieldValue('empreendimento', (v) => v || ''),
-            unidade: getFieldValue('unidade', (v) => v || ''),
-            areaPrivativa: getFieldValue('areaPrivativa', parseNumberUniversal),
-            tmaAno: getFieldValue('tmaAno', parseNumberUniversal),
-            tmaMes: getFieldValue('tmaMes', parseNumberUniversal)
-        },
-        
-        // TABELA DE VENDAS (16 campos)
-        tabelaVendas: {
-            // Entrada (4 campos)
-            entradaValor: getFieldValue('vendaEntradaValor', parseNumberUniversal),
-            entradaPercent: getFieldValue('vendaEntradaPercent', parseNumberUniversal),
-            entradaParcelas: getFieldValue('vendaEntradaParcelas', parseNumberUniversal),
-            entradaValorParcela: getFieldValue('vendaEntradaValorParcela', parseNumberUniversal),
-            
-            // Parcelas (4 campos)
-            parcelasValor: getFieldValue('vendaParcelasValor', parseNumberUniversal),
-            parcelasPercent: getFieldValue('vendaParcelasPercent', parseNumberUniversal),
-            parcelasQtd: getFieldValue('vendaParcelasQtd', parseNumberUniversal),
-            parcelasValorParcela: getFieldValue('vendaParcelasValorParcela', parseNumberUniversal),
-            
-            // Reforço (5 campos)
-            reforcoValor: getFieldValue('vendaReforcoValor', parseNumberUniversal),
-            reforcoPercent: getFieldValue('vendaReforcoPercent', parseNumberUniversal),
-            reforcoQtd: getFieldValue('vendaReforcoQtd', parseNumberUniversal),
-            reforcoFrequencia: getFieldValue('vendaReforcoFrequencia', parseNumberUniversal),
-            reforcoValorParcela: getFieldValue('vendaReforcoValorParcela', parseNumberUniversal),
-            
-            // Outros (4 campos)
-            bemMovelImovel: getFieldValue('vendaBemMovelImovel', parseNumberUniversal),
-            bemMovelImovelMes: getFieldValue('vendaBemMovelImovelMes', parseNumberUniversal),
-            bemMovelImovelPercent: getFieldValue('vendaBemMovelImovelPercent', parseNumberUniversal),
-            desagio: getFieldValue('vendaDesagio', parseNumberUniversal)
-        },
-        
-        // PROPOSTA CLIENTE (17 campos)
-        propostaCliente: {
-            mesVenda: getFieldValue('mesVenda', parseNumberUniversal),
-            
-            // Entrada (4 campos)
-            entradaValor: getFieldValue('propostaEntradaValor', parseNumberUniversal),
-            entradaPercent: getFieldValue('propostaEntradaPercent', parseNumberUniversal),
-            entradaParcelas: getFieldValue('propostaEntradaParcelas', parseNumberUniversal),
-            entradaValorParcela: getFieldValue('propostaEntradaValorParcela', parseNumberUniversal),
-            
-            // Parcelas (4 campos)
-            parcelasValor: getFieldValue('propostaParcelasValor', parseNumberUniversal),
-            parcelasPercent: getFieldValue('propostaParcelasPercent', parseNumberUniversal),
-            parcelasQtd: getFieldValue('propostaParcelasQtd', parseNumberUniversal),
-            parcelasValorParcela: getFieldValue('propostaParcelasValorParcela', parseNumberUniversal),
-            
-            // Reforço (5 campos)
-            reforcoValor: getFieldValue('propostaReforcoValor', parseNumberUniversal),
-            reforcoPercent: getFieldValue('propostaReforcoPercent', parseNumberUniversal),
-            reforcoQtd: getFieldValue('propostaReforcoQtd', parseNumberUniversal),
-            reforcoFrequencia: getFieldValue('propostaReforcoFrequencia', parseNumberUniversal),
-            reforcoValorParcela: getFieldValue('propostaReforcoValorParcela', parseNumberUniversal),
-            
-            // Outros (3 campos)
-            bemMovelImovel: getFieldValue('bemMovelImovel', parseNumberUniversal),
-            bemMovelImovelPercent: getFieldValue('bemMovelImovelPercent', parseNumberUniversal),
-            desagio: getFieldValue('desagio', parseNumberUniversal)
-        }
-    };
-    
-    console.log('📊 === RESUMO DOS DADOS COLETADOS ===');
-    console.log('👥 Dados Gerais:', Object.keys(data.dadosGerais).length, 'campos');
-    console.log('📊 Tabela Vendas:', Object.keys(data.tabelaVendas).length, 'campos');
-    console.log('🤝 Proposta Cliente:', Object.keys(data.propostaCliente).length, 'campos');
-    console.log('� Total de campos:', 
-        Object.keys(data.dadosGerais).length + 
-        Object.keys(data.tabelaVendas).length + 
-        Object.keys(data.propostaCliente).length);
-    console.log('📊 Dados completos coletados:', data);
-    
-    return data;
-}
-
-// Function to load scenario data into inputs
-function loadScenarioData(data) {
-    console.log('🔄 === INICIANDO CARREGAMENTO DOS DADOS ===');
-    console.log('📊 Dados recebidos:', data);
-    
-    if (!data) {
-        console.log('❌ Nenhum dado fornecido para carregar');
-        return;
-    }
-    
-    console.log('📂 Carregando dados do cenário nos inputs...');
-    
-    // Função auxiliar para formatar números em formato brasileiro
-    function formatBRNumber(value) {
-        if (!value && value !== 0) return '';
-        return new Intl.NumberFormat('pt-BR', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }).format(value);
-    }
-
-    // DADOS GERAIS (8 campos)
-    if (data.dadosGerais) {
-        console.log('📋 Carregando dados gerais:', data.dadosGerais);
-        const dg = data.dadosGerais;
-        
-        const campos = [
-            'cliente', 'imobiliaria', 'incorporadora', 'empreendimento', 
-            'unidade', 'areaPrivativa', 'tmaAno', 'tmaMes'
-        ];
-        
-        campos.forEach(campo => {
-            const elemento = document.getElementById(campo);
-            if (elemento && dg[campo] !== undefined) {
-                if (campo === 'areaPrivativa' || campo === 'tmaAno' || campo === 'tmaMes') {
-                    elemento.value = dg[campo] || '';
-                } else {
-                    elemento.value = dg[campo] || '';
-                }
-                console.log(`✅ ${campo}: ${dg[campo]}`);
-            } else if (!elemento) {
-                console.log(`⚠️ Elemento não encontrado: ${campo}`);
-            }
-        });
-    } else {
-        console.log('⚠️ dadosGerais não encontrado nos dados');
-    }
-    
-    // TABELA DE VENDAS (15 campos)
-    if (data.tabelaVendas) {
-        console.log('💰 Carregando tabela de vendas:', data.tabelaVendas);
-        const tv = data.tabelaVendas;
-        
-        // Entrada (4 campos)
-        ['entradaValor', 'entradaPercent', 'entradaParcelas', 'entradaValorParcela'].forEach(field => {
-            const elementId = 'venda' + field.charAt(0).toUpperCase() + field.slice(1);
-            const element = document.getElementById(elementId);
-            if (element && tv[field] !== undefined) {
-                if (field.includes('Valor') && !field.includes('Parcela')) {
-                    element.value = formatBRNumber(tv[field]);
-                } else if (field.includes('Percent')) {
-                    element.value = tv[field] ? tv[field] + '%' : '';
-                } else {
-                    element.value = tv[field] || '';
-                }
-                console.log(`✅ ${elementId}: ${tv[field]}`);
-            }
-        });
-        
-        // Parcelas (4 campos)
-        ['parcelasValor', 'parcelasPercent', 'parcelasQtd', 'parcelasValorParcela'].forEach(field => {
-            const elementId = 'venda' + field.charAt(0).toUpperCase() + field.slice(1);
-            const element = document.getElementById(elementId);
-            if (element && tv[field] !== undefined) {
-                if (field.includes('Valor') && !field.includes('Parcela')) {
-                    element.value = formatBRNumber(tv[field]);
-                } else if (field.includes('Percent')) {
-                    element.value = tv[field] ? tv[field] + '%' : '';
-                } else {
-                    element.value = tv[field] || '';
-                }
-                console.log(`✅ ${elementId}: ${tv[field]}`);
-            }
-        });
-        
-        // Reforço (5 campos)
-        ['reforcoValor', 'reforcoPercent', 'reforcoQtd', 'reforcoFrequencia', 'reforcoValorParcela'].forEach(field => {
-            const elementId = 'venda' + field.charAt(0).toUpperCase() + field.slice(1);
-            const element = document.getElementById(elementId);
-            if (element && tv[field] !== undefined) {
-                if (field.includes('Valor') && !field.includes('Parcela')) {
-                    element.value = formatBRNumber(tv[field]);
-                } else if (field.includes('Percent')) {
-                    element.value = tv[field] ? tv[field] + '%' : '';
-                } else {
-                    element.value = tv[field] || '';
-                }
-                console.log(`✅ ${elementId}: ${tv[field]}`);
-            }
-        });
-        
-        // Outros (4 campos)
-        if (document.getElementById('vendaBemMovelImovel') && tv.bemMovelImovel !== undefined) {
-            document.getElementById('vendaBemMovelImovel').value = formatBRNumber(tv.bemMovelImovel);
-        }
-        if (document.getElementById('vendaBemMovelImovelMes') && tv.bemMovelImovelMes !== undefined) {
-            document.getElementById('vendaBemMovelImovelMes').value = tv.bemMovelImovelMes || '';
-        }
-        if (document.getElementById('vendaBemMovelImovelPercent') && tv.bemMovelImovelPercent !== undefined) {
-            document.getElementById('vendaBemMovelImovelPercent').value = tv.bemMovelImovelPercent ? tv.bemMovelImovelPercent + '%' : '';
-        }
-        if (document.getElementById('vendaDesagio') && tv.desagio !== undefined) {
-            document.getElementById('vendaDesagio').value = tv.desagio || '';
-        }
-    } else {
-        console.log('⚠️ tabelaVendas não encontrado nos dados');
-    }
-    
-    // PROPOSTA CLIENTE (16 campos)
-    if (data.propostaCliente) {
-        console.log('📝 Carregando proposta cliente:', data.propostaCliente);
-        const pc = data.propostaCliente;
-        
-        // Mês da venda
-        if (document.getElementById('mesVenda') && pc.mesVenda !== undefined) {
-            document.getElementById('mesVenda').value = pc.mesVenda || '';
-        }
-        
-        // Entrada (4 campos)
-        ['entradaValor', 'entradaPercent', 'entradaParcelas', 'entradaValorParcela'].forEach(field => {
-            const elementId = 'proposta' + field.charAt(0).toUpperCase() + field.slice(1);
-            const element = document.getElementById(elementId);
-            if (element && pc[field] !== undefined) {
-                if (field.includes('Valor') && !field.includes('Parcela')) {
-                    element.value = formatBRNumber(pc[field]);
-                } else if (field.includes('Percent')) {
-                    element.value = pc[field] ? pc[field] + '%' : '';
-                } else {
-                    element.value = pc[field] || '';
-                }
-                console.log(`✅ ${elementId}: ${pc[field]}`);
-            }
-        });
-        
-        // Parcelas (4 campos)
-        ['parcelasValor', 'parcelasPercent', 'parcelasQtd', 'parcelasValorParcela'].forEach(field => {
-            const elementId = 'proposta' + field.charAt(0).toUpperCase() + field.slice(1);
-            const element = document.getElementById(elementId);
-            if (element && pc[field] !== undefined) {
-                if (field.includes('Valor') && !field.includes('Parcela')) {
-                    element.value = formatBRNumber(pc[field]);
-                } else if (field.includes('Percent')) {
-                    element.value = pc[field] ? pc[field] + '%' : '';
-                } else {
-                    element.value = pc[field] || '';
-                }
-                console.log(`✅ ${elementId}: ${pc[field]}`);
-            }
-        });
-        
-        // Reforço (5 campos)
-        ['reforcoValor', 'reforcoPercent', 'reforcoQtd', 'reforcoFrequencia', 'reforcoValorParcela'].forEach(field => {
-            const elementId = 'proposta' + field.charAt(0).toUpperCase() + field.slice(1);
-            const element = document.getElementById(elementId);
-            if (element && pc[field] !== undefined) {
-                if (field.includes('Valor') && !field.includes('Parcela')) {
-                    element.value = formatBRNumber(pc[field]);
-                } else if (field.includes('Percent')) {
-                    element.value = pc[field] ? pc[field] + '%' : '';
-                } else {
-                    element.value = pc[field] || '';
-                }
-                console.log(`✅ ${elementId}: ${pc[field]}`);
-            }
-        });
-        
-        // Outros (3 campos)
-        if (document.getElementById('bemMovelImovel') && pc.bemMovelImovel !== undefined) {
-            document.getElementById('bemMovelImovel').value = formatBRNumber(pc.bemMovelImovel);
-        }
-        if (document.getElementById('bemMovelImovelPercent') && pc.bemMovelImovelPercent !== undefined) {
-            document.getElementById('bemMovelImovelPercent').value = pc.bemMovelImovelPercent ? pc.bemMovelImovelPercent + '%' : '';
-        }
-        if (document.getElementById('desagio') && pc.desagio !== undefined) {
-            document.getElementById('desagio').value = pc.desagio || '';
-        }
-    } else {
-        console.log('⚠️ propostaCliente não encontrado nos dados');
-    }
-    
-}
-
-// Function to update scenario (when editing)
-async function updateScenario() {
-
-    const editingScenario = sessionStorage.getItem('editingScenario');
-    
-    if (!editingScenario) {
-        showError('Nenhum cenário em edição encontrado.');
-        return;
-    }
-    
-    // Verificar token de autenticação
-    const token = localStorage.getItem('token');
-    console.log('🔐 Token encontrado:', token ? 'SIM' : 'NÃO');
-    console.log('🔐 Token (primeiros 50 chars):', token ? token.substring(0, 50) + '...' : 'N/A');
-    
-    try {
-        const scenario = JSON.parse(editingScenario);
-        console.log('📝 ID do cenário:', scenario.id);
-        console.log('📝 Nome do cenário:', scenario.name);
-        
-        // 1. Coletar dados dos inputs
-        const data = collectAllInputData();
-        console.log('📊 Dados coletados para atualização:', data);
-        
-        // 2. Calcular todos os indicadores
-        let results = null;
-        try {
-            results = calculateAllIndicators(data);
-            console.log('✅ Indicadores calculados para atualização:', results);
-        } catch (calcError) {
-            console.warn('⚠️ Erro no cálculo dos indicadores:', calcError.message);
-            showError('Aviso: Cenário atualizado, mas alguns cálculos podem estar incompletos: ' + calcError.message);
-        }
-        
-        const requestBody = {
-            name: scenario.name,
-            description: scenario.description || `Cenário atualizado em ${new Date().toLocaleDateString('pt-BR')}`,
-            data: data,
-            results: results
-        };
-        
-        
-        const response = await fetch(`/api/scenarios/${scenario.id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(requestBody)
-        });
-        
-        
-        if (response.ok) {
-            const result = await response.json();
-            
-            showSuccess('Cenário atualizado com sucesso!');
-            
-            // Limpar modo de edição
-            sessionStorage.removeItem('editingScenario');
-            
-            // Resetar para modo de criação
-            setupCreateMode();
-            
-            // Redirecionar para cenários após 2 segundos
-            setTimeout(() => {
-                window.location.href = '/cenarios.html';
-            }, 2000);
-        } else {
-            const errorText = await response.text();
-            console.error('❌ Erro da API:', response.status, errorText);
-            
-            if (response.status === 401) {
-                console.error('❌ Token inválido ou expirado - redirecionando para login');
-                showError('Sessão expirada. Redirecionando para login...');
-                setTimeout(() => {
-                    window.location.href = '/login.html';
-                }, 2000);
-                return;
-            }
-            
-            try {
-                const error = JSON.parse(errorText);
-                showError(error.message || 'Erro ao atualizar cenário');
-            } catch {
-                showError(`Erro ${response.status}: ${errorText}`);
-            }
-        }
-        
-    } catch (error) {
-        console.error('❌ Erro ao atualizar cenário:', error);
-        showError('Erro ao atualizar cenário. Tente novamente.');
-    }
-}
-
-// ================================
-// FUNÇÕES DE CÁLCULO VPL E INDICADORES
-// ================================
-
-// Função para gerar o fluxo de caixa mensal
-function generateCashFlow(data, tipo) {
-    
-    const fluxo = [];
-    const MAX_MESES = 250;
-    
-    // Obter dados do tipo (tabela ou proposta)
-    const dadosFluxo = tipo === 'tabela' ? data.tabelaVendas : data.propostaCliente;
-    
-    // Valores de entrada
-    const entradaValor = dadosFluxo.entradaValor || 0;
-    const entradaParcelas = dadosFluxo.entradaParcelas || 1;
-    const entradaValorParcela = entradaValor / entradaParcelas;
-    
-    // Valores de parcelas
-    const parcelasValor = dadosFluxo.parcelasValor || 0;
-    const parcelasQtd = dadosFluxo.parcelasQtd || 0;
-    const parcelasValorParcela = parcelasQtd > 0 ? parcelasValor / parcelasQtd : 0;
-    
-    // Valores de reforço
-    const reforcoValor = dadosFluxo.reforcoValor || 0;
-    const reforcoQtd = dadosFluxo.reforcoQtd || 0;
-    const reforcoFrequencia = dadosFluxo.reforcoFrequencia || 6;
-    const reforcoValorParcela = reforcoQtd > 0 ? reforcoValor / reforcoQtd : 0;
-    
-    // Valores "nas chaves" ou "bem móvel"
-    const bemMovelValor = dadosFluxo.bemMovelImovel || 0;
-    const bemMovelMes = tipo === 'tabela' ? dadosFluxo.bemMovelImovelMes : data.propostaCliente.mesVenda;
-    
-    console.log(`💰 Valores para ${tipo}:`, {
-        entradaValorParcela, parcelasValorParcela, reforcoValorParcela, bemMovelValor, bemMovelMes
-    });
-    
-    // Gerar fluxo mês a mês
-    for (let mes = 1; mes <= MAX_MESES; mes++) {
-        let valorMes = 0;
-        
-        // 1. ENTRADA (primeiros meses conforme quantidade de parcelas de entrada)
-        if (mes <= entradaParcelas) {
-            valorMes += entradaValorParcela;
-        }
-        
-        // 2. PARCELAS (após entrada, durante quantidade de parcelas)
-        const inicioParcelamento = entradaParcelas + 1;
-        if (mes >= inicioParcelamento && mes < inicioParcelamento + parcelasQtd) {
-            valorMes += parcelasValorParcela;
-        }
-        
-        // 3. REFORÇO (a cada X meses conforme frequência)
-        if (reforcoValorParcela > 0 && mes % reforcoFrequencia === 0) {
-            // Verificar se ainda há parcelas de reforço disponíveis
-            const parcelasReforcoJaPagas = Math.floor(mes / reforcoFrequencia);
-            if (parcelasReforcoJaPagas <= reforcoQtd) {
-                valorMes += reforcoValorParcela;
-            }
-        }
-        
-        // 4. BEM MÓVEL/NAS CHAVES (no mês específico)
-        if (bemMovelMes && mes === bemMovelMes) {
-            valorMes += bemMovelValor;
-        }
-        
-        // Adicionar ao fluxo (apenas valores > 0 ou até onde há fluxo)
-        if (valorMes > 0) {
-            fluxo.push(valorMes);
-        } else if (fluxo.length > 0 && mes > Math.max(inicioParcelamento + parcelasQtd, bemMovelMes || 0, reforcoQtd * reforcoFrequencia)) {
-            // Parar quando não há mais fluxo esperado
             break;
-        } else {
-            fluxo.push(0);
-        }
-    }
-    
-    console.log(`Fluxo gerado para ${tipo}: ${fluxo.length} meses, soma total: ${fluxo.reduce((a, b) => a + b, 0)}`);
-    return fluxo;
-}
-
-// Função para calcular VPL
-function calculateVPL(fluxoDeCaixa, tmaMes) {
-    
-    if (!fluxoDeCaixa || fluxoDeCaixa.length === 0) {
-        console.log('⚠️ Fluxo de caixa vazio');
-        return 0;
-    }
-    
-    let vpl = 0;
-    const taxaDesconto = tmaMes / 100; // Converter de % para decimal
-    
-    fluxoDeCaixa.forEach((valor, index) => {
-        if (valor > 0) {
-            const valorPresente = valor / Math.pow(1 + taxaDesconto, index + 1);
-            vpl += valorPresente;
-            
-            // Log para debug (apenas primeiros 12 meses)
-            if (index < 12) {
-                console.log(`Mês ${index + 1}: R$ ${valor.toFixed(2)} -> VP: R$ ${valorPresente.toFixed(2)}`);
+        case 'salesData':
+            actionBtn.innerHTML = '<i class="fas fa-arrow-right"></i> <span>Próximo: Proposta Cliente</span>';
+            actionBtn.onclick = () => {
+                console.log('Clicou para ir para propostaCliente');
+                switchToTab('propostaCliente');
+            };
+            break;
+        case 'propostaCliente':
+            // Check if in editing mode
+            if (window.editingScenarioId) {
+                actionBtn.innerHTML = '<i class="fas fa-save"></i> <span>Atualizar Cenário</span>';
+                actionBtn.onclick = () => {
+                    console.log('Clicou para atualizar cenário');
+                    updateExistingScenario();
+                };
+            } else {
+                actionBtn.innerHTML = '<i class="fas fa-save"></i> <span>Salvar Cenário</span>';
+                actionBtn.onclick = () => {
+                    console.log('Clicou para salvar cenário');
+                    openSaveModal();
+                };
             }
-        }
-    });
-    
-    return vpl;
-}
-
-// Função principal para calcular todos os indicadores
-function calculateAllIndicators(data) {
-    
-    try {
-        // 1. Verificar TMA
-        const tmaMes = data.dadosGerais.tmaMes;
-        if (!tmaMes || tmaMes <= 0) {
-            throw new Error('TMA mensal não definida ou inválida');
-        }
-        
-        // 2. Calcular valores totais
-        const valorTotalTabela = (data.tabelaVendas.entradaValor || 0) + 
-                                (data.tabelaVendas.parcelasValor || 0) + 
-                                (data.tabelaVendas.reforcoValor || 0) + 
-                                (data.tabelaVendas.bemMovelImovel || 0);
-        
-        const valorTotalProposta = (data.propostaCliente.entradaValor || 0) + 
-                                  (data.propostaCliente.parcelasValor || 0) + 
-                                  (data.propostaCliente.reforcoValor || 0) + 
-                                  (data.propostaCliente.bemMovelImovel || 0);
-        
-        // 3. Calcular descontos nominais
-        const descontoNominalPercent = valorTotalTabela > 0 ? 
-            ((valorTotalProposta / valorTotalTabela) - 1) * 100 : 0;
-        
-        const descontoNominalReais = valorTotalTabela - valorTotalProposta;
-        
-        // 4. Gerar fluxos de caixa
-        const fluxoTabela = generateCashFlow(data, 'tabela');
-        const fluxoProposta = generateCashFlow(data, 'proposta');
-        
-        // 5. Calcular VPLs
-        const vplTabela = calculateVPL(fluxoTabela, tmaMes);
-        const vplProposta = calculateVPL(fluxoProposta, tmaMes);
-        
-        // 6. Calcular deltas
-        const deltaVpl = vplProposta - vplTabela;
-        
-        // 7. Calcular % Delta VPL (com proteção SEERRO)
-        let percentualDeltaVpl = 0;
-        if (vplTabela !== 0) {
-            percentualDeltaVpl = (deltaVpl / vplTabela) * 100;
-        }
-        
-        const resultados = {
-            valorTotalTabela,
-            valorTotalProposta,
-            descontoNominalPercent,
-            descontoNominalReais,
-            vplTabela,
-            vplProposta,
-            deltaVpl,
-            percentualDeltaVpl,
-            tmaMesUsada: tmaMes,
-            periodosCalculados: Math.max(fluxoTabela.length, fluxoProposta.length),
-            calculatedAt: new Date()
-        };
-        return resultados;
-        
-    } catch (error) {
-        throw error;
+            break;
+        default:
+            actionBtn.innerHTML = '<i class="fas fa-arrow-right"></i> <span>Próximo</span>';
+            actionBtn.onclick = () => switchToTab('salesData');
     }
 }
 
-// Função para atualizar o botão de ação baseado na aba ativa
-function updateActionButton(activeTab) {
-    const actionContainer = document.querySelector('.glassmorphism.rounded-2xl.p-6.shadow-lg');
-    if (!actionContainer) return;
+function switchToTab(targetTabId) {
+    console.log('Tentando mudar para aba:', targetTabId);
     
-    const titleElement = actionContainer.querySelector('h3');
-    const descriptionElement = actionContainer.querySelector('p');
-    const buttonElement = actionContainer.querySelector('button');
-    
-    if (!titleElement || !descriptionElement || !buttonElement) return;
-    
-    if (activeTab === 'propostaCliente') {
-        // Última aba - botão para salvar
-        titleElement.textContent = 'Finalizar Cenário';
-        descriptionElement.textContent = 'Todos os dados foram preenchidos. Salve o cenário para análise.';
-        
-        const iconElement = buttonElement.querySelector('i');
-        const spanElement = buttonElement.querySelector('span');
-        
-        if (iconElement && spanElement) {
-            iconElement.className = 'fas fa-save';
-            spanElement.textContent = 'Salvar Cenário';
-        }
-        
-        buttonElement.onclick = nextStep; // Mesma função, mas agora é "salvar"
+    // Find and click the target tab
+    const targetBtn = document.querySelector(`[data-tab="${targetTabId}"]`);
+    if (targetBtn) {
+        console.log('Botão da aba encontrado, clicando...');
+        targetBtn.click();
     } else {
-        // Outras abas - botão para próxima etapa
-        titleElement.textContent = 'Pronto para avançar?';
-        descriptionElement.textContent = 'Vamos para a próxima etapa da análise';
-        
-        const iconElement = buttonElement.querySelector('i');
-        const spanElement = buttonElement.querySelector('span');
-        
-        if (iconElement && spanElement) {
-            iconElement.className = 'fas fa-arrow-right';
-            spanElement.textContent = 'Próxima Etapa';
-        }
-        
-        buttonElement.onclick = goToNextTab;
+        console.error('Botão da aba não encontrado para:', targetTabId);
     }
 }
 
-// Função para ir para a próxima aba
-function goToNextTab() {
-    const currentActiveTab = document.querySelector('.subtab-btn.active');
-    if (!currentActiveTab) return;
-    
-    const currentTabId = currentActiveTab.getAttribute('data-tab');
-    const allTabs = ['generalData', 'salesData', 'propostaCliente'];
-    const currentIndex = allTabs.indexOf(currentTabId);
-    
-    if (currentIndex < allTabs.length - 1) {
-        // Ir para a próxima aba
-        const nextTabId = allTabs[currentIndex + 1];
-        const nextTabButton = document.querySelector(`[data-tab="${nextTabId}"]`);
-        
-        if (nextTabButton) {
-            nextTabButton.click();
-        }
-    } else {
-        // Já está na última aba, chamar nextStep
-        nextStep();
-    }
-}
+// ==================== VALIDATION ====================
 
-// Validação de campos obrigatórios
 function validateRequiredFields() {
     const requiredFields = [
         // Dados Gerais
@@ -1953,7 +687,7 @@ function validateRequiredFields() {
     
     // Campos da Tabela de Vendas (sempre obrigatórios se a aba estiver sendo usada)
     const tabelaVendasFields = [
-        'vendaEntradaValor', 'vendaEntradaParcelas', 'vendaParcelasValor', 'vendaParcelasQtd', 
+        'valorImovelInput', 'vendaEntradaValor', 'vendaEntradaParcelas', 'vendaParcelasValor', 'vendaParcelasQtd', 
         'vendaReforcoValor', 'vendaReforcoQtd'
     ];
     
@@ -2051,6 +785,7 @@ function getFieldLabel(fieldId) {
         'tmaAno': 'TMA Ano (%)',
         
         // Tabela de Vendas
+        'valorImovelInput': 'Valor do Imóvel (R$)',
         'vendaEntradaValor': 'Valor da Entrada (Tabela)',
         'vendaEntradaParcelas': 'Parcelas da Entrada (Tabela)',
         'vendaParcelasValor': 'Valor das Parcelas (Tabela)',
@@ -2070,41 +805,33 @@ function getFieldLabel(fieldId) {
     return labels[fieldId] || fieldId;
 }
 
-// Função para próxima etapa
-function nextStep() {
-    
-    // Verificar se está em modo de edição
-    const editingScenario = sessionStorage.getItem('editingScenario');
-    const isEditMode = !!editingScenario;
-    
-    
+// ==================== SAVE SCENARIO ====================
+
+function openSaveModal() {
     // Validar campos obrigatórios
     const missingFields = validateRequiredFields();
     
     if (missingFields.length > 0) {
         const message = `Por favor, preencha os seguintes campos obrigatórios:\n\n${missingFields.join('\n')}`;
-        showError(message);
+        if (window.showError) {
+            window.showError(message, 8000);
+        } else {
+            alert(message);
+        }
         return;
     }
     
-    if (isEditMode) {
-        // Modo edição: salvar diretamente sem pedir nome
-        updateExistingScenario(); // Usar a nova função específica para edição
-    } else {
-        // Modo criação: mostrar modal para nome do cenário
-        showScenarioNameModal();
+    // Show modal for scenario name
+    const modal = document.getElementById('scenarioNameModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.getElementById('scenarioNameInput')?.focus();
     }
 }
 
-function showScenarioNameModal() {
-    const modal = document.getElementById('scenarioNameModal');
-    const input = document.getElementById('scenarioNameInput');
-    
-    if (modal && input) {
-        modal.classList.remove('hidden');
-        input.focus();
-        input.value = ''; // Limpar campo
-    }
+function nextStep() {
+    // Esta função agora só é chamada pelo modal de salvar
+    openSaveModal();
 }
 
 function closeScenarioNameModal() {
@@ -2114,61 +841,537 @@ function closeScenarioNameModal() {
     }
 }
 
-async function saveScenarioAndProceed() {
-    const nameInput = document.getElementById('scenarioNameInput');
-    const name = nameInput?.value?.trim();
-    
-    if (!name) {
-        showError('Digite um nome para o cenário');
+function saveScenarioAndProceed() {
+    const scenarioName = document.getElementById('scenarioNameInput')?.value?.trim();
+    if (!scenarioName) {
+        if (window.showError) {
+            window.showError('Por favor, digite um nome para o cenário.');
+        } else {
+            alert('Por favor, digite um nome para o cenário.');
+        }
+        document.getElementById('scenarioNameInput')?.focus();
         return;
     }
     
+    // Close modal
     closeScenarioNameModal();
     
-    try {
-        showSuccess('Salvando cenário...');
-        const savedScenario = await saveScenarioWithName(name);
-        
-        // Salvar dados necessários para exibição dos resultados
-        if (savedScenario) {
-            // Coletar dados atuais dos inputs
-            const currentData = collectAllInputData();
-            
-            // Salvar no sessionStorage com as chaves que resultados.js espera
-            sessionStorage.setItem('currentInputData', JSON.stringify(currentData));
-            sessionStorage.setItem('currentScenarioName', name);
-            sessionStorage.setItem('currentScenarioId', savedScenario._id || savedScenario.id);
-
-            console.log('Dados salvos no sessionStorage para resultados:', {
-                currentInputData: !!currentData,
-                currentScenarioName: name,
-                currentScenarioId: savedScenario._id || savedScenario.id
-            });
+    // Mostrar indicador de carregamento
+    if (window.showInfo) {
+        window.showInfo('Salvando cenário...', 2000);
+    }
+    
+    // Coletar dados gerais
+    const dadosGerais = {
+        cliente: document.getElementById('cliente')?.value || '',
+        imobiliaria: document.getElementById('imobiliaria')?.value || '',
+        incorporadora: document.getElementById('incorporadora')?.value || '',
+        empreendimento: document.getElementById('empreendimento')?.value || '',
+        unidade: document.getElementById('unidade')?.value || '',
+        areaPrivativa: parseFloat(document.getElementById('areaPrivativa')?.value) || 0,
+        tmaAno: parseFloat(document.getElementById('tmaAno')?.value) || 0,
+        tmaMes: parseFloat(document.getElementById('tmaMes')?.value) || 0
+    };
+    
+    // Coletar tabela de vendas com novo campo valorImovel
+    const tabelaVendas = {
+        valorImovel: parseBRNumber(document.getElementById('valorImovelInput')?.value || '0'),
+        entradaValor: parseBRNumber(document.getElementById('vendaEntradaValor')?.value || '0'),
+        entradaPercent: parseFloat(document.getElementById('vendaEntradaPercent')?.value) || 0,
+        entradaParcelas: parseInt(document.getElementById('vendaEntradaParcelas')?.value) || 1,
+        entradaValorParcela: parseBRNumber(document.getElementById('vendaEntradaValorParcela')?.value || '0'),
+        parcelasValor: parseBRNumber(document.getElementById('vendaParcelasValor')?.value || '0'),
+        parcelasPercent: parseFloat(document.getElementById('vendaParcelasPercent')?.value) || 0,
+        parcelasQtd: parseInt(document.getElementById('vendaParcelasQtd')?.value) || 1,
+        parcelasValorParcela: parseBRNumber(document.getElementById('vendaParcelasValorParcela')?.value || '0'),
+        reforcoValor: parseBRNumber(document.getElementById('vendaReforcoValor')?.value || '0'),
+        reforcoPercent: parseFloat(document.getElementById('vendaReforcoPercent')?.value) || 0,
+        reforcoQtd: parseInt(document.getElementById('vendaReforcoQtd')?.value) || 1,
+        reforcoFrequencia: parseInt(document.getElementById('vendaReforcoFrequencia')?.value) || 6,
+        reforcoValorParcela: parseBRNumber(document.getElementById('vendaReforcoValorParcela')?.value || '0'),
+        // Separar Nas Chaves do Bem Móvel/Imóvel
+        nasChavesValor: parseBRNumber(document.getElementById('vendaNasChavesValor')?.value || '0'),
+        nasChavesPercent: parseFloat(document.getElementById('vendaNasChavesPercent')?.value) || 0,
+        nasChavesMes: parseInt(document.getElementById('vendaNasChavesMes')?.value) || 24,
+        nasChavesDesagio: parseFloat(document.getElementById('vendaDesagio')?.value) || 0
+    };
+    
+    // Coletar proposta do cliente
+    const propostaCliente = {
+        entradaValor: parseBRNumber(document.getElementById('propostaEntradaValor')?.value || '0'),
+        entradaParcelas: parseInt(document.getElementById('propostaEntradaParcelas')?.value) || 1,
+        entradaValorParcela: parseBRNumber(document.getElementById('propostaEntradaValorParcela')?.value || '0'),
+        parcelasValor: parseBRNumber(document.getElementById('propostaParcelasValor')?.value || '0'),
+        parcelasQtd: parseInt(document.getElementById('propostaParcelasQtd')?.value) || 1,
+        parcelasValorParcela: parseBRNumber(document.getElementById('propostaParcelasValorParcela')?.value || '0'),
+        reforcoValor: parseBRNumber(document.getElementById('propostaReforcoValor')?.value || '0'),
+        reforcoQtd: parseInt(document.getElementById('propostaReforcoQtd')?.value) || 1,
+        reforcoValorParcela: parseBRNumber(document.getElementById('propostaReforcoValorParcela')?.value || '0'),
+        bemMovelImovel: parseBRNumber(document.getElementById('bemMovelImovel')?.value || '0')
+    };
+    
+    // Criar objeto do cenário
+    const scenario = {
+        name: scenarioName,
+        data: {
+            dadosGerais: dadosGerais,
+            tabelaVendas: tabelaVendas,
+            propostaCliente: {
+                entradaValor: parseBRNumber(document.getElementById('propostaEntradaValor')?.value || '0'),
+                entradaParcelas: parseInt(document.getElementById('propostaEntradaParcelas')?.value) || 1,
+                entradaValorParcela: parseBRNumber(document.getElementById('propostaEntradaValorParcela')?.value || '0'),
+                parcelasValor: parseBRNumber(document.getElementById('propostaParcelasValor')?.value || '0'),
+                parcelasQtd: parseInt(document.getElementById('propostaParcelasQtd')?.value) || 1,
+                parcelasValorParcela: parseBRNumber(document.getElementById('propostaParcelasValorParcela')?.value || '0'),
+                reforcoValor: parseBRNumber(document.getElementById('propostaReforcoValor')?.value || '0'),
+                reforcoQtd: parseInt(document.getElementById('propostaReforcoQtd')?.value) || 1,
+                reforcoFrequencia: parseInt(document.getElementById('propostaReforcoFrequencia')?.value) || 6,
+                reforcoValorParcela: parseBRNumber(document.getElementById('propostaReforcoValorParcela')?.value || '0'),
+                bemMovelImovel: parseBRNumber(document.getElementById('bemMovelImovel')?.value || '0'),
+                mesVenda: parseInt(document.getElementById('mesVenda')?.value) || 1,
+                bemMovelDesagio: parseFloat(document.getElementById('desagio')?.value) || 0
+            },
+            createdAt: new Date().toISOString()
         }
-        
-        // Redirecionar para resultados com o ID do cenário salvo
-        if (savedScenario && savedScenario._id) {
+    };
+    
+    // Salvar no localStorage temporariamente
+    localStorage.setItem('currentScenario', JSON.stringify(scenario));
+    
+    // Enviar para o servidor
+    fetch('/api/scenarios', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(scenario)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Erro ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Resposta do servidor:', data);
+        if (data.scenario) {
+            // Limpar dados dos formulários
+            clearAllForms();
+            
+            // Mostrar sucesso
+            if (window.showSuccess) {
+                window.showSuccess('Cenário salvo com sucesso!', 3000);
+            }
+            
+            // Redirecionar para a página de resultados com o ID do cenário
             setTimeout(() => {
-                window.location.href = `resultados.html?scenario=${savedScenario._id}`;
+                window.location.href = `/resultados.html?scenario=${data.scenario._id}`;
             }, 1000);
         } else {
-            setTimeout(() => {
-                window.location.href = 'resultados.html';
-            }, 1000);
+            if (window.showError) {
+                window.showError('Erro ao salvar cenário: ' + (data.message || 'Erro desconhecido'));
+            } else {
+                alert('Erro ao salvar cenário: ' + (data.message || 'Erro desconhecido'));
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao salvar cenário:', error);
+        if (window.showError) {
+            window.showError('Erro ao salvar cenário: ' + error.message);
+        } else {
+            alert('Erro ao salvar cenário. Verifique sua conexão.');
+        }
+    });
+}
+
+function clearAllFormsConfirm() {
+    if (window.confirm('Tem certeza de que deseja limpar todos os dados preenchidos? Esta ação não pode ser desfeita.')) {
+        clearAllForms();
+        
+        // Mostrar mensagem de sucesso
+        if (window.showSuccess) {
+            window.showSuccess('Todos os dados foram limpos com sucesso!', 3000);
         }
         
-    } catch (error) {
-        showError('Erro ao salvar o cenário. Tente novamente.');
+        // Voltar para a primeira aba
+        const firstTab = document.querySelector('[data-tab="dados-gerais"]');
+        if (firstTab) {
+            firstTab.click();
+        }
     }
 }
 
-// Global functions
-window.collectAllInputData = collectAllInputData;
-window.loadScenarioData = loadScenarioData;
-window.updateScenario = updateScenario;
-window.nextStep = nextStep;
-window.showScenarioNameModal = showScenarioNameModal;
-window.closeScenarioNameModal = closeScenarioNameModal;
-window.saveScenarioAndProceed = saveScenarioAndProceed;
-window.updateActionButton = updateActionButton;
-window.goToNextTab = goToNextTab;
+function updateExistingScenario() {
+    if (!window.editingScenarioId) {
+        if (window.showError) {
+            window.showError('Erro: Modo de edição não identificado.');
+        } else {
+            alert('Erro: Modo de edição não identificado.');
+        }
+        return;
+    }
+    
+    // Validar campos obrigatórios básicos
+    const cliente = document.getElementById('cliente')?.value?.trim();
+    const valorImovel = document.getElementById('valorImovelInput')?.value?.trim();
+    
+    if (!cliente) {
+        if (window.showError) {
+            window.showError('Campo "Cliente" é obrigatório.');
+        } else {
+            alert('Campo "Cliente" é obrigatório.');
+        }
+        return;
+    }
+    
+    if (!valorImovel || parseBRNumber(valorImovel) <= 0) {
+        if (window.showError) {
+            window.showError('Campo "Valor do Imóvel" é obrigatório e deve ser maior que zero.');
+        } else {
+            alert('Campo "Valor do Imóvel" é obrigatório e deve ser maior que zero.');
+        }
+        return;
+    }
+    
+    // Mostrar indicador de carregamento
+    if (window.showInfo) {
+        window.showInfo('Atualizando cenário...', 2000);
+    }
+    
+    // Coletar dados gerais
+    const dadosGerais = {
+        cliente: document.getElementById('cliente')?.value || '',
+        imobiliaria: document.getElementById('imobiliaria')?.value || '',
+        incorporadora: document.getElementById('incorporadora')?.value || '',
+        empreendimento: document.getElementById('empreendimento')?.value || '',
+        unidade: document.getElementById('unidade')?.value || '',
+        areaPrivativa: parseFloat(document.getElementById('areaPrivativa')?.value) || 0,
+        tmaAno: parseFloat(document.getElementById('tmaAno')?.value) || 0,
+        tmaMes: parseFloat(document.getElementById('tmaMes')?.value) || 0
+    };
+    
+    // Coletar tabela de vendas com novo campo valorImovel
+    const tabelaVendas = {
+        valorImovel: parseBRNumber(document.getElementById('valorImovelInput')?.value || '0'),
+        entradaValor: parseBRNumber(document.getElementById('vendaEntradaValor')?.value || '0'),
+        entradaPercent: parseFloat(document.getElementById('vendaEntradaPercent')?.value) || 0,
+        entradaParcelas: parseInt(document.getElementById('vendaEntradaParcelas')?.value) || 1,
+        entradaValorParcela: parseBRNumber(document.getElementById('vendaEntradaValorParcela')?.value || '0'),
+        parcelasValor: parseBRNumber(document.getElementById('vendaParcelasValor')?.value || '0'),
+        parcelasPercent: parseFloat(document.getElementById('vendaParcelasPercent')?.value) || 0,
+        parcelasQtd: parseInt(document.getElementById('vendaParcelasQtd')?.value) || 1,
+        parcelasValorParcela: parseBRNumber(document.getElementById('vendaParcelasValorParcela')?.value || '0'),
+        reforcoValor: parseBRNumber(document.getElementById('vendaReforcoValor')?.value || '0'),
+        reforcoPercent: parseFloat(document.getElementById('vendaReforcoPercent')?.value) || 0,
+        reforcoQtd: parseInt(document.getElementById('vendaReforcoQtd')?.value) || 1,
+        reforcoFrequencia: parseInt(document.getElementById('vendaReforcoFrequencia')?.value) || 6,
+        reforcoValorParcela: parseBRNumber(document.getElementById('vendaReforcoValorParcela')?.value || '0'),
+        // Separar Nas Chaves do Bem Móvel/Imóvel
+        nasChavesValor: parseBRNumber(document.getElementById('vendaNasChavesValor')?.value || '0'),
+        nasChavesPercent: parseFloat(document.getElementById('vendaNasChavesPercent')?.value) || 0,
+        nasChavesMes: parseInt(document.getElementById('vendaNasChavesMes')?.value) || 24,
+        nasChavesDesagio: parseFloat(document.getElementById('vendaDesagio')?.value) || 0
+    };
+    
+    // Coletar proposta do cliente
+    const propostaCliente = {
+        entradaValor: parseBRNumber(document.getElementById('propostaEntradaValor')?.value || '0'),
+        entradaParcelas: parseInt(document.getElementById('propostaEntradaParcelas')?.value) || 1,
+        entradaValorParcela: parseBRNumber(document.getElementById('propostaEntradaValorParcela')?.value || '0'),
+        parcelasValor: parseBRNumber(document.getElementById('propostaParcelasValor')?.value || '0'),
+        parcelasQtd: parseInt(document.getElementById('propostaParcelasQtd')?.value) || 1,
+        parcelasValorParcela: parseBRNumber(document.getElementById('propostaParcelasValorParcela')?.value || '0'),
+        reforcoValor: parseBRNumber(document.getElementById('propostaReforcoValor')?.value || '0'),
+        reforcoQtd: parseInt(document.getElementById('propostaReforcoQtd')?.value) || 1,
+        reforcoFrequencia: parseInt(document.getElementById('propostaReforcoFrequencia')?.value) || 6,
+        reforcoValorParcela: parseBRNumber(document.getElementById('propostaReforcoValorParcela')?.value || '0'),
+        bemMovelImovel: parseBRNumber(document.getElementById('bemMovelImovel')?.value || '0'),
+        mesVenda: parseInt(document.getElementById('mesVenda')?.value) || 1,
+        bemMovelDesagio: parseFloat(document.getElementById('desagio')?.value) || 0
+    };
+    
+    // Criar objeto de atualização
+    const scenarioName = window.editingScenarioData?.name || 'Cenário Editado';
+    const updateData = {
+        name: scenarioName,
+        data: {
+            dadosGerais: dadosGerais,
+            tabelaVendas: tabelaVendas,
+            propostaCliente: propostaCliente,
+            updatedAt: new Date().toISOString()
+        }
+    };
+    
+    // Enviar para o servidor
+    fetch(`/api/scenarios/${window.editingScenarioId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(updateData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Erro ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Resposta da atualização:', data);
+        if (data.scenario) {
+            // Limpar modo de edição
+            window.editingScenarioId = null;
+            window.editingScenarioData = null;
+            
+            // Mostrar sucesso
+            if (window.showSuccess) {
+                window.showSuccess('Cenário atualizado com sucesso!', 3000);
+            }
+            
+            // Redirecionar para a página de resultados com o ID do cenário
+            setTimeout(() => {
+                window.location.href = `/resultados.html?scenario=${data.scenario._id}`;
+            }, 1000);
+        } else {
+            if (window.showError) {
+                window.showError('Erro ao atualizar cenário: ' + (data.message || 'Erro desconhecido'));
+            } else {
+                alert('Erro ao atualizar cenário: ' + (data.message || 'Erro desconhecido'));
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao atualizar cenário:', error);
+        if (window.showError) {
+            window.showError('Erro ao atualizar cenário: ' + error.message);
+        } else {
+            alert('Erro ao atualizar cenário. Verifique sua conexão.');
+        }
+    });
+}
+
+function clearAllForms() {
+    try {
+        // Limpar dados gerais
+        const generalFields = ['cliente', 'imobiliaria', 'incorporadora', 'empreendimento', 'unidade', 'areaPrivativa', 'tmaAno', 'tmaMes'];
+        generalFields.forEach(id => {
+            const field = document.getElementById(id);
+            if (field) field.value = '';
+        });
+        
+        // Limpar tabela de vendas
+        const vendasFields = [
+            'valorImovelInput', 'vendaEntradaValor', 'vendaEntradaPercent', 'vendaEntradaParcelas', 'vendaEntradaValorParcela',
+            'vendaParcelasValor', 'vendaParcelasPercent', 'vendaParcelasQtd', 'vendaParcelasValorParcela',
+            'vendaReforcoValor', 'vendaReforcoPercent', 'vendaReforcoQtd', 'vendaReforcoFrequencia', 'vendaReforcoValorParcela',
+            'vendaNasChavesValor', 'vendaNasChavesPercent'
+        ];
+        vendasFields.forEach(id => {
+            const field = document.getElementById(id);
+            if (field) {
+                if (id.includes('Parcelas') && !id.includes('Valor')) {
+                    field.value = '1';
+                } else if (id.includes('Qtd')) {
+                    field.value = '1';
+                } else if (id === 'vendaReforcoFrequencia') {
+                    field.value = '6';
+                } else {
+                    field.value = '';
+                }
+            }
+        });
+        
+        // Limpar proposta cliente
+        const propostaFields = [
+            'propostaEntradaValor', 'propostaEntradaPercent', 'propostaEntradaParcelas', 'propostaEntradaValorParcela',
+            'propostaParcelasValor', 'propostaParcelasPercent', 'propostaParcelasQtd', 'propostaParcelasValorParcela',
+            'propostaReforcoValor', 'propostaReforcoPercent', 'propostaReforcoQtd', 'propostaReforcoValorParcela',
+            'bemMovelImovel', 'bemMovelImovelPercent', 'propostaTotal'
+        ];
+        propostaFields.forEach(id => {
+            const field = document.getElementById(id);
+            if (field) {
+                if (id.includes('Parcelas') && !id.includes('Valor')) {
+                    field.value = '1';
+                } else if (id.includes('Qtd')) {
+                    field.value = '1';
+                } else {
+                    field.value = '';
+                }
+            }
+        });
+        
+        // Limpar resumo cards
+        const resumoElements = ['resumoEntrada', 'resumoParcelas', 'resumoReforco', 'resumoNasChaves'];
+        resumoElements.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = '0.0% - 0x';
+            }
+        });
+        
+        // Limpar localStorage
+        localStorage.removeItem('currentScenario');
+        
+        console.log('Formulários limpos com sucesso');
+    } catch (error) {
+        console.error('Erro ao limpar formulários:', error);
+    }
+}
+
+// ==================== LOAD SAVED DATA ====================
+
+function checkAndClearOldData() {
+    // Check if editing an existing scenario
+    const urlParams = new URLSearchParams(window.location.search);
+    const scenarioId = urlParams.get('scenario');
+    
+    // Se não estiver editando um cenário, limpar todos os dados
+    if (!scenarioId) {
+        clearAllForms();
+        localStorage.removeItem('currentScenario');
+    }
+}
+
+function loadSavedData() {
+    // Check if editing an existing scenario
+    const urlParams = new URLSearchParams(window.location.search);
+    const scenarioId = urlParams.get('scenario');
+    
+    // Check for editing scenario in sessionStorage first
+    const editingScenario = sessionStorage.getItem('editingScenario');
+    
+    if (editingScenario) {
+        try {
+            const scenario = JSON.parse(editingScenario);
+            console.log('Carregando cenário do sessionStorage:', scenario);
+            
+            // Set editing mode
+            window.editingScenarioId = scenario._id || scenario.id;
+            window.editingScenarioData = scenario; // Store full scenario data
+            console.log('Modo de edição ativado para cenário:', window.editingScenarioId);
+            
+            populateForm(scenario);
+            // Clear after loading to prevent reloading on refresh
+            sessionStorage.removeItem('editingScenario');
+        } catch (error) {
+            console.error('Erro ao carregar cenário do sessionStorage:', error);
+        }
+    } else if (scenarioId) {
+        // Set editing mode for URL parameter
+        window.editingScenarioId = scenarioId;
+        window.editingScenarioData = null; // Will be loaded from server
+        console.log('Modo de edição ativado via URL para cenário:', window.editingScenarioId);
+        
+        // Load from server
+        fetch(`/api/scenarios/${scenarioId}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Dados recebidos do servidor:', data);
+            if (data.scenario) {
+                window.editingScenarioData = data.scenario; // Store full scenario data
+                populateForm(data.scenario);
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar cenário:', error);
+        });
+    } else {
+        // Clear editing mode - this is creation mode
+        window.editingScenarioId = null;
+        window.editingScenarioData = null;
+        console.log('Modo de criação ativado');
+        
+        // Load from localStorage if available
+        const savedScenario = localStorage.getItem('currentScenario');
+        if (savedScenario) {
+            try {
+                const scenario = JSON.parse(savedScenario);
+                // Adaptar formato do localStorage para o formato esperado
+                const adaptedScenario = {
+                    data: scenario
+                };
+                populateForm(adaptedScenario);
+            } catch (error) {
+                console.error('Erro ao carregar dados salvos:', error);
+            }
+        }
+    }
+}
+
+function populateForm(scenario) {
+    console.log('populateForm chamada com:', scenario);
+    
+    // Verificar se há dados válidos para preencher
+    if (!scenario) {
+        console.log('Nenhum cenário para preencher');
+        return;
+    }
+    
+    // Adaptar estrutura - dados podem estar em scenario.data ou diretamente em scenario
+    const data = scenario.data || scenario;
+    console.log('Dados extraídos:', data);
+    
+    // Populate dados gerais
+    if (data.dadosGerais) {
+        console.log('Preenchendo dados gerais:', data.dadosGerais);
+        const dadosGerais = data.dadosGerais;
+        if (document.getElementById('cliente')) document.getElementById('cliente').value = dadosGerais.cliente || '';
+        if (document.getElementById('imobiliaria')) document.getElementById('imobiliaria').value = dadosGerais.imobiliaria || '';
+        if (document.getElementById('incorporadora')) document.getElementById('incorporadora').value = dadosGerais.incorporadora || '';
+        if (document.getElementById('empreendimento')) document.getElementById('empreendimento').value = dadosGerais.empreendimento || '';
+        if (document.getElementById('unidade')) document.getElementById('unidade').value = dadosGerais.unidade || '';
+        if (document.getElementById('areaPrivativa')) document.getElementById('areaPrivativa').value = dadosGerais.areaPrivativa || '';
+        if (document.getElementById('tmaAno')) document.getElementById('tmaAno').value = dadosGerais.tmaAno || '';
+        if (document.getElementById('tmaMes')) document.getElementById('tmaMes').value = dadosGerais.tmaMes || '';
+    }
+    
+    // Populate tabela de vendas
+    if (data.tabelaVendas) {
+        const tabelaVendas = data.tabelaVendas;
+        if (document.getElementById('valorImovelInput')) document.getElementById('valorImovelInput').value = formatBRNumber(tabelaVendas.valorImovel || 0);
+        if (document.getElementById('vendaEntradaValor')) document.getElementById('vendaEntradaValor').value = formatBRNumber(tabelaVendas.entradaValor || 0);
+        if (document.getElementById('vendaEntradaPercent')) document.getElementById('vendaEntradaPercent').value = tabelaVendas.entradaPercent || 0;
+        if (document.getElementById('vendaEntradaParcelas') && tabelaVendas.entradaParcelas && tabelaVendas.entradaParcelas !== 1) document.getElementById('vendaEntradaParcelas').value = tabelaVendas.entradaParcelas;
+        if (document.getElementById('vendaParcelasValor')) document.getElementById('vendaParcelasValor').value = formatBRNumber(tabelaVendas.parcelasValor || 0);
+        if (document.getElementById('vendaParcelasPercent')) document.getElementById('vendaParcelasPercent').value = tabelaVendas.parcelasPercent || 0;
+        if (document.getElementById('vendaParcelasQtd') && tabelaVendas.parcelasQtd && tabelaVendas.parcelasQtd !== 1) document.getElementById('vendaParcelasQtd').value = tabelaVendas.parcelasQtd;
+        if (document.getElementById('vendaReforcoValor')) document.getElementById('vendaReforcoValor').value = formatBRNumber(tabelaVendas.reforcoValor || 0);
+        if (document.getElementById('vendaReforcoPercent')) document.getElementById('vendaReforcoPercent').value = tabelaVendas.reforcoPercent || 0;
+        if (document.getElementById('vendaReforcoQtd') && tabelaVendas.reforcoQtd && tabelaVendas.reforcoQtd !== 1) document.getElementById('vendaReforcoQtd').value = tabelaVendas.reforcoQtd;
+        if (document.getElementById('vendaReforcoFrequencia')) document.getElementById('vendaReforcoFrequencia').value = tabelaVendas.reforcoFrequencia || 6;
+        if (document.getElementById('vendaNasChavesValor')) document.getElementById('vendaNasChavesValor').value = formatBRNumber(tabelaVendas.nasChavesValor || 0);
+        if (document.getElementById('vendaNasChavesPercent')) document.getElementById('vendaNasChavesPercent').value = tabelaVendas.nasChavesPercent || 0;
+        if (document.getElementById('vendaNasChavesMes')) document.getElementById('vendaNasChavesMes').value = tabelaVendas.nasChavesMes || 24;
+        if (document.getElementById('vendaDesagio')) document.getElementById('vendaDesagio').value = tabelaVendas.nasChavesDesagio || 0;
+    }
+    
+    // Populate proposta cliente
+    if (data.propostaCliente) {
+        const propostaCliente = data.propostaCliente;
+        if (document.getElementById('propostaEntradaValor')) document.getElementById('propostaEntradaValor').value = formatBRNumber(propostaCliente.entradaValor || 0);
+        if (document.getElementById('propostaEntradaParcelas') && propostaCliente.entradaParcelas && propostaCliente.entradaParcelas !== 1) document.getElementById('propostaEntradaParcelas').value = propostaCliente.entradaParcelas;
+        if (document.getElementById('propostaParcelasValor')) document.getElementById('propostaParcelasValor').value = formatBRNumber(propostaCliente.parcelasValor || 0);
+        if (document.getElementById('propostaParcelasQtd') && propostaCliente.parcelasQtd && propostaCliente.parcelasQtd !== 1) document.getElementById('propostaParcelasQtd').value = propostaCliente.parcelasQtd;
+        if (document.getElementById('propostaReforcoValor')) document.getElementById('propostaReforcoValor').value = formatBRNumber(propostaCliente.reforcoValor || 0);
+        if (document.getElementById('propostaReforcoQtd') && propostaCliente.reforcoQtd && propostaCliente.reforcoQtd !== 1) document.getElementById('propostaReforcoQtd').value = propostaCliente.reforcoQtd;
+        if (document.getElementById('propostaReforcoFrequencia')) document.getElementById('propostaReforcoFrequencia').value = propostaCliente.reforcoFrequencia || 6;
+        if (document.getElementById('bemMovelImovel')) document.getElementById('bemMovelImovel').value = formatBRNumber(propostaCliente.bemMovelImovel || 0);
+        if (document.getElementById('mesVenda') && propostaCliente.mesVenda && propostaCliente.mesVenda !== 1) document.getElementById('mesVenda').value = propostaCliente.mesVenda;
+        if (document.getElementById('desagio')) document.getElementById('desagio').value = propostaCliente.bemMovelDesagio || 0;
+    }
+    
+    // Recalculate after loading
+    setTimeout(() => {
+        calculateTMAMes();
+        calculateTabelaVendas();
+        calculatePropostaCliente();
+    }, 100);
+}

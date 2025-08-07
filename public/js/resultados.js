@@ -584,22 +584,12 @@ function validateCalculationInputs(data) {
 
 // Calcular Valor Total do Imóvel = soma de todos os valores da tabela
 function calculateValorTotalImovel(data) {
-    const tabela = data.tabelaVendas;
-    const entradaValor = parseFloat(tabela.entradaValor) || 0;
-    const parcelasValor = parseFloat(tabela.parcelasValor) || 0;
-    const reforcoValor = parseFloat(tabela.reforcoValor) || 0;
-    const bemMovelValor = parseFloat(tabela.bemMovelImovel) || 0;
+    // Agora que o valor do imóvel é editável, usar o valor direto
+    const valorImovel = parseFloat(data.tabelaVendas.valorImovel) || 0;
     
-    const total = entradaValor + parcelasValor + reforcoValor + bemMovelValor;
+    console.log('💰 Valor Total Imóvel (valor direto editável):', valorImovel);
     
-    console.log('💰 Valor Total Imóvel:');
-    console.log('   Entrada:', entradaValor);
-    console.log('   Parcelas:', parcelasValor);  
-    console.log('   Reforço:', reforcoValor);
-    console.log('   Bem Móvel:', bemMovelValor);
-    console.log('   ✅ Total:', total);
-    
-    return total;
+    return valorImovel;
 }
 
 // Calcular Valor Total da Proposta = soma de todos os valores da proposta
@@ -608,8 +598,8 @@ function calculateValorTotalProposta(data) {
     const entradaValor = parseFloat(proposta.entradaValor) || 0;
     const parcelasValor = parseFloat(proposta.parcelasValor) || 0;
     const reforcoValor = parseFloat(proposta.reforcoValor) || 0;
-    // Assumindo que bem móvel na proposta é o mesmo da tabela
-    const bemMovelValor = parseFloat(data.tabelaVendas.bemMovelImovel) || 0;
+    // Usar bem móvel da PROPOSTA, não da tabela
+    const bemMovelValor = parseFloat(proposta.bemMovelImovel) || 0;
     
     const total = entradaValor + parcelasValor + reforcoValor + bemMovelValor;
     
@@ -617,7 +607,7 @@ function calculateValorTotalProposta(data) {
     console.log('   Entrada:', entradaValor);
     console.log('   Parcelas:', parcelasValor);
     console.log('   Reforço:', reforcoValor);
-    console.log('   Bem Móvel:', bemMovelValor);
+    console.log('   Bem Móvel (Proposta):', bemMovelValor);
     console.log('   ✅ Total:', total);
     
     return total;
@@ -680,8 +670,9 @@ function generateFluxoTabela(data, valorTotal) {
     const reforcoValor = parseFloat(tabela.reforcoValor) || 0;
     const reforcoQtd = parseInt(tabela.reforcoQtd) || 0;
     const reforcoFrequencia = parseInt(tabela.reforcoFrequencia) || 12;
-    const bemMovelValor = parseFloat(tabela.bemMovelImovel) || 0;
-    const bemMovelMes = parseInt(tabela.bemMovelImovelMes) || mesVenda;
+    // Nas Chaves da tabela (separado)
+    const nasChavesValor = parseFloat(tabela.nasChavesValor) || 0;
+    const nasChavesMes = parseInt(tabela.nasChavesMes) || 24;
     
     // Calcular valores por parcela
     const valorPorEntrada = entradaParcelas > 0 ? entradaValor / entradaParcelas : entradaValor;
@@ -700,19 +691,19 @@ function generateFluxoTabela(data, valorTotal) {
         if (i < 5) console.log(`Parcela Tabela Mês ${entradaParcelas + i + 1}: R$ ${valorPorParcela.toLocaleString('pt-BR')}`);
     }
     
-    // 3. Reforços conforme frequência - COMEÇA NO MÊS 1 + frequência
+    // 3. Reforços conforme frequência - COMEÇA NO MÊS DA FREQUÊNCIA
     for (let i = 0; i < reforcoQtd; i++) {
-        const mesReforco = (i + 1) * reforcoFrequencia - 1; // -1 porque array é 0-indexed
+        const mesReforco = reforcoFrequencia + (i * reforcoFrequencia) - 1; // -1 porque array é 0-indexed
         if (mesReforco < 250) {
             fluxo[mesReforco] += valorPorReforco;
             console.log(`Reforço Tabela Mês ${mesReforco + 1}: R$ ${valorPorReforco.toLocaleString('pt-BR')}`);
         }
     }
     
-    // 4. Bem móvel - SÓ ESTE USA O MÊS DE VENDA
-    if (bemMovelMes > 0 && bemMovelMes <= 250) {
-        fluxo[bemMovelMes - 1] += bemMovelValor;
-        console.log(`Bem Móvel Tabela Mês ${bemMovelMes}: R$ ${bemMovelValor.toLocaleString('pt-BR')}`);
+    // 4. Nas Chaves da tabela
+    if (nasChavesMes > 0 && nasChavesMes <= 250) {
+        fluxo[nasChavesMes - 1] += nasChavesValor;
+        console.log(`Nas Chaves Tabela Mês ${nasChavesMes}: R$ ${nasChavesValor.toLocaleString('pt-BR')}`);
     }
     
     const valoresNaoZero = fluxo.map((v, i) => v > 0 ? `Mês ${i+1}: R$ ${v.toLocaleString('pt-BR')}` : null).filter(Boolean);
@@ -736,10 +727,10 @@ function generateFluxoProposta(data, valorTotal) {
     const parcelasQtd = parseInt(proposta.parcelasQtd) || 0;
     const reforcoValor = parseFloat(proposta.reforcoValor) || 0;
     const reforcoQtd = parseInt(proposta.reforcoQtd) || 0;
-    const reforcoFrequencia = parseInt(proposta.reforcoFrequencia) || 12;
-    // Bem móvel assumindo mesmo da tabela
-    const bemMovelValor = parseFloat(data.tabelaVendas.bemMovelImovel) || 0;
-    const bemMovelMes = parseInt(data.tabelaVendas.bemMovelImovelMes) || mesVenda;
+    const reforcoFrequencia = parseInt(proposta.reforcoFrequencia) || 6;
+    // Bem móvel da PROPOSTA, não da tabela
+    const bemMovelValor = parseFloat(proposta.bemMovelImovel) || 0;
+    const bemMovelMes = mesVenda; // Usar mesVenda da proposta, não da tabela
     
     // Calcular valores por parcela
     const valorPorEntrada = entradaParcelas > 0 ? entradaValor / entradaParcelas : entradaValor;
@@ -758,9 +749,9 @@ function generateFluxoProposta(data, valorTotal) {
         if (i < 5) console.log(`Parcela Proposta Mês ${entradaParcelas + i + 1}: R$ ${valorPorParcela.toLocaleString('pt-BR')}`);
     }
     
-    // 3. Reforços conforme frequência - COMEÇA NO MÊS 1 + frequência
+    // 3. Reforços conforme frequência - COMEÇA NO MÊS DA FREQUÊNCIA
     for (let i = 0; i < reforcoQtd; i++) {
-        const mesReforco = (i + 1) * reforcoFrequencia - 1; // -1 porque array é 0-indexed
+        const mesReforco = reforcoFrequencia + (i * reforcoFrequencia) - 1; // -1 porque array é 0-indexed
         if (mesReforco < 250) {
             fluxo[mesReforco] += valorPorReforco;
             console.log(`Reforço Proposta Mês ${mesReforco + 1}: R$ ${valorPorReforco.toLocaleString('pt-BR')}`);
@@ -969,11 +960,11 @@ function generateComponentesFluxoProposta(data) {
     const parcelasQtd = parseInt(proposta.parcelasQtd) || 0;
     const reforcoValor = parseFloat(proposta.reforcoValor) || 0;
     const reforcoQtd = parseInt(proposta.reforcoQtd) || 0;
-    const reforcoFrequencia = parseInt(proposta.reforcoFrequencia) || 12;
+    const reforcoFrequencia = parseInt(proposta.reforcoFrequencia) || 6;
     
-    // Bem móvel (nas chaves) - assumindo mesmo da tabela
-    const bemMovelValor = parseFloat(data.tabelaVendas.bemMovelImovel) || 0;
-    const bemMovelMes = parseInt(data.tabelaVendas.bemMovelImovelMes) || mesVenda;
+    // Bem móvel (nas chaves) - usar da PROPOSTA, não da tabela
+    const bemMovelValor = parseFloat(proposta.bemMovelImovel) || 0;
+    const bemMovelMes = mesVenda; // Usar mesVenda da proposta
     
     // Calcular valores por parcela
     const valorPorEntrada = entradaParcelas > 0 ? entradaValor / entradaParcelas : entradaValor;
@@ -990,9 +981,9 @@ function generateComponentesFluxoProposta(data) {
         parcelas[entradaParcelas + i] = valorPorParcela;
     }
     
-    // 3. Reforços conforme frequência (ex: a cada 6 meses) - COMEÇA NO MÊS 1 + frequência
+    // 3. Reforços conforme frequência (ex: a cada 6 meses) - COMEÇA NO MÊS DA FREQUÊNCIA
     for (let i = 0; i < reforcoQtd; i++) {
-        const mesReforco = (i + 1) * reforcoFrequencia - 1; // -1 porque array é 0-indexed
+        const mesReforco = reforcoFrequencia + (i * reforcoFrequencia) - 1; // -1 porque array é 0-indexed
         if (mesReforco < 250) {
             reforcos[mesReforco] = valorPorReforco;
         }
@@ -1031,9 +1022,9 @@ function generateComponentesFluxoTabela(data) {
     const reforcoQtd = parseInt(tabela.reforcoQtd) || 0;
     const reforcoFrequencia = parseInt(tabela.reforcoFrequencia) || 12;
     
-    // Bem móvel da TABELA
-    const bemMovelValor = parseFloat(tabela.bemMovelImovel) || 0;
-    const bemMovelMes = parseInt(tabela.bemMovelImovelMes) || mesVenda;
+    // Nas Chaves da TABELA (separado)
+    const nasChavesValor = parseFloat(tabela.nasChavesValor) || 0;
+    const nasChavesMes = parseInt(tabela.nasChavesMes) || 24;
     
     // Calcular valores por parcela da TABELA
     const valorPorEntrada = entradaParcelas > 0 ? entradaValor / entradaParcelas : entradaValor;
@@ -1050,17 +1041,17 @@ function generateComponentesFluxoTabela(data) {
         parcelas[entradaParcelas + i] = valorPorParcela;
     }
     
-    // 3. Reforços da TABELA - COMEÇA NO MÊS 1 + frequência
+    // 3. Reforços da TABELA - COMEÇA NO MÊS DA FREQUÊNCIA
     for (let i = 0; i < reforcoQtd; i++) {
-        const mesReforco = (i + 1) * reforcoFrequencia - 1; // -1 porque array é 0-indexed
+        const mesReforco = reforcoFrequencia + (i * reforcoFrequencia) - 1; // -1 porque array é 0-indexed
         if (mesReforco < 250) {
             reforcos[mesReforco] = valorPorReforco;
         }
     }
     
-    // 4. Bem móvel da TABELA - SÓ ESTE USA O MÊS DE VENDA
-    if (bemMovelMes > 0 && bemMovelMes <= 250) {
-        nasChaves[bemMovelMes - 1] = bemMovelValor;
+    // 4. Nas Chaves da TABELA
+    if (nasChavesMes > 0 && nasChavesMes <= 250) {
+        nasChaves[nasChavesMes - 1] = nasChavesValor;
     }
     
     return {
