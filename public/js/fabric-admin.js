@@ -204,27 +204,57 @@ class FabricAdmin {
      * Testar conexão com Microsoft Fabric
      */
     async testFabricConnection() {
-        
         this.updateConnectionStatus('connecting');
         this.addLog('🔄 Testando conexão com Microsoft Fabric...', 'info');
         
         try {
             const response = await this.apiClient.request('/fabric/test-connection', 'GET');
             
+            console.log('🔍 [FABRIC-ADMIN] Resposta da API:', response);
             
-            if (response.success) {
+            // Verificar se a resposta tem o formato esperado
+            if (response && (response.connected === true || response.success === true)) {
                 this.fabricStatus = 'connected';
                 this.updateConnectionStatus('connected');
                 this.addLog('✅ Conexão com Fabric estabelecida com sucesso', 'success');
                 
+                // Log adicional baseado no modo
+                if (response.mode) {
+                    this.addLog(`📋 Modo: ${response.mode}`, 'info');
+                }
+                if (response.tenantId) {
+                    this.addLog(`🏢 Tenant ID: ${response.tenantId}`, 'info');
+                }
+                
             } else {
-                throw new Error(response.message || 'Erro desconhecido');
+                // Lidar com diferentes tipos de erro
+                let errorMessage = 'Erro desconhecido';
+                
+                if (response && response.mode === 'config-missing') {
+                    errorMessage = 'Configuração do Fabric não encontrada no Vercel. Verifique as variáveis de ambiente.';
+                    this.addLog('⚠️ Configuração necessária:', 'warning');
+                    this.addLog('• FABRIC_TENANT_ID', 'warning');
+                    this.addLog('• FABRIC_CLIENT_ID', 'warning');
+                    this.addLog('• FABRIC_CLIENT_SECRET', 'warning');
+                } else if (response && response.message) {
+                    errorMessage = response.message;
+                } else if (response && response.error) {
+                    errorMessage = response.error;
+                }
+                
+                this.fabricStatus = 'disconnected';
+                this.updateConnectionStatus('disconnected');
+                this.addLog('❌ ' + errorMessage, 'error');
+                
+                if (response && response.instructions) {
+                    this.addLog('💡 ' + response.instructions, 'info');
+                }
             }
             
         } catch (error) {
             this.fabricStatus = 'disconnected';
             this.updateConnectionStatus('disconnected');
-            this.addLog('❌ Erro na conexão: ' + error.message, 'error');
+            this.addLog('❌ Erro de rede na conexão: ' + error.message, 'error');
             console.error('❌ [FABRIC-ADMIN] Erro na conexão:', error);
         }
     }

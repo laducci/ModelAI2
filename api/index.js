@@ -11,16 +11,80 @@ const Empreendimento = require('../backend/models/Empreendimento');
 let FabricIntegration;
 try {
   FabricIntegration = require('../backend/integrations/FabricIntegration');
+  console.log('✅ FabricIntegration carregado com sucesso');
 } catch (error) {
   console.warn('⚠️ FabricIntegration não carregado:', error.message);
-  // Classe mock para evitar erros
+  // Classe mock melhorada para produção
   FabricIntegration = class {
+    constructor() {
+      this.baseUrl = 'https://api.fabric.microsoft.com/v1';
+      this.accessToken = null;
+      this.tenantId = process.env.FABRIC_TENANT_ID;
+      this.clientId = process.env.FABRIC_CLIENT_ID;
+      this.clientSecret = process.env.FABRIC_CLIENT_SECRET;
+    }
+
     async testConnection() {
+      // Verificar se as variáveis de ambiente estão configuradas
+      const hasEnvVars = this.tenantId && this.clientId && this.clientSecret;
+      
+      if (!hasEnvVars) {
+        return {
+          connected: false,
+          mode: 'config-missing',
+          message: 'Variáveis de ambiente do Fabric não configuradas no Vercel',
+          error: 'Missing environment variables: FABRIC_TENANT_ID, FABRIC_CLIENT_ID, FABRIC_CLIENT_SECRET',
+          instructions: 'Configure as variáveis de ambiente no painel do Vercel'
+        };
+      }
+
+      try {
+        // Tentar autenticação real
+        const authUrl = `https://login.microsoftonline.com/${this.tenantId}/oauth2/v2.0/token`;
+        
+        const response = await fetch(authUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: new URLSearchParams({
+            grant_type: 'client_credentials',
+            client_id: this.clientId,
+            client_secret: this.clientSecret,
+            scope: 'https://analysis.windows.net/powerbi/api/.default'
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.access_token) {
+          this.accessToken = data.access_token;
+          return {
+            connected: true,
+            mode: 'production',
+            message: 'Conectado ao Microsoft Fabric com sucesso',
+            timestamp: new Date().toISOString(),
+            tenantId: this.tenantId
+          };
+        } else {
+          throw new Error(data.error_description || data.error || 'Erro na autenticação');
+        }
+      } catch (error) {
+        return {
+          connected: false,
+          mode: 'error',
+          message: 'Erro na conexão com Fabric: ' + error.message,
+          error: error.message,
+          timestamp: new Date().toISOString()
+        };
+      }
+    }
+
+    async updateConfiguration(config) {
       return {
-        connected: false,
-        mode: 'error',
-        message: 'Integração Fabric não disponível no ambiente atual',
-        error: 'Module not found'
+        success: false,
+        message: 'Configuração não suportada no ambiente Vercel. Use variáveis de ambiente.',
+        data: config
       };
     }
   };
@@ -1289,18 +1353,47 @@ const handler = async (req, res) => {
 
   // ==================== ROTAS FABRIC ====================
   
+  // Debug da API - Rota simples para testar se está funcionando
+  if (cleanUrl === '/api/fabric/debug' && method === 'GET') {
+    return sendResponse(200, {
+      success: true,
+      message: 'API Fabric funcionando',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      hasEnvVars: {
+        FABRIC_TENANT_ID: !!process.env.FABRIC_TENANT_ID,
+        FABRIC_CLIENT_ID: !!process.env.FABRIC_CLIENT_ID,
+        FABRIC_CLIENT_SECRET: !!process.env.FABRIC_CLIENT_SECRET
+      }
+    });
+  }
+  
   // Testar conexão com Fabric
   if ((cleanUrl === '/api/fabric/test' || cleanUrl === '/api/fabric/test-connection') && method === 'GET') {
     try {
       const fabricIntegration = new FabricIntegration();
       const testResult = await fabricIntegration.testConnection();
-      return sendResponse(200, testResult);
+      
+      // Garantir que sempre retornamos um formato consistente
+      const response = {
+        success: testResult.connected || false,
+        connected: testResult.connected || false,
+        mode: testResult.mode || 'unknown',
+        message: testResult.message || 'Teste de conexão executado',
+        timestamp: testResult.timestamp || new Date().toISOString(),
+        ...testResult
+      };
+      
+      return sendResponse(200, response);
     } catch (error) {
       console.error('❌ Erro no teste Fabric:', error);
       return sendResponse(500, { 
-        connected: false, 
+        success: false,
+        connected: false,
+        mode: 'error',
         message: 'Erro no teste de conexão com Fabric',
-        error: error.message 
+        error: error.message,
+        timestamp: new Date().toISOString()
       });
     }
   }
@@ -1312,6 +1405,7 @@ const handler = async (req, res) => {
       
       if (!tenantId || !clientId || !clientSecret) {
         return sendResponse(400, { 
+          success: false,
           message: 'Tenant ID, Client ID e Client Secret são obrigatórios' 
         });
       }
@@ -1323,10 +1417,15 @@ const handler = async (req, res) => {
         clientSecret
       });
 
-      return sendResponse(200, result);
+      return sendResponse(200, {
+        success: result.success || false,
+        message: result.message || 'Configuração atualizada',
+        ...result
+      });
     } catch (error) {
       console.error('❌ Erro na configuração Fabric:', error);
       return sendResponse(500, { 
+        success: false,
         message: 'Erro ao configurar Fabric',
         error: error.message 
       });
@@ -1338,10 +1437,14 @@ const handler = async (req, res) => {
     try {
       const fabricIntegration = new FabricIntegration();
       const workspaces = await fabricIntegration.listWorkspaces();
-      return sendResponse(200, { workspaces });
+      return sendResponse(200, { 
+        success: true,
+        workspaces 
+      });
     } catch (error) {
       console.error('❌ Erro ao listar workspaces:', error);
       return sendResponse(500, { 
+        success: false,
         message: 'Erro ao listar workspaces',
         error: error.message 
       });
@@ -1355,16 +1458,21 @@ const handler = async (req, res) => {
       
       if (!workspaceId || !datasetName || !scenarios) {
         return sendResponse(400, { 
+          success: false,
           message: 'Workspace ID, nome do dataset e cenários são obrigatórios' 
         });
       }
 
       const fabricIntegration = new FabricIntegration();
       const result = await fabricIntegration.exportData(workspaceId, datasetName, scenarios);
-      return sendResponse(200, result);
+      return sendResponse(200, {
+        success: result.success !== false,
+        ...result
+      });
     } catch (error) {
       console.error('❌ Erro na exportação:', error);
       return sendResponse(500, { 
+        success: false,
         message: 'Erro ao exportar dados para Fabric',
         error: error.message 
       });
@@ -1376,10 +1484,14 @@ const handler = async (req, res) => {
     try {
       const fabricIntegration = new FabricIntegration();
       const config = await fabricIntegration.getConfiguration();
-      return sendResponse(200, config);
+      return sendResponse(200, {
+        success: true,
+        ...config
+      });
     } catch (error) {
       console.error('❌ Erro ao obter configuração:', error);
       return sendResponse(500, { 
+        success: false,
         message: 'Erro ao obter configuração do Fabric',
         error: error.message 
       });
