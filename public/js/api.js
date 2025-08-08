@@ -46,7 +46,7 @@ class ApiClient {
         }
 
         try {
-            console.log(`🔍 Fazendo requisição ${config.method || 'GET'} para ${url}`, data ? { data } : '');
+            
             
             const response = await fetch(url, config);
             const responseText = await response.text();

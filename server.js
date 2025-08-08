@@ -23,7 +23,7 @@ mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 }).then(async () => {
-    console.log('📦 MongoDB Connected');
+    
     
     // Criar usuário admin padrão se não existir
     try {
@@ -41,10 +41,10 @@ mongoose.connect(process.env.MONGODB_URI, {
             });
             
             await adminUser.save();
-            console.log('👑 Usuário administrador criado:', adminEmail);
-            console.log('🔑 Senha padrão: admin123');
+            
+            
         } else {
-            console.log('👑 Usuário administrador já existe:', adminEmail);
+            
         }
     } catch (error) {
         console.error('❌ Erro ao criar admin:', error);
@@ -183,27 +183,29 @@ app.post('/api/create-admin', async (req, res) => {
 const salesRoutes = require('./backend/routes/sales');
 const cashflowRoutes = require('./backend/routes/cashflow');
 const fabricRoutes = require('./backend/routes/fabric');
+const empreendimentosRoutes = require('./backend/routes/empreendimentos');
 
 app.use('/api/sales', salesRoutes);
 app.use('/api/cashflow', cashflowRoutes);
 app.use('/api/fabric', fabricRoutes);
+app.use('/api/empreendimentos', empreendimentosRoutes);
 
 // Middleware para rotas da API (direciona para o handler universal)
 app.use('/api', async (req, res, next) => {
-    console.log('🔍 [SERVER DEBUG] Middleware API - req.path:', req.path);
-    console.log('🔍 [SERVER DEBUG] Middleware API - req.url:', req.url);
-    console.log('🔍 [SERVER DEBUG] Middleware API - req.method:', req.method);
-    console.log('🔍 [SERVER DEBUG] Middleware API - req.headers:', req.headers);
+    
+    
+    
+    
     
     // Pular as rotas já definidas acima
-    if (req.path === '/auth/login' || req.path === '/auth/verify' || req.path === '/create-admin' || req.path === '/health' || req.path.startsWith('/sales') || req.path.startsWith('/cashflow') || req.path.startsWith('/fabric')) {
-        console.log('🔄 [SERVER DEBUG] Pulando para rota definida:', req.path);
+    if (req.path === '/auth/login' || req.path === '/auth/verify' || req.path === '/create-admin' || req.path === '/health' || req.path.startsWith('/sales') || req.path.startsWith('/cashflow') || req.path.startsWith('/fabric') || req.path.startsWith('/empreendimentos')) {
+        
         return next();
     }
     
     // Montar a URL completa para o handler da API
     const fullUrl = '/api' + req.path;
-    console.log('🔧 [SERVER DEBUG] URL completa para handler:', fullUrl);
+    
     
     // Usar o handler universal para outras rotas da API
     try {
@@ -236,7 +238,7 @@ app.get('/api/health', (req, res) => {
 
 // Rota de teste para debug
 app.get('/api/test', (req, res) => {
-    console.log('🧪 [TEST] Rota de teste acessada!');
+    
     res.json({ 
         message: 'Rota de teste funcionando!', 
         url: req.url,
@@ -256,7 +258,7 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor ModelAI rodando na porta ${PORT}`);
-    console.log(`📱 Frontend: http://localhost:${PORT}`);
-    console.log(`🔧 API: http://localhost:${PORT}/api`);
+    
+    
+    
 });

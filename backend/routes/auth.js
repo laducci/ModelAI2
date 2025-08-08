@@ -57,7 +57,7 @@ router.post('/register', async (req, res) => {
 
         await user.save();
 
-        console.log('✅ Usuário criado:', user.email, 'Role:', user.role, 'Active:', user.isActive);
+        
 
         // Gerar token
         const token = jwt.sign(

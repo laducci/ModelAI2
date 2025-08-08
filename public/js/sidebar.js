@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     toggleIcon.style.transition = 'transform 0.8s ease';
                 }
                 
-                console.log('✅ Sidebar Desktop inicializada');
+                
             });
         }, 50);
     }

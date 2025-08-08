@@ -18,7 +18,7 @@ class FabricAdmin {
     }
 
     async init() {
-        console.log('🚀 [FABRIC-ADMIN] Inicializando Fabric Admin...');
+        
         
         // Verificar se o usuário é admin ANTES de qualquer coisa
         if (!this.checkAdminAccess()) {
@@ -38,7 +38,7 @@ class FabricAdmin {
         // Testar conexão inicial
         await this.testFabricConnection();
         
-        console.log('✅ [FABRIC-ADMIN] Fabric Admin inicializado com sucesso');
+        
     }
 
     /**
@@ -61,7 +61,7 @@ class FabricAdmin {
                 return false;
             }
             
-            console.log('✅ [FABRIC-ADMIN] Acesso admin confirmado para:', this.currentUser.name);
+            
             return true;
             
         } catch (error) {
@@ -107,16 +107,16 @@ class FabricAdmin {
      * Configurar event listeners
      */
     setupEventListeners() {
-        console.log('🔧 [FABRIC-ADMIN] Configurando event listeners...');
+        
         
         // Testar conexão
         const testConnectionBtn = document.getElementById('testConnection');
         if (testConnectionBtn) {
             testConnectionBtn.addEventListener('click', () => {
-                console.log('🔗 [FABRIC-ADMIN] Botão Testar Conexão clicado');
+                
                 this.testFabricConnection();
             });
-            console.log('✅ [FABRIC-ADMIN] Event listener para testConnection adicionado');
+            
         } else {
             console.error('❌ [FABRIC-ADMIN] Botão testConnection não encontrado');
         }
@@ -125,28 +125,28 @@ class FabricAdmin {
         const debugBtn = document.getElementById('debugPowerBI');
         if (debugBtn) {
             debugBtn.addEventListener('click', () => this.debugPowerBI());
-            console.log('✅ [FABRIC-ADMIN] Event listener para debugPowerBI adicionado');
+            
         }
 
         // Carregar workspaces
         const loadWorkspacesBtn = document.getElementById('loadWorkspaces');
         if (loadWorkspacesBtn) {
             loadWorkspacesBtn.addEventListener('click', () => this.loadWorkspaces());
-            console.log('✅ [FABRIC-ADMIN] Event listener para loadWorkspaces adicionado');
+            
         }
 
         // Carregar datasets
         const loadDatasetsBtn = document.getElementById('loadDatasets');
         if (loadDatasetsBtn) {
             loadDatasetsBtn.addEventListener('click', () => this.loadDatasets());
-            console.log('✅ [FABRIC-ADMIN] Event listener para loadDatasets adicionado');
+            
         }
 
         // Carregar usuários
         const loadUsersBtn = document.getElementById('loadUsers');
         if (loadUsersBtn) {
             loadUsersBtn.addEventListener('click', () => this.loadUsersByCompany());
-            console.log('✅ [FABRIC-ADMIN] Event listener para loadUsers adicionado');
+            
         }
 
         // Sincronização
@@ -204,19 +204,19 @@ class FabricAdmin {
      * Testar conexão com Microsoft Fabric
      */
     async testFabricConnection() {
-        console.log('🔗 [FABRIC-ADMIN] Testando conexão com Fabric...');
+        
         this.updateConnectionStatus('connecting');
         this.addLog('🔄 Testando conexão com Microsoft Fabric...', 'info');
         
         try {
             const response = await this.apiClient.request('/fabric/test-connection', 'GET');
-            console.log('📡 [FABRIC-ADMIN] Resposta da API:', response);
+            
             
             if (response.success) {
                 this.fabricStatus = 'connected';
                 this.updateConnectionStatus('connected');
                 this.addLog('✅ Conexão com Fabric estabelecida com sucesso', 'success');
-                console.log('✅ [FABRIC-ADMIN] Conexão Fabric OK');
+                
             } else {
                 throw new Error(response.message || 'Erro desconhecido');
             }
@@ -233,12 +233,12 @@ class FabricAdmin {
      * Debug PowerBI API
      */
     async debugPowerBI() {
-        console.log('🔍 [FABRIC-ADMIN] Executando debug PowerBI API...');
+        
         this.addLog('🔍 Executando debug detalhado da PowerBI API...', 'info');
         
         try {
             const response = await this.apiClient.request('/fabric/debug-powerbi', 'GET');
-            console.log('📡 [FABRIC-ADMIN] Resposta debug:', response);
+            
             
             if (response.success) {
                 this.addLog('✅ Debug executado com sucesso', 'success');
@@ -295,7 +295,7 @@ class FabricAdmin {
                 }
                 
                 this.addLog(`✅ ${companies.length} incorporadoras carregadas`, 'success');
-                console.log('✅ [FABRIC-ADMIN] Incorporadoras carregadas:', companies);
+                
             }
             
         } catch (error) {
@@ -321,7 +321,7 @@ class FabricAdmin {
             if (response && response.users) {
                 this.users = response.users.filter(user => user.company === this.selectedIncorporadora);
                 this.addLog(`✅ ${this.users.length} usuários carregados da ${this.selectedIncorporadora}`, 'success');
-                console.log('✅ [FABRIC-ADMIN] Usuários carregados:', this.users);
+                
             }
             
         } catch (error) {
@@ -614,7 +614,7 @@ class FabricAdmin {
     addLog(message, type = 'info') {
         const logElement = document.getElementById('syncLog');
         if (!logElement) {
-            console.log('📝 [FABRIC-ADMIN] Log:', message);
+            
             return;
         }
 
@@ -814,6 +814,6 @@ class FabricAdmin {
 
 // Inicializar quando a página carregar
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 [FABRIC-ADMIN] DOM carregado, inicializando...');
+    
     window.fabricAdmin = new FabricAdmin();
 });

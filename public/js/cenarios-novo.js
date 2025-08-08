@@ -16,7 +16,7 @@ class ScenarioManager {
             }
 
             this.currentUser = this.api.getCurrentUser();
-            console.log('👤 Usuário atual:', this.currentUser);
+            
             
             if (!this.currentUser) {
                 showError('Erro ao obter dados do usuário. Redirecionando...');
@@ -51,7 +51,7 @@ class ScenarioManager {
             if (response.ok) {
                 const data = await response.json();
                 this.scenarios = data.scenarios || [];
-                console.log('Cenários carregados da API:', this.scenarios.length);
+                
 
             } else {
                 const errorText = await response.text();
@@ -78,13 +78,13 @@ class ScenarioManager {
         }
         
         if (this.scenarios.length === 0) {
-            console.log('Nenhum cenário encontrado - exibindo estado vazio');
+            
             if (grid) grid.style.display = 'none';
             if (emptyState) emptyState.classList.remove('hidden');
             return;
         }
         
-        console.log('Renderizando', this.scenarios.length, 'cenários');
+        
         
         grid.style.display = 'grid';
         if (emptyState) emptyState.classList.add('hidden');
@@ -509,7 +509,7 @@ class ScenarioManager {
 
     editScenario(scenarioId) {
         try {
-            console.log('✏️ Editando cenário:', scenarioId);
+            
             
             if (!scenarioId) {
                 showError('ID do cenário não encontrado');
@@ -531,14 +531,14 @@ const scenarioManager = new ScenarioManager();
 
 // Inicializar quando a página carregar
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 DOM carregado, inicializando ScenarioManager...');
+    
     scenarioManager.init();
 });
 
 // ==================== FUNÇÕES GLOBAIS ====================
 
 function createNewScenario() {
-    console.log('🆕 Criando novo cenário...');
+    
     window.location.href = '/inputs.html';
 }
 

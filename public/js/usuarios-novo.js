@@ -1,6 +1,6 @@
 // USUARIOS.JS - VERSÃO SIMPLIFICADA E FUNCIONAL
-console.log('🚀🚀🚀 USUARIOS-NOVO.JS CARREGADO! 🚀🚀🚀');
-console.log('Carregando usuarios.js...');
+
+
 
 // Variáveis globais
 let usuarios = [];
@@ -9,10 +9,10 @@ let carregandoUsuarios = false;
 
 // Função para carregar usuários
 window.carregarUsuarios = async function() {
-    console.log('Carregando usuários...');
+    
     
     if (carregandoUsuarios) {
-        console.log('Já carregando, ignorando...');
+        
         return;
     }
     
@@ -28,7 +28,7 @@ window.carregarUsuarios = async function() {
         if (response.ok) {
             const data = await response.json();
             usuarios = data.users || [];
-            console.log('Usuários carregados:', usuarios.length);
+            
             
             renderizarUsuarios();
             atualizarEstatisticas();
@@ -47,7 +47,7 @@ window.carregarUsuarios = async function() {
 
 // Função para renderizar usuários
 function renderizarUsuarios() {
-    console.log('Renderizando usuários...');
+    
     
     const tbody = document.getElementById('tabelaUsuarios');
     if (!tbody) {
@@ -73,7 +73,7 @@ function renderizarUsuarios() {
     usuariosFiltrados = usuarios;
     filtrarUsuarios();
     
-    console.log('Usuários renderizados!');
+    
 }
 
 // Função para atualizar estatísticas
@@ -89,7 +89,7 @@ function atualizarEstatisticas() {
 
 // Função para editar usuário
 window.editarUsuario = function(userId) {
-    console.log('Editando usuário:', userId);
+    
     
     const usuario = usuarios.find(u => u._id === userId);
     if (!usuario) {
@@ -117,12 +117,12 @@ window.fecharModalEditarUsuario = function() {
 
 // Função para salvar edição
 window.salvarEdicaoUsuario = async function(event) {
-    console.log('🔥🔥🔥 FUNÇÃO SALVAR EDITAÇÃO CHAMADA! 🔥🔥🔥');
+    
     if (event) event.preventDefault();
-    console.log('salvarEdicaoUsuario chamada!');
+    
     
     const userId = document.getElementById('editarUsuarioId').value;
-    console.log('User ID:', userId);
+    
     
     if (!userId) {
         showError('ID do usuário não encontrado.');
@@ -137,7 +137,7 @@ window.salvarEdicaoUsuario = async function(event) {
         active: document.getElementById('editarStatus').value === 'true'
     };
     
-    console.log('Dados de atualização:', dadosAtualizacao);
+    
     
     // Validação básica
     if (!dadosAtualizacao.name || !dadosAtualizacao.email) {
@@ -148,11 +148,11 @@ window.salvarEdicaoUsuario = async function(event) {
     const novaSenha = document.getElementById('editarSenha').value;
     if (novaSenha && novaSenha.trim()) {
         dadosAtualizacao.password = novaSenha.trim();
-        console.log('Senha será atualizada');
+        
     }
     
     try {
-        console.log('Enviando requisição PUT para:', `/api/users/${userId}`);
+        
         const response = await fetch(`/api/users/${userId}`, {
             method: 'PUT',
             headers: {
@@ -162,11 +162,11 @@ window.salvarEdicaoUsuario = async function(event) {
             body: JSON.stringify(dadosAtualizacao)
         });
         
-        console.log('Status da resposta:', response.status);
+        
         
         if (response.ok) {
             const resultado = await response.json();
-            console.log('Resposta da API:', resultado);
+            
             showSuccess(`Usuário "${dadosAtualizacao.name}" atualizado com sucesso!`);
             window.fecharModalEditarUsuario();
             await window.carregarUsuarios();
@@ -287,10 +287,10 @@ window.logout = async function() {
 
 // INICIALIZAÇÃO
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('Inicializando página...');
+    
     
     if (inicializacaoRealizada) {
-        console.log('Já inicializado, ignorando...');
+        
         return;
     }
     inicializacaoRealizada = true;
@@ -304,7 +304,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             return;
         }
         
-        console.log('Token válido, carregando usuários...');
+        
         
         // Carregar usuários
         await window.carregarUsuarios();
@@ -315,7 +315,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Inicializar filtros
         inicializarFiltros();
         
-        console.log('Inicialização completa!');
+        
         
     } catch (error) {
         console.error('Erro na inicialização:', error);
@@ -325,20 +325,20 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 // Configurar event listeners do modal
 function setupModalEventListeners() {
-    console.log('Configurando event listeners do modal...');
+    
     
     // Botão Novo Usuário
     const btnNovoUsuario = document.getElementById('btnNovoUsuario');
     if (btnNovoUsuario) {
         btnNovoUsuario.addEventListener('click', abrirModalNovoUsuario);
-        console.log('Event listener do botão Novo Usuário configurado');
+        
     }
     
     // Form de novo usuário
     const formNovoUsuario = document.getElementById('formNovoUsuario');
     if (formNovoUsuario) {
         formNovoUsuario.addEventListener('submit', criarNovoUsuario);
-        console.log('Event listener do form configurado');
+        
     }
     
     // Modal - fechar clicando fora
@@ -349,13 +349,13 @@ function setupModalEventListeners() {
                 fecharModalNovoUsuario();
             }
         });
-        console.log('Event listener para fechar modal clicando fora configurado');
+        
     }
 }
 
 // Abrir modal de novo usuário
 function abrirModalNovoUsuario() {
-    console.log('Abrindo modal de novo usuário...');
+    
     const modal = document.getElementById('modalNovoUsuario');
     if (modal) {
         modal.classList.remove('hidden');
@@ -366,7 +366,7 @@ function abrirModalNovoUsuario() {
 
 // Fechar modal de novo usuário
 window.fecharModalNovoUsuario = function() {
-    console.log('Fechando modal de novo usuário...');
+    
     const modal = document.getElementById('modalNovoUsuario');
     if (modal) {
         modal.classList.add('hidden');
@@ -376,7 +376,7 @@ window.fecharModalNovoUsuario = function() {
 // Criar novo usuário
 async function criarNovoUsuario(event) {
     event.preventDefault();
-    console.log('Criando novo usuário...');
+    
     
     const formData = new FormData(event.target);
     const userData = {
@@ -415,7 +415,7 @@ async function criarNovoUsuario(event) {
 
 // Fechar modal de editar usuário
 window.fecharModalEditarUsuario = function() {
-    console.log('Fechando modal de editar usuário...');
+    
     const modal = document.getElementById('modalEditarUsuario');
     if (modal) {
         modal.classList.add('hidden');
@@ -425,7 +425,7 @@ window.fecharModalEditarUsuario = function() {
 // Salvar edição de usuário
 window.salvarEdicaoUsuario = async function(event) {
     event.preventDefault();
-    console.log('Salvando edição de usuário...');
+    
     
     const userId = document.getElementById('editarUsuarioId').value;
     const userData = {
@@ -588,4 +588,4 @@ function inicializarFiltros() {
     }
 }
 
-console.log('usuarios.js carregado!');
+

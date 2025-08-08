@@ -15,14 +15,14 @@ const { auth, adminAuth } = require('../middleware/auth');
 // GET /api/fabric/debug-powerbi - Debug PowerBI API (ADMIN ONLY)
 router.get('/debug-powerbi', auth, adminAuth, async (req, res) => {
     try {
-        console.log('🔍 DEBUG: Testando acesso PowerBI API...');
+        
         
         const fabric = new FabricIntegration();
         await fabric.authenticate();
         
-        console.log('🔍 DEBUG: Token obtido:', fabric.accessToken ? 'SIM' : 'NÃO');
-        console.log('🔍 DEBUG: Tenant ID:', fabric.tenantId);
-        console.log('🔍 DEBUG: Client ID:', fabric.clientId);
+        
+        
+        
         
         // Teste 1: Chamar API de workspaces diretamente
         const workspacesResponse = await fetch('https://api.powerbi.com/v1.0/myorg/groups', {
@@ -32,9 +32,9 @@ router.get('/debug-powerbi', auth, adminAuth, async (req, res) => {
             }
         });
         
-        console.log('🔍 DEBUG: Status workspaces:', workspacesResponse.status);
+        
         const workspacesText = await workspacesResponse.text();
-        console.log('🔍 DEBUG: Resposta workspaces:', workspacesText);
+        
         
         // Teste 2: Verificar capacidades do usuário
         const capacitiesResponse = await fetch('https://api.powerbi.com/v1.0/myorg/capacities', {
@@ -44,9 +44,9 @@ router.get('/debug-powerbi', auth, adminAuth, async (req, res) => {
             }
         });
         
-        console.log('🔍 DEBUG: Status capacities:', capacitiesResponse.status);
+        
         const capacitiesText = await capacitiesResponse.text();
-        console.log('🔍 DEBUG: Resposta capacities:', capacitiesText);
+        
         
         res.json({
             success: true,
@@ -119,12 +119,12 @@ router.get('/workspaces', auth, adminAuth, async (req, res) => {
 router.get('/datasets/:workspaceId', auth, adminAuth, async (req, res) => {
     try {
         const { workspaceId } = req.params;
-        console.log('📊 Listando datasets para workspace:', workspaceId);
+        
         
         const fabric = new FabricIntegration();
         
         const datasets = await fabric.listSemanticModels(workspaceId);
-        console.log('📈 Datasets encontrados:', datasets.length);
+        
         
         res.json({
             success: true,
@@ -170,7 +170,7 @@ router.post('/save-configuration', auth, adminAuth, async (req, res) => {
         });
         
         if (!incorporadora || !workspaceId || !datasetId) {
-            console.log('❌ [FABRIC SAVE] Campos obrigatórios faltando');
+            
             return res.status(400).json({
                 success: false,
                 message: 'Incorporadora, workspace e dataset são obrigatórios'
@@ -181,7 +181,7 @@ router.post('/save-configuration', auth, adminAuth, async (req, res) => {
         let existingConfig = await FabricConfiguration.findByCompany(incorporadora);
         
         if (existingConfig) {
-            console.log('🔄 [FABRIC SAVE] Atualizando configuração existente');
+            
             // Atualizar configuração existente
             existingConfig.company = incorporadora;
             existingConfig.workspaceId = workspaceId;
@@ -194,14 +194,14 @@ router.post('/save-configuration', auth, adminAuth, async (req, res) => {
             
             await existingConfig.save();
             
-            console.log('✅ [FABRIC SAVE] Configuração atualizada:', existingConfig._id);
+            
             res.json({
                 success: true,
                 message: `Configuração da ${incorporadora} atualizada com sucesso`,
                 data: existingConfig
             });
         } else {
-            console.log('➕ [FABRIC SAVE] Criando nova configuração');
+            
             // Criar nova configuração
             const newConfig = new FabricConfiguration({
                 company: incorporadora,
@@ -215,7 +215,7 @@ router.post('/save-configuration', auth, adminAuth, async (req, res) => {
             
             await newConfig.save();
             
-            console.log('✅ [FABRIC SAVE] Nova configuração criada:', newConfig._id);
+            
             res.json({
                 success: true,
                 message: `Configuração da ${incorporadora} criada com sucesso`,
@@ -312,7 +312,7 @@ router.post('/sync', auth, adminAuth, async (req, res) => {
         
         for (const module of modulesToSync) {
             try {
-                console.log(`🔄 Sincronizando ${module} para usuário ${userId}`);
+                
                 
                 const moduleData = await fabric.syncModuleData(workspaceId, datasetId, module);
                 
@@ -393,7 +393,7 @@ router.post('/sync-all', auth, adminAuth, async (req, res) => {
         
         for (const user of users) {
             try {
-                console.log(`🔄 Sincronizando dados para usuário: ${user.email}`);
+                
                 
                 const userResults = await fabric.syncAllModules(workspaceId, datasetId);
                 
@@ -469,7 +469,7 @@ router.post('/sync-company', auth, adminAuth, async (req, res) => {
         }
         
         const startTime = Date.now();
-        console.log(`🚀 Iniciando sincronização completa da ${company}`);
+        
         
         // Buscar todos os usuários da empresa
         const users = await User.find({ company, isActive: true });
@@ -484,7 +484,7 @@ router.post('/sync-company', auth, adminAuth, async (req, res) => {
         const userIds = users.map(u => u._id);
         const scenarios = await Scenario.find({ userId: { $in: userIds } });
         
-        console.log(`📊 Encontrados ${scenarios.length} cenários de ${users.length} usuários da ${company}`);
+        
         
         const fabric = new FabricIntegration();
         const syncResults = {};
@@ -501,7 +501,7 @@ router.post('/sync-company', auth, adminAuth, async (req, res) => {
         // Sincronizar cada módulo
         for (const module of fabricConfig.modules) {
             try {
-                console.log(`🔄 Sincronizando módulo ${module} da ${company}...`);
+                
                 
                 const tableName = `ModelAI_${module.charAt(0).toUpperCase() + module.slice(1)}_${company.replace(/\s+/g, '')}`;
                 const data = moduleData[module];
@@ -515,7 +515,7 @@ router.post('/sync-company', auth, adminAuth, async (req, res) => {
                         tableName: tableName
                     };
                     
-                    console.log(`✅ Módulo ${module}: ${data.length} registros sincronizados`);
+                    
                 } else {
                     syncResults[module] = {
                         success: true,
@@ -549,7 +549,7 @@ router.post('/sync-company', auth, adminAuth, async (req, res) => {
             duration
         });
         
-        console.log(`🎉 Sincronização da ${company} concluída: ${totalRecords} registros em ${duration}ms`);
+        
         
         res.json({
             success: true,
@@ -810,22 +810,22 @@ async function processCashFlowData(userId, data) {
 
 async function processDefaultsData(userId, data) {
     // Implementar processamento de inadimplência
-    console.log('Processando dados de inadimplência...');
+    
 }
 
 async function processBudgetData(userId, data) {
     // Implementar processamento de orçamento
-    console.log('Processando dados de orçamento...');
+    
 }
 
 async function processConstructionData(userId, data) {
     // Implementar processamento de obra
-    console.log('Processando dados de obra...');
+    
 }
 
 async function processExpensesData(userId, data) {
     // Implementar processamento de despesas
-    console.log('Processando dados de despesas...');
+    
 }
 
 module.exports = router;

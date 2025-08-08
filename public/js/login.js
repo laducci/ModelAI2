@@ -1,5 +1,5 @@
 // LOGIN.JS - SISTEMA REAL DE PRODUÇÃO
-console.log('🔐 LOGIN - Sistema Real Iniciando...');
+
 
 // Global state
 let isLoading = false;
@@ -90,7 +90,7 @@ if (loginForm) {
       return;
     }
 
-    console.log('🔐 Tentativa de login para:', email);
+    
 
     try {
       // API Call direto (sem depender de ApiClient não carregado ainda)
@@ -98,10 +98,10 @@ if (loginForm) {
         ? 'http://localhost:3000/api' 
         : '/api'; // Usar URL relativa para Vercel
 
-      console.log('🌐 Base URL:', baseURL);
+      
       const apiURL = `${baseURL}/auth/login`;
-      console.log('🔗 URL completa:', apiURL);
-      console.log('📤 Enviando dados:', { email, password: '***' });
+      
+      
 
       const response = await fetch(apiURL, {
         method: 'POST',
@@ -111,18 +111,18 @@ if (loginForm) {
         body: JSON.stringify({ email, password })
       });
 
-      console.log('📥 Status da resposta:', response.status);
+      
       console.log('📥 Headers da resposta:', Object.fromEntries(response.headers.entries()));
 
       const data = await response.json();
-      console.log('📥 Resposta do servidor:', data);
+      
 
       if (!response.ok) {
         throw new Error(data.message || data.error || `Erro ${response.status}`);
       }
 
       if (data.message && data.token && data.user) {
-        console.log('✅ Login bem-sucedido para:', data.user.name, 'Role:', data.user.role);
+        
 
         // Salvar dados de autenticação
         localStorage.setItem('token', data.token);
@@ -140,10 +140,10 @@ if (loginForm) {
         // Redirecionar baseado no role
         setTimeout(() => {
           if (data.user.role === 'admin') {
-            console.log('👑 Redirecionando admin para usuarios.html');
+            
             window.location.href = 'usuarios.html';
           } else {
-            console.log('👤 Redirecionando usuário para inputs.html');
+            
             window.location.href = 'inputs.html';
           }
         }, 1000);
@@ -163,7 +163,7 @@ if (loginForm) {
 
 // Verificar se já está logado
 document.addEventListener('DOMContentLoaded', function () {
-  console.log('📋 Login page carregada');
+  
   
   // COMENTANDO O REDIRECIONAMENTO AUTOMÁTICO PARA PODER TESTAR
   /*
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (token && userData) {
     try {
       const user = JSON.parse(userData);
-      console.log('✅ Usuário já logado:', user.name);
+      
       
       if (user.role === 'admin') {
         window.location.replace('usuarios.html');
@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function () {
         window.location.replace('inputs.html');
       }
     } catch (error) {
-      console.log('❌ Dados corrompidos - limpando localStorage');
+      
       localStorage.clear();
     }
   }
@@ -200,4 +200,4 @@ document.addEventListener('DOMContentLoaded', function () {
 window.togglePasswordVisibility = togglePasswordVisibility;
 window.showForgotPassword = showForgotPassword;
 
-console.log('🔐 LOGIN.JS - Sistema Real Configurado!');
+

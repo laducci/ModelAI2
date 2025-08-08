@@ -429,8 +429,8 @@ window.testParseBRNumber = function() {
     const testValues = ['100000', '100.000', '100.000,00', 'R$ 100.000,00', '500000'];
     testValues.forEach(val => {
         const result = parseBRNumber(val);
-        console.log(`🧪 Testando: "${val}" → Resultado: ${result}`);
-        console.log('---');
+        
+        
     });
 };
 
@@ -1103,7 +1103,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Função para atualizar cenário existente (modo edição)
 async function updateExistingScenario() {
-    console.log('🔄 Atualizando cenário existente...');
+    
     
     const editingScenario = sessionStorage.getItem('editingScenario');
     if (!editingScenario) {
@@ -1114,17 +1114,17 @@ async function updateExistingScenario() {
     
     try {
         const scenario = JSON.parse(editingScenario);
-        console.log('📋 Cenário sendo editado:', scenario);
+        
         
         // 1. Coletar dados dos inputs atuais
         const data = collectAllInputData();
-        console.log('📊 Novos dados coletados:', data);
+        
         
         // 2. Calcular todos os indicadores com os novos dados
         let results = null;
         try {
             results = calculateAllIndicators(data);
-            console.log('✅ Novos indicadores calculados:', results);
+            
         } catch (calcError) {
             console.warn('⚠️ Erro no cálculo dos indicadores:', calcError.message);
             showError('Aviso: Cenário atualizado, mas alguns cálculos podem estar incompletos: ' + calcError.message);
@@ -1139,7 +1139,7 @@ async function updateExistingScenario() {
             lastModified: new Date().toISOString()
         };
         
-        console.log('📤 Enviando atualização para API:', payload);
+        
         
         // Verificar se temos um ID válido
         if (!scenario._id) {
@@ -1150,7 +1150,7 @@ async function updateExistingScenario() {
             return;
         }
         
-        console.log('🔄 Atualizando cenário ID:', scenario._id);
+        
         
         // 4. Enviar atualização para o backend
         const response = await fetch(`/api/scenarios/${scenario._id}`, {
@@ -1164,7 +1164,7 @@ async function updateExistingScenario() {
         
         if (response.ok) {
             const result = await response.json();
-            console.log('✅ Cenário atualizado:', result);
+            
             
             // Salvar dados necessários para exibição dos resultados
             sessionStorage.setItem('currentInputData', JSON.stringify(data));
@@ -1210,12 +1210,12 @@ async function updateExistingScenario() {
 }
 
 function saveScenario() {
-    console.log('💾 Salvando NOVO cenário...');
+    
     
     try {
         // Limpar modo de edição se existir (garante que é um novo cenário)
         sessionStorage.removeItem('editingScenario');
-        console.log('🗑️ Removido editingScenario - criando novo cenário');
+        
         
         // Coletar todos os dados dos inputs
         const scenarioData = collectAllInputData();
@@ -1281,17 +1281,17 @@ async function confirmSaveScenarioFromInputs() {
 
 async function saveScenarioWithName(name) {
     try {
-        console.log('💾 === SALVANDO CENÁRIO COM CÁLCULOS ===');
+        
         
         // 1. Coletar dados dos inputs
         const data = collectAllInputData();
-        console.log('📊 Dados coletados:', data);
+        
         
         // 2. Calcular todos os indicadores
         let results = null;
         try {
             results = calculateAllIndicators(data);
-            console.log('✅ Indicadores calculados:', results);
+            
         } catch (calcError) {
             console.warn('⚠️ Erro no cálculo dos indicadores:', calcError.message);
             showError('Aviso: Cenário salvo, mas alguns cálculos podem estar incompletos: ' + calcError.message);
@@ -1305,7 +1305,7 @@ async function saveScenarioWithName(name) {
             results: results
         };
         
-        console.log('📤 Enviando para API:', payload);
+        
         
         // 4. Enviar para o backend
         const response = await fetch('/api/scenarios', {
@@ -1319,7 +1319,7 @@ async function saveScenarioWithName(name) {
         
         if (response.ok) {
             const result = await response.json();
-            console.log('✅ Cenário salvo:', result);
+            
             showSuccess('Cenário salvo com sucesso! Cálculos realizados.');
             
             // Retornar o resultado para uso posterior
@@ -1348,11 +1348,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     
     // Verificar todas as chaves do sessionStorage
-    console.log('🔍 Conteúdo completo do sessionStorage:');
+    
     for (let i = 0; i < sessionStorage.length; i++) {
         const key = sessionStorage.key(i);
         const value = sessionStorage.getItem(key);
-        console.log(`  ${key}: ${value}`);
+        
     }
     
     // ONLY load scenario data if explicitly editing AND came from scenarios page
@@ -1361,12 +1361,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (editingScenario && cameFromScenarios) {
         try {
             const scenario = JSON.parse(editingScenario);
-            console.log('📝 SUCESSO - Cenário parseado:', scenario);
-            console.log('📝 Nome do cenário:', scenario.name);
-            console.log('📊 Dados do cenário:', scenario.data);
+            
+            
+            
             
             // ✅ MODO EDIÇÃO - Cenário existe e veio de cenarios.html
-            console.log('🔄 MODO EDIÇÃO ATIVADO');
+            
             
             loadScenarioData(scenario.data);
             showInfo(`Editando cenário: ${scenario.name}`);
@@ -1379,13 +1379,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     span.textContent = 'Atualizar Cenário';
                 }
                 saveButton.setAttribute('onclick', 'updateScenario()');
-                console.log('✅ Botão alterado para updateScenario');
+                
             } else {
-                console.log('⚠️ Botão de salvar não encontrado');
+                
             }
             
             // NÃO remover o editingScenario aqui - manter até salvar/cancelar
-            console.log('✅ Modo de edição ativado com sucesso');
+            
         } catch (error) {
             console.error('❌ ERRO ao carregar cenário para edição:', error);
             console.error('❌ Dados que causaram erro:', editingScenario);
@@ -1393,10 +1393,10 @@ document.addEventListener('DOMContentLoaded', function() {
             setupCreateMode();
         }
     } else {
-        console.log('📝 MODO CRIAÇÃO ATIVADO');
+        
         // Se não veio de cenarios.html, limpar dados de edição e configurar modo criação
         if (!cameFromScenarios && editingScenario) {
-            console.log('🧹 Limpando editingScenario - acesso direto à página');
+            
             sessionStorage.removeItem('editingScenario');
         }
         setupCreateMode();
@@ -1416,7 +1416,7 @@ function setupCreateMode() {
         saveButton.setAttribute('onclick', 'saveScenario()');
         console.log('✅ Botão configurado para saveScenario (novo cenário)');
     } else {
-        console.log('⚠️ Botão de salvar não encontrado');
+        
     }
     
     // Limpar qualquer dado residual
@@ -1429,12 +1429,12 @@ function setupCreateMode() {
         updateActionButton(tabId);
     }
     
-    console.log('✅ Modo de criação configurado');
+    
 }
 
 // Função para resetar para modo de criação (pode ser chamada manualmente)
 function resetToCreateMode() {
-    console.log('🔄 Resetando para modo de criação...');
+    
     sessionStorage.removeItem('editingScenario');
     setupCreateMode();
     showInfo('Modo de criação ativado - agora você pode criar um novo cenário');
@@ -1442,7 +1442,7 @@ function resetToCreateMode() {
 
 // Function to collect all input data
 function collectAllInputData() {
-    console.log('🔍 === COLETANDO DADOS DE TODOS OS INPUTS ===');
+    
     
     // Função auxiliar para debugar cada campo
     function getFieldValue(id, parser = (v) => v || '') {
@@ -1450,17 +1450,17 @@ function collectAllInputData() {
         const exists = !!element;
         const value = element?.value;
         
-        console.log(`🔍 Campo ${id}:`);
-        console.log(`  📍 Elemento existe: ${exists}`);
+        
+        
         console.log(`  📝 Valor bruto: "${value}" (tipo: ${typeof value})`);
         
         if (!exists) {
-            console.log(`  ❌ ELEMENTO ${id} NÃO ENCONTRADO!`);
+            
             return '';
         }
         
         if (value === undefined || value === null || value === '') {
-            console.log(`  ⚠️ Valor vazio - retornando valor padrão`);
+            
             return parser('') || 0;
         }
         
@@ -1469,7 +1469,7 @@ function collectAllInputData() {
             console.log(`  ✅ Valor parseado: ${parsed} (tipo: ${typeof parsed})`);
             return parsed;
         } catch (error) {
-            console.log(`  ❌ Erro no parser: ${error.message}`);
+            
             return '';
         }
     }
@@ -1566,7 +1566,7 @@ function collectAllInputData() {
         }
     };
     
-    console.log('📊 === RESUMO DOS DADOS COLETADOS ===');
+    
     console.log('👥 Dados Gerais:', Object.keys(data.dadosGerais).length, 'campos');
     console.log('📊 Tabela Vendas:', Object.keys(data.tabelaVendas).length, 'campos');
     console.log('🤝 Proposta Cliente:', Object.keys(data.propostaCliente).length, 'campos');
@@ -1574,22 +1574,22 @@ function collectAllInputData() {
         Object.keys(data.dadosGerais).length + 
         Object.keys(data.tabelaVendas).length + 
         Object.keys(data.propostaCliente).length);
-    console.log('📊 Dados completos coletados:', data);
+    
     
     return data;
 }
 
 // Function to load scenario data into inputs
 function loadScenarioData(data) {
-    console.log('🔄 === INICIANDO CARREGAMENTO DOS DADOS ===');
-    console.log('📊 Dados recebidos:', data);
+    
+    
     
     if (!data) {
-        console.log('❌ Nenhum dado fornecido para carregar');
+        
         return;
     }
     
-    console.log('📂 Carregando dados do cenário nos inputs...');
+    
     
     // Função auxiliar para formatar números em formato brasileiro
     function formatBRNumber(value) {
@@ -1602,7 +1602,7 @@ function loadScenarioData(data) {
 
     // DADOS GERAIS (8 campos)
     if (data.dadosGerais) {
-        console.log('📋 Carregando dados gerais:', data.dadosGerais);
+        
         const dg = data.dadosGerais;
         
         const campos = [
@@ -1618,18 +1618,18 @@ function loadScenarioData(data) {
                 } else {
                     elemento.value = dg[campo] || '';
                 }
-                console.log(`✅ ${campo}: ${dg[campo]}`);
+                
             } else if (!elemento) {
-                console.log(`⚠️ Elemento não encontrado: ${campo}`);
+                
             }
         });
     } else {
-        console.log('⚠️ dadosGerais não encontrado nos dados');
+        
     }
     
     // TABELA DE VENDAS (15 campos)
     if (data.tabelaVendas) {
-        console.log('💰 Carregando tabela de vendas:', data.tabelaVendas);
+        
         const tv = data.tabelaVendas;
         
         // Entrada (4 campos)
@@ -1644,7 +1644,7 @@ function loadScenarioData(data) {
                 } else {
                     element.value = tv[field] || '';
                 }
-                console.log(`✅ ${elementId}: ${tv[field]}`);
+                
             }
         });
         
@@ -1660,7 +1660,7 @@ function loadScenarioData(data) {
                 } else {
                     element.value = tv[field] || '';
                 }
-                console.log(`✅ ${elementId}: ${tv[field]}`);
+                
             }
         });
         
@@ -1676,7 +1676,7 @@ function loadScenarioData(data) {
                 } else {
                     element.value = tv[field] || '';
                 }
-                console.log(`✅ ${elementId}: ${tv[field]}`);
+                
             }
         });
         
@@ -1694,12 +1694,12 @@ function loadScenarioData(data) {
             document.getElementById('vendaDesagio').value = tv.desagio || '';
         }
     } else {
-        console.log('⚠️ tabelaVendas não encontrado nos dados');
+        
     }
     
     // PROPOSTA CLIENTE (16 campos)
     if (data.propostaCliente) {
-        console.log('📝 Carregando proposta cliente:', data.propostaCliente);
+        
         const pc = data.propostaCliente;
         
         // Mês da venda
@@ -1719,7 +1719,7 @@ function loadScenarioData(data) {
                 } else {
                     element.value = pc[field] || '';
                 }
-                console.log(`✅ ${elementId}: ${pc[field]}`);
+                
             }
         });
         
@@ -1735,7 +1735,7 @@ function loadScenarioData(data) {
                 } else {
                     element.value = pc[field] || '';
                 }
-                console.log(`✅ ${elementId}: ${pc[field]}`);
+                
             }
         });
         
@@ -1751,7 +1751,7 @@ function loadScenarioData(data) {
                 } else {
                     element.value = pc[field] || '';
                 }
-                console.log(`✅ ${elementId}: ${pc[field]}`);
+                
             }
         });
         
@@ -1766,7 +1766,7 @@ function loadScenarioData(data) {
             document.getElementById('desagio').value = pc.desagio || '';
         }
     } else {
-        console.log('⚠️ propostaCliente não encontrado nos dados');
+        
     }
     
 }
@@ -1783,23 +1783,23 @@ async function updateScenario() {
     
     // Verificar token de autenticação
     const token = localStorage.getItem('token');
-    console.log('🔐 Token encontrado:', token ? 'SIM' : 'NÃO');
+    
     console.log('🔐 Token (primeiros 50 chars):', token ? token.substring(0, 50) + '...' : 'N/A');
     
     try {
         const scenario = JSON.parse(editingScenario);
-        console.log('📝 ID do cenário:', scenario.id);
-        console.log('📝 Nome do cenário:', scenario.name);
+        
+        
         
         // 1. Coletar dados dos inputs
         const data = collectAllInputData();
-        console.log('📊 Dados coletados para atualização:', data);
+        
         
         // 2. Calcular todos os indicadores
         let results = null;
         try {
             results = calculateAllIndicators(data);
-            console.log('✅ Indicadores calculados para atualização:', results);
+            
         } catch (calcError) {
             console.warn('⚠️ Erro no cálculo dos indicadores:', calcError.message);
             showError('Aviso: Cenário atualizado, mas alguns cálculos podem estar incompletos: ' + calcError.message);
@@ -1950,7 +1950,7 @@ function generateCashFlow(data, tipo) {
 function calculateVPL(fluxoDeCaixa, tmaMes) {
     
     if (!fluxoDeCaixa || fluxoDeCaixa.length === 0) {
-        console.log('⚠️ Fluxo de caixa vazio');
+        
         return 0;
     }
     

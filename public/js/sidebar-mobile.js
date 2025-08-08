@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
             mainContent.classList.add('ml-0');
         }
         
-        console.log('✅ Sidebar Mobile inicializada');
+        
     }
 
     // Monitorar redimensionamento (só para garantir)

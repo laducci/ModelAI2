@@ -23,17 +23,17 @@ function getUserData() {
 
 // ATUALIZAR DADOS IMEDIATAMENTE
 function loadUserDataImmediately() {
-    console.log('🔍 [AUTH-GUARD] loadUserDataImmediately chamada');
+    
     const userData = getUserData();
-    console.log('🔍 [AUTH-GUARD] getUserData retornou:', userData);
+    
     
     if (userData) {
         currentUser = userData.user;
-        console.log('🔥 DADOS DO USUÁRIO CARREGADOS IMEDIATAMENTE:', currentUser);
-        console.log('🔥 Nome:', currentUser?.name, 'Email:', currentUser?.email, 'Role:', currentUser?.role);
+        
+        
         updateUserInterface();
     } else {
-        console.log('❌ [AUTH-GUARD] Nenhum userData encontrado');
+        
     }
 }
 
@@ -82,7 +82,7 @@ function updateUserInterface() {
         return;
     }
     
-    console.log('🔄 Atualizando interface para:', currentUser.name, currentUser.email);
+    
     
     // Nome do usuário - IMEDIATAMENTE
     const nameElements = document.querySelectorAll('#user-name, #userName, .user-name');

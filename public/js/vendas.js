@@ -423,7 +423,7 @@ class VendasDashboard {
 
     mostrarSucesso(mensagem) {
         // Implementar sistema de notificações
-        console.log(mensagem);
+        
         alert(mensagem);
     }
 }

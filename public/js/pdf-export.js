@@ -31,7 +31,7 @@ function getImageAsBase64(imagePath) {
 
 // Função melhorada para exportar PDF com logo
 async function exportToPDFWithLogo() {
-    console.log('🔍 Iniciando exportação PDF com logo');
+    
     
     // Verificar se há dados para exportar
     const scenarioName = document.getElementById('scenarioName').textContent || 'Nome do Cenário';
@@ -67,7 +67,7 @@ async function exportToPDFWithLogo() {
             const logoY = 4; // Centralizado no header de 20mm
             
             doc.addImage(logoBase64, 'PNG', logoX, logoY, logoWidth, logoHeight);
-            console.log('✅ Logo adicionada com sucesso ao PDF');
+            
             
         } catch (error) {
             console.warn('⚠️ Não foi possível carregar a logo, usando texto:', error);
@@ -464,7 +464,7 @@ function finalizarPDF(doc, pageWidth, margin, dataHora, agora, scenarioName) {
     const fileName = `ModelAI_Analise_${scenarioName.replace(/[^a-zA-Z0-9]/g, '_')}_${agora.toISOString().slice(0,10)}.pdf`;
     doc.save(fileName);
     
-    console.log('✅ PDF exportado com sucesso:', fileName);
+    
     console.log(`📊 Total de linhas exportadas: ${fluxoDataLength} (período: ${periodoSelecionado} meses)`);
     
     if (window.showAlert) {

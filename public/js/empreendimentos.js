@@ -181,7 +181,7 @@ class EmpreendimentosManager {
             }
 
             const result = await response.json();
-            console.log('Empreendimento salvo:', result);
+            
 
             // Atualizar localStorage também para compatibilidade
             if (this.editingId) {
@@ -332,7 +332,7 @@ class EmpreendimentosManager {
                 });
 
                 if (response.ok) {
-                    console.log('Empreendimento excluído da API:', id);
+                    
                 }
                 
                 // Remover do estado local (independente do resultado da API)
@@ -473,7 +473,7 @@ class EmpreendimentosManager {
 
             if (response.ok) {
                 const data = await response.json();
-                console.log('Empreendimentos carregados da API:', data);
+                
                 
                 // Converter dados da API para formato do frontend
                 this.empreendimentos = data.empreendimentos.map(emp => ({
@@ -514,7 +514,7 @@ class EmpreendimentosManager {
         }
 
         // Fallback: carregar do localStorage
-        console.log('Carregando empreendimentos do localStorage como fallback');
+        
         try {
             const saved = localStorage.getItem('empreendimentos');
             if (saved) {
