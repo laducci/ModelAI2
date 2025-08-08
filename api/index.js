@@ -129,6 +129,53 @@ try {
       }
     }
 
+    async listDatasets(workspaceId) {
+      // Verificar se as variáveis de ambiente estão configuradas
+      if (!this.tenantId || !this.clientId || !this.clientSecret) {
+        throw new Error('Variáveis de ambiente do Fabric não configuradas');
+      }
+
+      if (!workspaceId) {
+        throw new Error('Workspace ID é obrigatório');
+      }
+
+      try {
+        // Tentar autenticação primeiro
+        if (!this.accessToken) {
+          const authResult = await this.testConnection();
+          if (!authResult.connected) {
+            throw new Error(authResult.message);
+          }
+        }
+
+        // Tentar listar datasets reais do workspace
+        const response = await fetch(`https://api.powerbi.com/v1.0/myorg/groups/${workspaceId}/datasets`, {
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Service Principal não autorizado. Configure as permissões no Power BI Admin Portal.');
+          } else if (response.status === 403) {
+            throw new Error('Acesso negado. Verifique as permissões do Service Principal.');
+          } else if (response.status === 404) {
+            throw new Error('Workspace não encontrado ou sem permissão de acesso.');
+          } else {
+            throw new Error(`Erro HTTP ${response.status}: ${response.statusText}`);
+          }
+        }
+
+        const data = await response.json();
+        return data.value || [];
+      } catch (error) {
+        console.error('❌ Erro ao listar datasets:', error);
+        throw error;
+      }
+    }
+
     async getConfiguration() {
       return {
         success: true,
@@ -1507,6 +1554,36 @@ const handler = async (req, res) => {
       return sendResponse(500, { 
         success: false,
         message: 'Erro ao listar workspaces',
+        error: error.message 
+      });
+    }
+  }
+
+  // Listar datasets de um workspace específico
+  if (cleanUrl.match(/^\/api\/fabric\/datasets\/[^\/]+$/) && method === 'GET') {
+    try {
+      const workspaceId = cleanUrl.split('/')[4]; // Extrai o workspaceId da URL
+      
+      if (!workspaceId) {
+        return sendResponse(400, { 
+          success: false,
+          message: 'Workspace ID é obrigatório' 
+        });
+      }
+
+      const fabricIntegration = new FabricIntegration();
+      const datasets = await fabricIntegration.listDatasets(workspaceId);
+      return sendResponse(200, { 
+        success: true,
+        data: {
+          datasets
+        }
+      });
+    } catch (error) {
+      console.error('❌ Erro ao listar datasets:', error);
+      return sendResponse(500, { 
+        success: false,
+        message: 'Erro ao listar datasets',
         error: error.message 
       });
     }
