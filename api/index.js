@@ -5,6 +5,26 @@ const jwt = require('jsonwebtoken');
 // MODELS
 const User = require('../backend/models/User');
 const Scenario = require('../backend/models/Scenario');
+const Empreendimento = require('../backend/models/Empreendimento');
+
+// INTEGRATIONS
+let FabricIntegration;
+try {
+  FabricIntegration = require('../backend/integrations/FabricIntegration');
+} catch (error) {
+  console.warn('⚠️ FabricIntegration não carregado:', error.message);
+  // Classe mock para evitar erros
+  FabricIntegration = class {
+    async testConnection() {
+      return {
+        connected: false,
+        mode: 'error',
+        message: 'Integração Fabric não disponível no ambiente atual',
+        error: 'Module not found'
+      };
+    }
+  };
+}
 
 // DB CONNECT
 const connectDB = async () => {
@@ -928,6 +948,132 @@ const handler = async (req, res) => {
     }
   }
 
+  // ==================== ROTAS DE EMPREENDIMENTOS ====================
+  
+  // Listar empreendimentos do usuário
+  if (url === '/api/empreendimentos' && method === 'GET') {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token) {
+        return sendResponse(401, { message: 'Token não fornecido.' });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
+      
+      const empreendimentos = await Empreendimento.find({ 
+        user: decoded.userId,
+        isActive: true 
+      }).sort({ createdAt: -1 });
+      
+      return sendResponse(200, { empreendimentos });
+    } catch (error) {
+      console.error('Erro ao listar empreendimentos:', error);
+      return sendResponse(500, { message: 'Erro interno do servidor.' });
+    }
+  }
+  
+  // Criar empreendimento
+  if (url === '/api/empreendimentos' && method === 'POST') {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token) {
+        return sendResponse(401, { message: 'Token não fornecido.' });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
+      const { nome, incorporadora, tabelaVendas } = body;
+
+      if (!nome || !incorporadora) {
+        return sendResponse(400, { message: 'Nome e incorporadora são obrigatórios.' });
+      }
+      
+      const empreendimento = new Empreendimento({
+        nome,
+        incorporadora,
+        tabelaVendas: tabelaVendas || {},
+        user: decoded.userId
+      });
+
+      await empreendimento.save();
+      
+      return sendResponse(201, { 
+        message: 'Empreendimento salvo com sucesso!',
+        empreendimento
+      });
+    } catch (error) {
+      console.error('Erro ao salvar empreendimento:', error);
+      return sendResponse(500, { message: 'Erro interno do servidor.' });
+    }
+  }
+  
+  // Atualizar empreendimento
+  if (url.startsWith('/api/empreendimentos/') && method === 'PUT') {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token) {
+        return sendResponse(401, { message: 'Token não fornecido.' });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
+      const empreendimentoId = url.split('/').pop();
+      const { nome, incorporadora, tabelaVendas } = body;
+
+      const empreendimento = await Empreendimento.findOne({ 
+        _id: empreendimentoId,
+        user: decoded.userId 
+      });
+
+      if (!empreendimento) {
+        return sendResponse(404, { message: 'Empreendimento não encontrado.' });
+      }
+
+      empreendimento.nome = nome || empreendimento.nome;
+      empreendimento.incorporadora = incorporadora || empreendimento.incorporadora;
+      empreendimento.tabelaVendas = tabelaVendas || empreendimento.tabelaVendas;
+
+      await empreendimento.save();
+
+      return sendResponse(200, { 
+        message: 'Empreendimento atualizado com sucesso!',
+        empreendimento
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar empreendimento:', error);
+      return sendResponse(500, { message: 'Erro interno do servidor.' });
+    }
+  }
+  
+  // Deletar empreendimento
+  if (url.startsWith('/api/empreendimentos/') && method === 'DELETE') {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token) {
+        return sendResponse(401, { message: 'Token não fornecido.' });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ModelAI_2025_Super_Secure_JWT_Key_32_Characters_Long_For_Production');
+      const empreendimentoId = url.split('/').pop();
+
+      const empreendimento = await Empreendimento.findOne({ 
+        _id: empreendimentoId,
+        user: decoded.userId 
+      });
+
+      if (!empreendimento) {
+        return sendResponse(404, { message: 'Empreendimento não encontrado.' });
+      }
+
+      // Soft delete
+      empreendimento.isActive = false;
+      await empreendimento.save();
+
+      return sendResponse(200, { message: 'Empreendimento removido com sucesso!' });
+    } catch (error) {
+      console.error('Erro ao deletar empreendimento:', error);
+      return sendResponse(500, { message: 'Erro interno do servidor.' });
+    }
+  }
+
   // ==================== ROTAS DE CENÁRIOS ====================
   
   // Salvar cenário
@@ -1139,6 +1285,105 @@ const handler = async (req, res) => {
       timestamp: new Date().toISOString()
     });
     return req.httpMethod ? result : result;
+  }
+
+  // ==================== ROTAS FABRIC ====================
+  
+  // Testar conexão com Fabric
+  if ((cleanUrl === '/api/fabric/test' || cleanUrl === '/api/fabric/test-connection') && method === 'GET') {
+    try {
+      const fabricIntegration = new FabricIntegration();
+      const testResult = await fabricIntegration.testConnection();
+      return sendResponse(200, testResult);
+    } catch (error) {
+      console.error('❌ Erro no teste Fabric:', error);
+      return sendResponse(500, { 
+        connected: false, 
+        message: 'Erro no teste de conexão com Fabric',
+        error: error.message 
+      });
+    }
+  }
+
+  // Configurar credenciais do Fabric
+  if (cleanUrl === '/api/fabric/configure' && method === 'POST') {
+    try {
+      const { tenantId, clientId, clientSecret } = body;
+      
+      if (!tenantId || !clientId || !clientSecret) {
+        return sendResponse(400, { 
+          message: 'Tenant ID, Client ID e Client Secret são obrigatórios' 
+        });
+      }
+
+      const fabricIntegration = new FabricIntegration();
+      const result = await fabricIntegration.updateConfiguration({
+        tenantId,
+        clientId,
+        clientSecret
+      });
+
+      return sendResponse(200, result);
+    } catch (error) {
+      console.error('❌ Erro na configuração Fabric:', error);
+      return sendResponse(500, { 
+        message: 'Erro ao configurar Fabric',
+        error: error.message 
+      });
+    }
+  }
+
+  // Listar workspaces do Fabric
+  if (cleanUrl === '/api/fabric/workspaces' && method === 'GET') {
+    try {
+      const fabricIntegration = new FabricIntegration();
+      const workspaces = await fabricIntegration.listWorkspaces();
+      return sendResponse(200, { workspaces });
+    } catch (error) {
+      console.error('❌ Erro ao listar workspaces:', error);
+      return sendResponse(500, { 
+        message: 'Erro ao listar workspaces',
+        error: error.message 
+      });
+    }
+  }
+
+  // Exportar dados para Fabric
+  if (cleanUrl === '/api/fabric/export' && method === 'POST') {
+    try {
+      const { workspaceId, datasetName, scenarios } = body;
+      
+      if (!workspaceId || !datasetName || !scenarios) {
+        return sendResponse(400, { 
+          message: 'Workspace ID, nome do dataset e cenários são obrigatórios' 
+        });
+      }
+
+      const fabricIntegration = new FabricIntegration();
+      const result = await fabricIntegration.exportData(workspaceId, datasetName, scenarios);
+      return sendResponse(200, result);
+    } catch (error) {
+      console.error('❌ Erro na exportação:', error);
+      return sendResponse(500, { 
+        message: 'Erro ao exportar dados para Fabric',
+        error: error.message 
+      });
+    }
+  }
+
+  // Obter configuração atual do Fabric
+  if (cleanUrl === '/api/fabric/config' && method === 'GET') {
+    try {
+      const fabricIntegration = new FabricIntegration();
+      const config = await fabricIntegration.getConfiguration();
+      return sendResponse(200, config);
+    } catch (error) {
+      console.error('❌ Erro ao obter configuração:', error);
+      return sendResponse(500, { 
+        message: 'Erro ao obter configuração do Fabric',
+        error: error.message 
+      });
+    }
   }
 
   // Rota não encontrada

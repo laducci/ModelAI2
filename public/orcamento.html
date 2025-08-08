@@ -46,6 +46,10 @@
                             <i class="fas fa-edit text-sm mr-3"></i>
                             <span class="text-sm font-medium">Inputs</span>
                         </a>
+                        <a href="empreendimentos.html" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg">
+                            <i class="fas fa-building text-sm mr-3"></i>
+                            <span class="text-sm font-medium">Empreendimentos</span>
+                        </a>
                         <a href="cenarios.html" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg">
                             <i class="fas fa-folder text-sm mr-3"></i>
                             <span class="text-sm font-medium">Cenários</span>
@@ -96,10 +100,28 @@
                     </div>
                 </div>
                 
-                <a href="usuarios.html" id="adminUsersLink" class="sidebar-item flex items-center p-3 text-teal-200 hover:text-white" style="display: none;">
-                    <i class="fas fa-users sidebar-icon mr-3 text-lg"></i>
-                    <span class="font-medium sidebar-text">Usuários</span>
-                </a>
+                <!-- Administração - Menu Principal -->
+                <div class="space-y-1">
+                    <button class="sidebar-item w-full flex items-center justify-between p-3 text-teal-200 hover:text-white rounded-lg" id="administracaoToggle">
+                        <div class="flex items-center">
+                            <i class="fas fa-cogs sidebar-icon mr-3 text-lg"></i>
+                            <span class="font-medium sidebar-text">Administração</span>
+                        </div>
+                        <i class="fas fa-chevron-right transition-transform duration-200" id="administracaoChevron"></i>
+                    </button>
+                    
+                    <!-- Submenus da Administração -->
+                    <div class="ml-4 space-y-1 hidden" id="administracaoSubmenu">
+                        <a href="usuarios.html" id="adminUsersLink" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg" style="display: block;">
+                            <i class="fas fa-users text-sm mr-3"></i>
+                            <span class="text-sm font-medium">Usuários</span>
+                        </a>
+                        <a href="fabric-admin.html" id="adminFabricLink" class="sidebar-subitem flex items-center p-2 text-teal-200 hover:text-white hover:bg-teal-700/30 rounded-lg" style="display: block;">
+                            <i class="fas fa-microchip text-sm mr-3"></i>
+                            <span class="text-sm font-medium">Fabric Integration</span>
+                        </a>
+                    </div>
+                </div>
             </div>
             
             <!-- Divider -->
