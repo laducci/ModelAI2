@@ -372,24 +372,44 @@ class FabricAdmin {
         try {
             this.addLog('🔄 Carregando workspaces do Microsoft Fabric...', 'info');
             
-            const response = await this.apiClient.request('/fabric/workspaces');
+            const response = await this.apiClient.request('/fabric/workspaces', 'GET');
             
-            if (response.success && response.data) {
+            console.log('🔍 [FABRIC-ADMIN] Resposta workspaces:', response);
+            
+            // Verificar diferentes formatos de resposta
+            let workspaces = [];
+            let success = false;
+            
+            if (response && response.success && response.workspaces) {
+                workspaces = response.workspaces;
+                success = true;
+            } else if (response && response.workspaces) {
+                workspaces = response.workspaces;
+                success = true;
+            } else if (response && Array.isArray(response)) {
+                workspaces = response;
+                success = true;
+            } else if (response && response.data && response.data.workspaces) {
+                workspaces = response.data.workspaces;
+                success = true;
+            }
+            
+            if (success && Array.isArray(workspaces)) {
                 const select = document.getElementById('workspaceSelect');
                 if (select) {
                     select.innerHTML = '<option value="">Selecione um workspace</option>';
                     
-                    if (response.data.workspaces && response.data.workspaces.length > 0) {
-                        response.data.workspaces.forEach(workspace => {
+                    if (workspaces.length > 0) {
+                        workspaces.forEach(workspace => {
                             const option = document.createElement('option');
                             option.value = workspace.id;
                             option.textContent = workspace.name;
                             select.appendChild(option);
                         });
-                        this.addLog(`✅ ${response.data.workspaces.length} workspaces carregados`, 'success');
+                        this.addLog(`✅ ${workspaces.length} workspaces carregados`, 'success');
                         
                         // Destacar o workspace ModelAI se existir
-                        const modelAIWorkspace = response.data.workspaces.find(ws => 
+                        const modelAIWorkspace = workspaces.find(ws => 
                             ws.name.includes('ModelAI') || ws.name.includes('[ModelAI]')
                         );
                         if (modelAIWorkspace) {
@@ -401,18 +421,35 @@ class FabricAdmin {
                     }
                 }
             } else {
+                // Analisar mensagens de erro específicas
+                let errorMessage = 'Erro desconhecido';
+                
+                if (response && response.error) {
+                    errorMessage = response.error;
+                } else if (response && response.message) {
+                    errorMessage = response.message;
+                } else if (typeof response === 'string') {
+                    errorMessage = response;
+                }
+                
                 // Verificar se é erro de permissão
-                if (response.message && (response.message.includes('401') || response.message.includes('PERMISSÃO NEGADA') || response.message.includes('Unauthorized'))) {
+                if (errorMessage.includes('401') || 
+                    errorMessage.includes('PERMISSÃO NEGADA') || 
+                    errorMessage.includes('Unauthorized') ||
+                    errorMessage.includes('Service Principal não autorizado')) {
                     this.addLog('❌ Erro de permissão: Service Principal não autorizado', 'error');
                     this.addLog('🔐 Configuração necessária no Power BI Admin Portal', 'warning');
                     this.showPermissionGuide();
+                } else if (errorMessage.includes('403') || errorMessage.includes('Forbidden')) {
+                    this.addLog('❌ Acesso negado: Verifique as permissões do Service Principal', 'error');
+                    this.showPermissionGuide();
                 } else {
-                    this.addLog('❌ Erro ao carregar workspaces: ' + (response.message || 'Erro desconhecido'), 'error');
+                    this.addLog('❌ Erro ao carregar workspaces: ' + errorMessage, 'error');
                 }
             }
             
         } catch (error) {
-            this.addLog('❌ Erro ao carregar workspaces: ' + error.message, 'error');
+            this.addLog('❌ Erro de rede ao carregar workspaces: ' + error.message, 'error');
             console.error('❌ [FABRIC-ADMIN] Erro ao carregar workspaces:', error);
             
             // Se for erro de permissão, mostrar guia

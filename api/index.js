@@ -87,6 +87,67 @@ try {
         data: config
       };
     }
+
+    async listWorkspaces() {
+      // Verificar se as variáveis de ambiente estão configuradas
+      if (!this.tenantId || !this.clientId || !this.clientSecret) {
+        throw new Error('Variáveis de ambiente do Fabric não configuradas');
+      }
+
+      try {
+        // Tentar autenticação primeiro
+        if (!this.accessToken) {
+          const authResult = await this.testConnection();
+          if (!authResult.connected) {
+            throw new Error(authResult.message);
+          }
+        }
+
+        // Tentar listar workspaces reais
+        const response = await fetch('https://api.powerbi.com/v1.0/myorg/groups', {
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Service Principal não autorizado. Configure as permissões no Power BI Admin Portal.');
+          } else if (response.status === 403) {
+            throw new Error('Acesso negado. Verifique as permissões do Service Principal.');
+          } else {
+            throw new Error(`Erro HTTP ${response.status}: ${response.statusText}`);
+          }
+        }
+
+        const data = await response.json();
+        return data.value || [];
+      } catch (error) {
+        console.error('❌ Erro ao listar workspaces:', error);
+        throw error;
+      }
+    }
+
+    async getConfiguration() {
+      return {
+        success: true,
+        configured: !!(this.tenantId && this.clientId && this.clientSecret),
+        tenantId: this.tenantId ? this.tenantId.substring(0, 8) + '...' : 'Não configurado',
+        clientId: this.clientId ? this.clientId.substring(0, 8) + '...' : 'Não configurado',
+        hasSecret: !!this.clientSecret
+      };
+    }
+
+    async exportData(workspaceId, datasetName, scenarios) {
+      return {
+        success: false,
+        message: 'Exportação não implementada na versão Vercel. Use integração local.',
+        workspaceId,
+        datasetName,
+        scenarioCount: scenarios?.length || 0
+      };
+    }
   };
 }
 
